@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { ActorId, CurrencyId, OwnerRef } from '../core/refs';
 import type { Intent, IntentOutcome, ModeKey } from '../modes/types';
 import { buildSection, type BuiltSection } from '../render/builder';
-import { createFigure, styleFor } from '../render/figures';
+import { createFamiliarFigure, createFigure, styleFor } from '../render/figures';
 import type { SceneLayout, Vec2 } from '../render/layout';
 import { Materials } from '../render/materials';
 import { createStage, type Palette, type Stage } from '../render/stage';
@@ -15,6 +15,16 @@ const WALK = 5.5; // m/s
 const RUN = 9;
 const TALK_RANGE = 3.2; // reaches across a counter
 const GATHER_RANGE = 2.4;
+
+interface FamiliarView {
+  id: string;
+  actorId: ActorId;
+  figure: THREE.Group;
+  at: Vec2;
+  follows: boolean;
+  floats: boolean;
+  label: HTMLElement;
+}
 
 interface NpcView {
   id: ActorId;
@@ -38,6 +48,7 @@ export class Game {
   private readonly player: THREE.Group;
   private pos: Vec2 = [0, 0];
   private npcs: NpcView[] = [];
+  private pets: FamiliarView[] = [];
   private placeLabels: { el: HTMLElement; at: THREE.Vector3 }[] = [];
   private dialogueWith: ActorId | null = null;
   private dialogueLine = 0;
@@ -118,6 +129,7 @@ export class Game {
     this.hud.labels.innerHTML = '';
     this.placeLabels = this.section.labels.map((l) => ({ el: this.label(l.text, l.kind), at: l.position }));
     this.spawnNpcs();
+    this.spawnFamiliars();
     this.hud.close();
     this.dialogueWith = null;
   }
@@ -140,6 +152,50 @@ export class Game {
       figure.position.set(at[0], 0, at[1]);
       this.section.group.add(figure);
       this.npcs.push({ id: a.id, figure, at, label: this.label(a.name, 'npc') });
+    }
+  }
+
+  /** Familiars in this section: owned followers trail the player; others sit with their keeper or at a layout spot. */
+  private spawnFamiliars(): void {
+    for (const p of this.pets) {
+      this.section.group.remove(p.figure);
+      p.label.remove();
+    }
+    this.pets = [];
+    for (const f of Object.values(this.sim.state.familiars)) {
+      const fa = this.sim.state.actors[f.actorId];
+      if (!fa || this.sceneFor(fa.locationId) !== this.layout.id) continue;
+      const sp = this.sim.familiars.species(f);
+      const owner = this.sim.familiars.ownerOf(f.id);
+      const mine = owner?.kind === 'actor' && owner.id === this.playerId;
+      const keeper = owner?.kind === 'actor' ? this.npcs.find((n) => n.id === owner.id) : undefined;
+      const at: Vec2 | undefined = mine
+        ? [this.pos[0] - 1.2, this.pos[1] + 1]
+        : this.layout.npcs[f.id] ?? (keeper ? [keeper.at[0] + 1.3, keeper.at[1] + 0.6] : this.layout.spawns[fa.locationId ?? '']);
+      if (!at) continue;
+      const figure = createFamiliarFigure(this.materials, sp?.figure ?? 'hound');
+      figure.position.x = at[0];
+      figure.position.z = at[1];
+      this.section.group.add(figure);
+      this.pets.push({ id: f.id, actorId: f.actorId, figure, at, follows: mine && !!sp?.followsOwner, floats: sp?.figure === 'moth', label: this.label(f.name, 'npc') });
+    }
+  }
+
+  private updateFamiliars(dt: number): void {
+    const t = performance.now();
+    for (const p of this.pets) {
+      if (p.follows) {
+        const d = dist(p.at, this.pos);
+        if (d > 1.8) {
+          const k = Math.min(1, (dt / 1000) * 4);
+          const next: Vec2 = [p.at[0] + (this.pos[0] - p.at[0]) * k * 0.6, p.at[1] + (this.pos[1] - p.at[1]) * k * 0.6];
+          p.figure.rotation.y = Math.atan2(next[0] - p.at[0], next[1] - p.at[1]);
+          p.at = next;
+        }
+      }
+      p.figure.position.x = p.at[0];
+      p.figure.position.z = p.at[1];
+      if (p.floats) p.figure.position.y = 1.5 + Math.sin(t / 300 + p.at[0]) * 0.25;
     }
   }
 
@@ -166,6 +222,7 @@ export class Game {
       if (!n || dist(n.at, this.pos) > TALK_RANGE + 2.5) this.hud.close();
     }
 
+    this.updateFamiliars(dt);
     this.updatePrompt();
     this.stage.follow(this.player.position, dt);
     this.updateLabels();
@@ -226,6 +283,7 @@ export class Game {
     }
     if (key === 'i') return this.hud.openPanel === 'inventory' ? this.hud.close() : this.showInventory();
     if (key === 'j') return this.hud.openPanel === 'journal' ? this.hud.close() : this.showJournal();
+    if (key === 'c') return this.hud.openPanel === 'companions' ? this.hud.close() : this.showCompanions();
     const n = Number(key);
     if (n >= 1 && n <= 9) {
       const mode = this.implementedModes()[n - 1];
@@ -335,6 +393,19 @@ export class Game {
       }
     }
 
+    const companions: Choice[] = Object.values(this.sim.state.familiars)
+      .filter((f) => f.offer && this.sim.familiars.ownerOf(f.id)?.id === npcId)
+      .map((f) => ({
+        label: `${f.name} the ${this.sim.familiars.formIn(f, this.sim.state.realm.id)} — ${f.offer!.price ? this.money(f.offer!.price) : 'free to a good home'}`,
+        detail: `${f.variant}; ${f.temperament}${allowed('acquire-familiar') ? '' : ` (not in ${def.name} mode)`}`,
+        disabled: !allowed('acquire-familiar') || !this.sim.economy.canAfford(this.self, f.offer!.currencyId, f.offer!.price),
+        onChoose: () => {
+          this.act({ kind: 'acquire-familiar', familiarId: f.id });
+          this.spawnFamiliars();
+          after();
+        },
+      }));
+
     const deeds: Choice[] = npc.tags.includes('official')
       ? Object.values(this.sim.state.properties)
           .filter((p) => p.forSale)
@@ -354,6 +425,7 @@ export class Game {
       sections: [
         { heading: 'Hand over', choices: handOver },
         { heading: 'Work offered', choices: offers },
+        { heading: 'Companions looking for a home', choices: companions },
         { heading: 'Buy', choices: buy },
         { heading: 'Sell', choices: sell },
         { heading: 'Deeds for sale', choices: deeds },
@@ -374,6 +446,37 @@ export class Game {
       { heading: 'Carried', rows: items },
       { heading: 'Owned', rows: owned },
     ]);
+  }
+
+  private showCompanions(): void {
+    const mine = this.sim.familiars.ownedBy(this.self);
+    const def = this.sim.modes.definition(this.sim.modes.current(this.playerId))!;
+    const allowed = (k: Intent['kind']) => def.intents.includes(k);
+    const refresh = (intent: Intent) => () => {
+      this.act(intent);
+      this.showCompanions();
+    };
+    const sections = mine.map((f) => {
+      const st = this.sim.familiars.status(f.id);
+      const c = f.care;
+      const rows: (string | Choice)[] = [
+        `${f.variant} · ${f.temperament}`,
+        `Bond ${Math.round(f.bond)}/100 · Fed ${Math.round(c.satiety)} · Energy ${Math.round(c.energy)} · Mood ${Math.round(c.mood)}`,
+        st.ok ? `Seems ${st.value.notes.join(', ')}.` : '',
+      ];
+      const diet = this.sim.familiars.species(f)?.diet ?? [];
+      const stacks = this.sim.state.inventories[`actor:${this.playerId}`]?.stacks ?? {};
+      const foods = Object.entries(stacks).filter(([id, q]) => q > 0 && this.sim.state.items[id]?.tags.some((t) => diet.includes(t)));
+      const gate = (k: Intent['kind']) => (allowed(k) ? undefined : `switch to Companion mode`);
+      for (const [itemId, q] of foods) {
+        rows.push({ label: `Feed ${this.sim.state.items[itemId]!.name} (${q})`, detail: gate('feed-familiar'), disabled: !allowed('feed-familiar'), onChoose: refresh({ kind: 'feed-familiar', familiarId: f.id, itemId: itemId as never }) });
+      }
+      if (!foods.length) rows.push(`No food ${f.name} will eat — Quill's Sundries sells some.`);
+      rows.push({ label: 'Rest', detail: gate('rest-familiar'), disabled: !allowed('rest-familiar'), onChoose: refresh({ kind: 'rest-familiar', familiarId: f.id }) });
+      rows.push({ label: 'Spend time together', detail: gate('bond-familiar'), disabled: !allowed('bond-familiar'), onChoose: refresh({ kind: 'bond-familiar', familiarId: f.id }) });
+      return { heading: `${f.name} the ${this.sim.familiars.formIn(f, this.sim.state.realm.id)}`, rows };
+    });
+    this.hud.list('companions', 'Companions', mine.length ? 'Care for those in your keeping (C to close)' : 'No Familiars yet — Hester at Brindle Farm has a hound pup looking for a home.', sections);
   }
 
   private showJournal(): void {
@@ -416,6 +519,7 @@ export class Game {
       }
     };
     for (const n of this.npcs) place(n.label, new THREE.Vector3(n.at[0], 2.6, n.at[1]));
+    for (const p of this.pets) place(p.label, new THREE.Vector3(p.at[0], p.floats ? 2.3 : 1.5, p.at[1]));
     for (const l of this.placeLabels) place(l.el, l.at);
   }
 

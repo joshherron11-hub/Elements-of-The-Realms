@@ -65,6 +65,11 @@ export function applyContentPack(sim: Simulation, pack: ContentPack): void {
   }
   for (const sp of pack.searchSpots) s.searchSpots[sp.id] = { ...sp, foundBy: [] };
   for (const h of pack.happenings) s.happenings[h.id] = { ...h, seenBy: [] };
+  for (const sp of pack.familiarSpecies) s.familiarSpecies[sp.id] = { ...sp };
+  for (const f of pack.familiars) {
+    const made = sim.familiars.create({ ...f, id: f.id as never, provenance: authored });
+    if (!made.ok) throw new Error(`content ${pack.id}: ${made.error.message}`);
+  }
 }
 
 export interface BootstrapOptions {

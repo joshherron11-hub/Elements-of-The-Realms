@@ -114,7 +114,10 @@
         "accept-contract",
         "complete-task",
         "purchase-property",
-        "search"
+        "search",
+        "familiar-status",
+        "acquire-familiar",
+        "feed-familiar"
       ]
     },
     {
@@ -175,7 +178,11 @@
       "intents": [
         "travel",
         "talk",
-        "familiar-status"
+        "familiar-status",
+        "acquire-familiar",
+        "feed-familiar",
+        "rest-familiar",
+        "bond-familiar"
       ]
     },
     {

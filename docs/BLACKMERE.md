@@ -50,7 +50,7 @@ social events are listed in `docs/ECONOMY.md`.
 
 ## Controls
 WASD / arrows move · Shift run · E interact · F search · I inventory · J journal ·
-1–6 modes · Esc close
+C companions · 1–6 modes · Esc close
 
 ## Rendering
 Toon materials with three bands, inverted-hull outlines, painted canvas backdrops on

@@ -81,7 +81,8 @@
       "baseValue": 2,
       "techTier": "medieval",
       "tags": [
-        "familiar-food"
+        "familiar-food",
+        "hound-food"
       ]
     },
     {
@@ -91,7 +92,8 @@
       "baseValue": 2,
       "techTier": "medieval",
       "tags": [
-        "familiar-food"
+        "familiar-food",
+        "seed-food"
       ]
     },
     {

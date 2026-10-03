@@ -1,4 +1,4 @@
-import type { ContractId, ItemId, LocationId, MarketId, PlatformDomain, PropertyId, ResourceNodeId, TaskId, ActorId } from '../core/refs';
+import type { ContractId, FamiliarId, ItemId, LocationId, MarketId, PlatformDomain, PropertyId, ResourceNodeId, TaskId, ActorId } from '../core/refs';
 import type { InteractionCategory } from '../world/realm';
 
 /**
@@ -19,7 +19,11 @@ export type Intent =
   | { readonly kind: 'accept-contract'; readonly contractId: ContractId }
   | { readonly kind: 'complete-task'; readonly taskId: TaskId }
   | { readonly kind: 'purchase-property'; readonly propertyId: PropertyId }
-  | { readonly kind: 'familiar-status' };
+  | { readonly kind: 'familiar-status' }
+  | { readonly kind: 'acquire-familiar'; readonly familiarId: FamiliarId }
+  | { readonly kind: 'feed-familiar'; readonly familiarId: FamiliarId; readonly itemId: ItemId }
+  | { readonly kind: 'rest-familiar'; readonly familiarId: FamiliarId }
+  | { readonly kind: 'bond-familiar'; readonly familiarId: FamiliarId };
 
 export type IntentKind = Intent['kind'];
 
@@ -34,6 +38,10 @@ export const INTENT_KINDS: readonly IntentKind[] = [
   'complete-task',
   'purchase-property',
   'familiar-status',
+  'acquire-familiar',
+  'feed-familiar',
+  'rest-familiar',
+  'bond-familiar',
 ];
 
 export interface IntentOutcome {

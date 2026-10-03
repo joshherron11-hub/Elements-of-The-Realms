@@ -1,0 +1,124 @@
+{
+  "id": "happy-fall-familiars",
+  "realmId": "realm_happy-fall",
+  "familiarSpecies": [
+    {
+      "id": "species_russet-hound",
+      "name": "Russet Hound",
+      "role": "companion",
+      "diet": [
+        "hound-food"
+      ],
+      "satietyDecayPerHour": 8,
+      "energyDecayPerHour": 6,
+      "followsOwner": true,
+      "utilityTags": [
+        "companion",
+        "tracking"
+      ],
+      "realmForms": {
+        "realm_happy-fall": "russet hound"
+      },
+      "figure": "hound",
+      "description": "Farm dogs of the autumn country: rust-coated, stubborn, devoted."
+    },
+    {
+      "id": "species_lantern-moth",
+      "name": "Lantern Moth",
+      "role": "collectible",
+      "diet": [
+        "seed-food"
+      ],
+      "satietyDecayPerHour": 3,
+      "energyDecayPerHour": 2,
+      "followsOwner": true,
+      "utilityTags": [
+        "light",
+        "collectible"
+      ],
+      "realmForms": {
+        "realm_happy-fall": "lantern moth"
+      },
+      "figure": "moth",
+      "description": "Hand-sized moths whose wings hold a little warm light after dusk."
+    },
+    {
+      "id": "species_keep-raven",
+      "name": "Keep Raven",
+      "role": "symbol",
+      "diet": [
+        "hound-food",
+        "seed-food"
+      ],
+      "satietyDecayPerHour": 4,
+      "energyDecayPerHour": 3,
+      "followsOwner": false,
+      "utilityTags": [
+        "messenger",
+        "civic-symbol",
+        "historical"
+      ],
+      "realmForms": {
+        "realm_happy-fall": "keep raven"
+      },
+      "figure": "bird",
+      "description": "Long-lived ravens kept at old keeps; said to remember every lord."
+    }
+  ],
+  "familiars": [
+    {
+      "id": "familiar_bramble",
+      "speciesId": "species_russet-hound",
+      "name": "Bramble",
+      "variant": "russet with a white blaze",
+      "temperament": "loyal, curious, easily muddied",
+      "owner": {
+        "kind": "actor",
+        "id": "actor_hester-brindle"
+      },
+      "locationId": "location_brindle-farm",
+      "bond": 30,
+      "care": {
+        "satiety": 50,
+        "energy": 75,
+        "mood": 60
+      },
+      "offerPrice": 12
+    },
+    {
+      "id": "familiar_wick",
+      "speciesId": "species_lantern-moth",
+      "name": "Wick",
+      "variant": "amber-winged",
+      "temperament": "shy, drawn to warmth",
+      "owner": {
+        "kind": "actor",
+        "id": "actor_sela-vantry"
+      },
+      "locationId": "location_blackmere-tavern",
+      "bond": 40,
+      "care": {
+        "satiety": 70,
+        "energy": 60,
+        "mood": 65
+      },
+      "offerPrice": 18
+    },
+    {
+      "id": "familiar_old-corvin",
+      "speciesId": "species_keep-raven",
+      "name": "Old Corvin",
+      "variant": "grey-beaked elder",
+      "temperament": "watchful, opinionated",
+      "owner": {
+        "kind": "organization",
+        "id": "org_blackmere-council"
+      },
+      "locationId": "location_blackmere-keep",
+      "bond": 60,
+      "utilityTags": [
+        "keep-symbol"
+      ]
+    }
+  ]
+}

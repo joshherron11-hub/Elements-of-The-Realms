@@ -20,7 +20,7 @@ import type {
 } from '../economy/types';
 import type { Contract, Task } from '../contracts/types';
 import type { ChronicleEntry } from '../chronicle/types';
-import type { Familiar } from '../familiars/types';
+import type { Familiar, FamiliarSpecies } from '../familiars/types';
 import type { DeclaredClaim, Evidence, Identity, IdentityLink, Interaction, Person } from '../identity/types';
 import type { DerivedRecord } from '../identity/canonical/pipeline';
 import type { Recognition } from '../identity/canonical/recognition';
@@ -88,6 +88,7 @@ export interface WorldState {
   /** `${refKey(subject)}@${refKey(scope)}` → reputation */
   reputations: Record<string, Reputation>;
 
+  familiarSpecies: Record<string, FamiliarSpecies>;
   familiars: Record<string, Familiar>;
 
   chronicle: ChronicleEntry[];
@@ -150,6 +151,7 @@ export function createWorldState(opts: NewWorldOptions): WorldState {
     tasks: {},
     relationships: {},
     reputations: {},
+    familiarSpecies: {},
     familiars: {},
     chronicle: [],
     interactions: {},

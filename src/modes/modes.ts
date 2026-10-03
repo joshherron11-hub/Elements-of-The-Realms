@@ -14,6 +14,7 @@ import { emit, type SimContext } from '../world/context';
 import type { InteractionCategory } from '../world/realm';
 import type { SearchService } from '../world/search';
 import type { WorldService } from '../world/world';
+import type { FamiliarService } from '../familiars/familiars';
 import type { Intent, IntentKind, IntentOutcome, ModeDefinition, ModeKey } from './types';
 
 export interface ModeDeps {
@@ -28,6 +29,7 @@ export interface ModeDeps {
   relationships: RelationshipService;
   contracts: ContractService;
   search: SearchService;
+  familiars: FamiliarService;
 }
 
 /** The mode an actor is in when they have not chosen one. */
@@ -45,6 +47,10 @@ const INTENT_CATEGORY: Record<IntentKind, InteractionCategory | null> = {
   'complete-task': 'contract',
   'purchase-property': 'property',
   'familiar-status': 'care',
+  'acquire-familiar': 'care',
+  'feed-familiar': 'care',
+  'rest-familiar': 'care',
+  'bond-familiar': 'care',
 };
 
 /**
@@ -135,7 +141,24 @@ export class ModeService {
       }
     }
     if (want('purchase-property')) for (const p of Object.values(s.properties)) if (p.forSale && this.canTransactProperty(here, p.locationId)) out.push({ kind: 'purchase-property', propertyId: p.id });
-    if (want('familiar-status') && this.deps.ownership.assetsOf(self, 'familiar').length) out.push({ kind: 'familiar-status' });
+    const mine = this.deps.familiars.ownedBy(self);
+    if (want('familiar-status') && mine.length) out.push({ kind: 'familiar-status' });
+    if (want('acquire-familiar')) {
+      for (const f of Object.values(s.familiars)) {
+        if (f.offer && s.actors[f.actorId]?.locationId === here && !mine.includes(f)) out.push({ kind: 'acquire-familiar', familiarId: f.id });
+      }
+    }
+    for (const f of mine) {
+      if (s.actors[f.actorId]?.locationId !== here) continue;
+      if (want('feed-familiar')) {
+        const diet = this.deps.familiars.species(f)?.diet ?? [];
+        for (const [itemId, q] of Object.entries(s.inventories[`actor:${actorId}`]?.stacks ?? {})) {
+          if (q > 0 && s.items[itemId]?.tags.some((t) => diet.includes(t))) out.push({ kind: 'feed-familiar', familiarId: f.id, itemId: itemId as never });
+        }
+      }
+      if (want('rest-familiar')) out.push({ kind: 'rest-familiar', familiarId: f.id });
+      if (want('bond-familiar')) out.push({ kind: 'bond-familiar', familiarId: f.id });
+    }
     return out;
   }
 
@@ -240,12 +263,29 @@ export class ModeService {
         return r.ok ? done(`You now own ${r.value.name}`, { propertyId: r.value.id }) : r;
       }
       case 'familiar-status': {
-        const familiars = d.ownership
-          .assetsOf(self, 'familiar')
-          .map((a) => this.ctx.state.familiars[a.id])
-          .filter((f) => f !== undefined)
-          .map((f) => ({ id: f.id, name: f.name, species: f.species, bond: f.bond, care: { ...f.care } }));
-        return done(familiars.length ? familiars.map((f) => `${f.name} (bond ${f.bond})`).join(', ') : 'You have no Familiars.', { familiars });
+        const familiars = d.familiars.ownedBy(self).map((f) => d.familiars.status(f.id)).filter((r) => r.ok).map((r) => r.value);
+        return done(
+          familiars.length ? familiars.map((f) => `${f.name} the ${f.form}: bond ${Math.round(f.bond)}, ${f.notes.join(', ')}`).join(' · ') : 'You have no Familiars.',
+          { familiars },
+        );
+      }
+      case 'acquire-familiar': {
+        const f = this.ctx.state.familiars[intent.familiarId];
+        if (f && this.ctx.state.actors[f.actorId]?.locationId !== actor.locationId) return err('NOT_PRESENT', `${f.name} is not here`);
+        const r = d.familiars.acquire(self, intent.familiarId);
+        return r.ok ? done(`${r.value.name} is yours now. Look after them.`, { familiarId: r.value.id }) : r;
+      }
+      case 'feed-familiar': {
+        const r = d.familiars.feed(self, intent.familiarId, intent.itemId);
+        return r.ok ? done(`${r.value.name} eats happily (fed ${Math.round(r.value.care.satiety)}/100).`, { familiarId: r.value.id }) : r;
+      }
+      case 'rest-familiar': {
+        const r = d.familiars.rest(self, intent.familiarId);
+        return r.ok ? done(`${r.value.name} naps (energy ${Math.round(r.value.care.energy)}/100).`, { familiarId: r.value.id }) : r;
+      }
+      case 'bond-familiar': {
+        const r = d.familiars.bond(self, intent.familiarId);
+        return r.ok ? done(`You and ${r.value.name} spend a while together (bond ${Math.round(r.value.bond)}).`, { familiarId: r.value.id }) : r;
       }
     }
   }

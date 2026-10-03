@@ -39,8 +39,10 @@ Merchant, search and investment contracts; a social happening; market drift; pro
 deeds via the civic office; council, guilds, clan and faction placeholders; journal
 standing view.
 
-## Phase 8 — Familiars ⬜
-Species, bond, care loop (feed/rest/bond/status), provenance, three examples.
+## Phase 8 — Familiars ✅
+Species data, Familiar service, care loop (feed/rest/bond/status), acquisition,
+following, bond milestones in the Chronicle, three examples (hound, moth, raven),
+companion UI.
 
 ## Phase 9 — Chronicle + persistence ⬜
 Personal Chronicle; Realm/Organization Chronicle interfaces; save/load.

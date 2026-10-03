@@ -5,6 +5,23 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — Phase 8: Familiars
+- `FamiliarSpecies` data; `FamiliarService` (create, acquire, feed, rest, bond,
+  status, offers, time-based care decay, follow-owner, per-Familiar Chronicle
+  history, bond milestones).
+- Intents `acquire-familiar`, `feed-familiar`, `rest-familiar`, `bond-familiar`;
+  Live and Companion modes updated.
+- `30-familiars.json`: Russet Hound, Lantern Moth and Keep Raven species; Bramble
+  (Hester's hound pup), Wick (Sela's moth) and Old Corvin (the council's raven).
+  Hound Biscuits and Seed Cake carry distinct diet tags.
+- Content packs accept `familiarSpecies` and `familiars`, validated (species, owner,
+  location, diet coverage).
+- UI: hound/moth/raven figures, follower behaviour, adoption in dialogue,
+  Companions panel (C).
+- `docs/FAMILIARS.md`. 12 new tests (197 total): ownership, care state, bond
+  changes, save/load, no Recognition from ownership.
+
+
 ### Added — Phase 7: Economy, contracts, property
 - `20-blackmere-life.json`: merchant contract (Apples for Quill's), search contract
   (The Lost Satchel), investment (A Share in the Cider Press), social happening

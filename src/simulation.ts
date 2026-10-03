@@ -21,6 +21,7 @@ import type { SimContext } from './world/context';
 import { WorldService } from './world/world';
 import { SearchService } from './world/search';
 import { HappeningService } from './world/happenings';
+import { FamiliarService } from './familiars/familiars';
 import { ModeService } from './modes/modes';
 import type { ModeDefinition } from './modes/types';
 import type { WorldState } from './world/world-state';
@@ -66,6 +67,7 @@ export class Simulation {
   readonly identity: IdentityService;
   readonly search: SearchService;
   readonly happenings: HappeningService;
+  readonly familiars: FamiliarService;
   readonly modes: ModeService;
 
   constructor(opts: SimulationOptions) {
@@ -109,6 +111,7 @@ export class Simulation {
     this.interactions = new InteractionService(ctx);
     this.identity = new IdentityService(ctx);
     this.search = new SearchService(ctx, this.inventory);
+    this.familiars = new FamiliarService(ctx, { ownership: this.ownership, economy: this.economy, inventory: this.inventory, actors: this.actors });
     this.happenings = new HappeningService(ctx, this.relationships, this.reputation);
     this.modes = new ModeService(
       ctx,
@@ -124,6 +127,7 @@ export class Simulation {
         relationships: this.relationships,
         contracts: this.contracts,
         search: this.search,
+        familiars: this.familiars,
       },
       opts.modes ?? [],
     );
@@ -134,13 +138,16 @@ export class Simulation {
         this.chronicle.attach();
         this.interactions.attach();
         this.happenings.attach();
+        this.familiars.attach();
       },
       tick: (dt) => {
         this.resources.tick(dt);
         this.market.tick();
+        this.familiars.tick(dt);
         this.contracts.tick();
       },
       dispose: () => {
+        this.familiars.detach();
         this.happenings.detach();
         this.interactions.detach();
         this.chronicle.detach();

@@ -43,3 +43,58 @@ export function styleFor(m: Materials, tags: string[], isPlayer = false): Figure
   if (tags.includes('traveler')) return { body: P.stone, accent: P.moss };
   return { body: P.stone, accent: P.light };
 }
+
+/** Original placeholder Familiar figures: a hound, a glowing moth, a raven. */
+export function createFamiliarFigure(m: Materials, figure: string): THREE.Group {
+  const P = m.palette;
+  const g = new THREE.Group();
+  if (figure === 'hound') {
+    const body = m.mesh(new THREE.BoxGeometry(0.5, 0.45, 1), P.ember);
+    body.position.y = 0.5;
+    g.add(body);
+    const head = m.mesh(new THREE.BoxGeometry(0.42, 0.4, 0.42), P.ember);
+    head.position.set(0, 0.82, 0.55);
+    g.add(head);
+    const snout = m.mesh(new THREE.BoxGeometry(0.22, 0.18, 0.25), P.light, false);
+    snout.position.set(0, 0.74, 0.82);
+    g.add(snout);
+    for (const x of [-0.16, 0.16]) {
+      const ear = m.mesh(new THREE.ConeGeometry(0.1, 0.25, 4), P.timber, false);
+      ear.position.set(x, 1.07, 0.5);
+      g.add(ear);
+    }
+    for (const [x, z] of [[-0.17, 0.35], [0.17, 0.35], [-0.17, -0.35], [0.17, -0.35]] as const) {
+      const leg = m.mesh(new THREE.BoxGeometry(0.13, 0.32, 0.13), P.timber, false);
+      leg.position.set(x, 0.16, z);
+      g.add(leg);
+    }
+    const tail = m.mesh(new THREE.BoxGeometry(0.08, 0.08, 0.4), P.ember, false);
+    tail.position.set(0, 0.7, -0.62);
+    tail.rotation.x = -0.6;
+    g.add(tail);
+  } else if (figure === 'moth') {
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), new THREE.MeshBasicMaterial({ color: P.light }));
+    g.add(body);
+    for (const side of [-1, 1]) {
+      const wing = new THREE.Mesh(new THREE.CircleGeometry(0.3, 10), new THREE.MeshBasicMaterial({ color: P.gold, transparent: true, opacity: 0.85, side: THREE.DoubleSide }));
+      wing.position.x = side * 0.28;
+      wing.rotation.y = side * 0.5;
+      g.add(wing);
+    }
+    g.add(new THREE.PointLight(P.gold, 3, 5, 1.8));
+    g.position.y = 1.6;
+  } else {
+    const body = m.mesh(new THREE.ConeGeometry(0.28, 0.8, 6), P.ink);
+    body.rotation.x = Math.PI / 2.4;
+    body.position.y = 0.45;
+    g.add(body);
+    const head = m.mesh(new THREE.SphereGeometry(0.18, 8, 6), P.ink);
+    head.position.set(0, 0.75, 0.25);
+    g.add(head);
+    const beak = m.mesh(new THREE.ConeGeometry(0.06, 0.22, 4), P.stone, false);
+    beak.rotation.x = Math.PI / 2;
+    beak.position.set(0, 0.73, 0.45);
+    g.add(beak);
+  }
+  return g;
+}

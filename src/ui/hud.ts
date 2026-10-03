@@ -73,7 +73,7 @@ export class Hud {
     this.toasts = el('div', { id: 'hud-toasts' });
     this.panel = el('div', { id: 'hud-panel', className: 'panel' });
     const help = el('div', { id: 'hud-help' });
-    help.textContent = 'WASD / arrows move · Shift run · E interact · F search · I inventory · J journal · 1–6 modes · Esc close';
+    help.textContent = 'WASD / arrows move · Shift run · E interact · F search · I inventory · J journal · C companions · 1–6 modes · Esc close';
     this.root.append(this.labels, this.status, this.modes, this.promptEl, this.toasts, this.panel, help);
     parent.appendChild(this.root);
   }

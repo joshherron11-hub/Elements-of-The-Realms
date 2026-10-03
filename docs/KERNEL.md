@@ -35,7 +35,7 @@ supply *data* for these types; none of them add kernel code.
 | Search | `SearchSpot` | `SearchService` | `src/world/search.ts` |
 | Happening | `Happening` | `HappeningService` | `src/world/happenings.ts` (see `docs/ECONOMY.md`) |
 | Content pack | `ContentPack` | `parseContentPack`, `validatePack`, `applyContentPack`, `bootstrapWorld`, `joinRealm` | `src/world/content-pack.ts`, `src/seed.ts` |
-| Familiar | `Familiar`, `FamiliarCareState` | — (Phase 8) | `src/familiars/types.ts` |
+| Familiar | `FamiliarSpecies`, `Familiar`, `FamiliarCareState` | `FamiliarService` | `src/familiars/` (see `docs/FAMILIARS.md`) |
 
 ## How services compose
 

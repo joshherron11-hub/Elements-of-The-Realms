@@ -9,13 +9,14 @@ Intent kinds:
 - `travel`, `talk`
 - `buy`, `sell`, `gather`, `search`
 - `accept-contract`, `complete-task`
-- `purchase-property`, `familiar-status`
+- `purchase-property`
+- `familiar-status`, `acquire-familiar`, `feed-familiar`, `rest-familiar`, `bond-familiar`
 
 `perform` checks three things, then delegates to the owning service:
 1. the actor's current mode allows the intent;
 2. the server's rules allow its interaction category (talk → social, buy/sell → trade,
    accept/complete → contract, property → property, search → exploration,
-   familiar → care);
+   familiar intents → care);
 3. locality: you must be at the market, with the person, or where an offer is made.
 
 `sim.modes.available(actorId)` lists concrete intents possible right now, which the UI
@@ -29,8 +30,8 @@ required category is allowed and any `requires.pvp`/`requires.war` is satisfied.
 
 | Mode | Status | Intents |
 |---|---|---|
-| **Live** (default) | implemented | travel, talk, buy, sell, gather, search, accept/complete contracts, purchase property |
-| **Companion** | implemented | travel, talk, familiar-status (care intents arrive with Familiars) |
+| **Live** (default) | implemented | travel, talk, buy, sell, gather, search, accept/complete contracts, purchase property, acquire / feed Familiars, Familiar status |
+| **Companion** | implemented | travel, talk, familiar status / acquire / feed / rest / bond |
 | **Explore** | implemented | travel, gather, search |
 | **Invest** | implemented | travel, talk, investment contracts, purchase property |
 | **Social** | implemented | travel, talk |

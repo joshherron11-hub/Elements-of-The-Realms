@@ -4,6 +4,7 @@ import type { OwnerRef, ScopeRef } from '../core/refs';
 import type { Reward, TaskRequirement, ContractTerms } from '../contracts/types';
 import type { SearchSpot } from './search';
 import type { Happening } from './happenings';
+import type { FamiliarSpecies } from '../familiars/types';
 import { MAGIC_SCALE, TECHNOLOGY_SCALE, type RealmDefinition } from './realm';
 
 /**
@@ -49,9 +50,26 @@ export interface ContentPack {
   contracts: PackContract[];
   searchSpots: Omit<SearchSpot, 'foundBy'>[];
   happenings: Omit<Happening, 'seenBy'>[];
+  familiarSpecies: FamiliarSpecies[];
+  familiars: PackFamiliar[];
 }
 
-const LISTS = ['currencies', 'items', 'resources', 'locations', 'routes', 'actors', 'organizations', 'roles', 'markets', 'resourceNodes', 'properties', 'risks', 'contracts', 'searchSpots', 'happenings'] as const;
+export interface PackFamiliar {
+  id: string;
+  speciesId: string;
+  name: string;
+  variant: string;
+  temperament: string;
+  owner: OwnerRef;
+  locationId?: string;
+  bond?: number;
+  care?: { satiety?: number; energy?: number; mood?: number };
+  utilityTags: string[];
+  realmForms: Record<string, string>;
+  offerPrice?: number;
+}
+
+const LISTS = ['currencies', 'items', 'resources', 'locations', 'routes', 'actors', 'organizations', 'roles', 'markets', 'resourceNodes', 'properties', 'risks', 'contracts', 'searchSpots', 'happenings', 'familiarSpecies', 'familiars'] as const;
 
 const LOCATION_KINDS = ['region', 'settlement', 'district', 'building', 'room', 'wilderness', 'road'] as const;
 const ROUTE_KINDS = ['path', 'road', 'river', 'sea', 'portal'] as const;
@@ -306,6 +324,40 @@ export function parseContentPack(raw: unknown, source = 'pack'): Result<ContentP
         requiresFlag: v.optStr(x.requiresFlag, `${p}.requiresFlag`),
       };
     }),
+    familiarSpecies: list('familiarSpecies', (x, p) => ({
+      id: v.str(x.id, `${p}.id`),
+      name: v.str(x.name, `${p}.name`),
+      role: v.oneOf(x.role, ['companion', 'utility', 'collectible', 'symbol'] as const, `${p}.role`),
+      diet: v.arr(x.diet, `${p}.diet`, (t, tp) => v.str(t, tp)),
+      satietyDecayPerHour: v.num(x.satietyDecayPerHour, `${p}.satietyDecayPerHour`, 0, 100),
+      energyDecayPerHour: v.num(x.energyDecayPerHour, `${p}.energyDecayPerHour`, 0, 100),
+      followsOwner: v.bool(x.followsOwner, `${p}.followsOwner`),
+      utilityTags: x.utilityTags === undefined ? [] : v.arr(x.utilityTags, `${p}.utilityTags`, (t, tp) => v.str(t, tp)),
+      realmForms: Object.fromEntries(Object.entries(v.obj(x.realmForms ?? {}, `${p}.realmForms`)).map(([k, f]) => [k, v.str(f, `${p}.realmForms.${k}`)])),
+      figure: v.str(x.figure, `${p}.figure`),
+      description: v.optStr(x.description, `${p}.description`),
+    })),
+    familiars: list('familiars', (x, p) => {
+      const care = x.care === undefined ? undefined : v.obj(x.care, `${p}.care`);
+      return {
+        id: v.str(x.id, `${p}.id`),
+        speciesId: v.str(x.speciesId, `${p}.speciesId`),
+        name: v.str(x.name, `${p}.name`),
+        variant: v.str(x.variant, `${p}.variant`),
+        temperament: v.str(x.temperament, `${p}.temperament`),
+        owner: owner(v, x.owner, `${p}.owner`),
+        locationId: v.optStr(x.locationId, `${p}.locationId`),
+        bond: x.bond === undefined ? undefined : v.num(x.bond, `${p}.bond`, 0, 100),
+        care: care && {
+          satiety: care.satiety === undefined ? undefined : v.num(care.satiety, `${p}.care.satiety`, 0, 100),
+          energy: care.energy === undefined ? undefined : v.num(care.energy, `${p}.care.energy`, 0, 100),
+          mood: care.mood === undefined ? undefined : v.num(care.mood, `${p}.care.mood`, 0, 100),
+        },
+        utilityTags: x.utilityTags === undefined ? [] : v.arr(x.utilityTags, `${p}.utilityTags`, (t, tp) => v.str(t, tp)),
+        realmForms: Object.fromEntries(Object.entries(v.obj(x.realmForms ?? {}, `${p}.realmForms`)).map(([k, f]) => [k, v.str(f, `${p}.realmForms.${k}`)])),
+        offerPrice: x.offerPrice === undefined ? undefined : int(v, x.offerPrice, `${p}.offerPrice`, 0),
+      };
+    }),
   };
   return v.ok ? ok(pack) : err('INVALID_CONTENT', v.errors.join('\n'));
 }
@@ -381,6 +433,14 @@ export function validatePack(pack: ContentPack, realm: RealmDefinition): Result<
     }
   }
   for (const s of pack.searchSpots) need(has('locations', s.locationId) && has('items', s.itemId), `search spot ${s.id} has bad references`);
+  for (const f of pack.familiars) {
+    need(has('familiarSpecies', f.speciesId), `familiar ${f.id} has unknown species ${f.speciesId}`);
+    need(ownerOk(f.owner), `familiar ${f.id} has unknown owner`);
+    need(has('locations', f.locationId), `familiar ${f.id} is at unknown location`);
+  }
+  for (const sp of pack.familiarSpecies) {
+    need(sp.diet.every((tag) => pack.items.some((i) => i.tags.includes(tag))), `species ${sp.id} eats something no item provides`);
+  }
   for (const h of pack.happenings) {
     need(h.trigger.kind === 'talk' ? has('actors', h.trigger.actorId) : has('locations', h.trigger.locationId), `happening ${h.id} has an unknown trigger target`);
     for (const r of h.effects.relationships ?? []) need(has('actors', r.with), `happening ${h.id} involves unknown actor ${r.with}`);
