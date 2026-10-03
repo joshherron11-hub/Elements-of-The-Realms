@@ -123,6 +123,15 @@ export interface OrientationPolicy {
   minDistinctInteractions: number;
 }
 
+/**
+ * Orientation policy per server Canonical strictness. Every level currently
+ * uses the hard floor: thresholds above it are a Canon decision pending the
+ * project owner's approval.
+ */
+export function orientationPolicyFor(_strictness: 'RELAXED' | 'STANDARD' | 'STRICT'): OrientationPolicy {
+  return { minDistinctInteractions: ORIENTATION_MIN_INTERACTIONS_FLOOR };
+}
+
 export function validateOrientation(a: OrientationAssignment, policy: OrientationPolicy): Result<true> {
   const required = Math.max(ORIENTATION_MIN_INTERACTIONS_FLOOR, policy.minDistinctInteractions);
   const distinct = new Set(a.basis).size;

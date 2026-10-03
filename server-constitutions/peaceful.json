@@ -1,0 +1,27 @@
+{
+  "preset": "PEACEFUL",
+  "name": "Peaceful",
+  "description": "The default civilization-first server. No war, no PvP, property is safe; risk is economic and personal, never violent.",
+  "variables": {
+    "war": "OFF",
+    "pvp": "OFF",
+    "propertyRisk": "SAFE",
+    "economicRisk": "NORMAL",
+    "crime": "NPC_ONLY",
+    "familiarDanger": "LOW",
+    "technology": "FIXED",
+    "history": "PROGRESSIVE",
+    "politics": "LIGHT",
+    "persistence": "LONG_TERM",
+    "access": "PRIVATE",
+    "canonicalStrictness": "STANDARD",
+    "aiDensity": "MINIMAL"
+  },
+  "ownerOverridable": [
+    "access",
+    "economicRisk",
+    "politics",
+    "aiDensity",
+    "familiarDanger"
+  ]
+}

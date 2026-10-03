@@ -5,6 +5,7 @@ import type { ActorId, LocationId, PlatformDomain } from '../core/refs';
 import type { Rng } from '../core/rng';
 import type { ChronicleVisibility } from '../chronicle/types';
 import type { WorldState } from './world-state';
+import type { ResolvedRules } from './constitution';
 
 /**
  * Metadata every domain event carries. If `chronicle` is true, the Chronicle
@@ -34,6 +35,8 @@ export interface SimContext {
   readonly ids: IdFactory;
   readonly events: EventBus;
   readonly rng: Rng;
+  /** Effective Realm + server rules, when running under a constitution. */
+  readonly rules?: ResolvedRules;
   /** Current mode name, set by the mode layer. */
   mode?: string;
 }

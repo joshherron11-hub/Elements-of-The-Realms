@@ -1,0 +1,28 @@
+{
+  "preset": "EXPERIMENTAL",
+  "name": "Experimental",
+  "description": "A short-lived sandbox for trying rules and content. Seasonal persistence.",
+  "variables": {
+    "war": "OFF",
+    "pvp": "OFF",
+    "propertyRisk": "SAFE",
+    "economicRisk": "HIGH",
+    "crime": "NPC_ONLY",
+    "familiarDanger": "LOW",
+    "technology": "FIXED",
+    "history": "PROGRESSIVE",
+    "politics": "LIGHT",
+    "persistence": "SEASONAL",
+    "access": "INVITE",
+    "canonicalStrictness": "STANDARD",
+    "aiDensity": "STANDARD"
+  },
+  "ownerOverridable": [
+    "economicRisk",
+    "familiarDanger",
+    "politics",
+    "aiDensity",
+    "persistence",
+    "propertyRisk"
+  ]
+}

@@ -9,8 +9,8 @@ supply *data* for these types; none of them add kernel code.
 |---|---|---|---|
 | Actor | `Actor`, `ActorKind`, `ActorController` | `ActorService` | `src/entities/actor.ts`, `actors.ts` |
 | Identity | `Person`, `Identity`, `DeclaredClaim`, `IdentityLink` | `IdentityService` | `src/identity/types.ts`, `identity.ts` |
-| Realm | `RealmRef`, `RealmType` | — (Phase 4) | `src/world/types.ts` |
-| ServerConstitution | `ServerRef` | — (Phase 4) | `src/world/types.ts` |
+| Realm | `RealmDefinition`, `RealmConstitution`, `RealmType` | `parseRealmDefinition`, `planRealmTransfer` | `src/world/realm.ts`, `constitution.ts` (see `docs/REALMS.md`) |
+| ServerConstitution | `ServerConstitution`, `ServerDefinition`, `ResolvedRules` | `parseServerConstitution`, `resolveServerRules`, `allowsInteraction`, `pvpAllowed` | `src/world/server.ts`, `constitution.ts` |
 | Organization / Faction / Clan | `Organization`, `Faction`, `Clan`, `Membership` | `OrganizationService` | `src/entities/organization.ts`, `organizations.ts` |
 | Role / Permission / Authority | `Role`, `Permission`, `AuthorityGrant` | `AuthorityService` | `src/entities/authority.ts`, `organizations.ts` |
 | Ownership | `OwnershipRecord`, `AssetRef`, `OwnerRef` | `OwnershipService` | `src/economy/ownership.ts` |

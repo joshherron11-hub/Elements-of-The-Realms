@@ -7,3 +7,4 @@ export * from './rng';
 export * from './refs';
 export * from './provenance';
 export * from './math';
+export * from './schema';

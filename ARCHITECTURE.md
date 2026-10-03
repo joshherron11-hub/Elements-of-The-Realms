@@ -112,7 +112,10 @@ a `layer` (`declared`, `observed`, `derived`, `recognized`), and the layers neve
   war, PvP, property risk, crime, AI density, persistence, access, Canonical strictness.
 - **Mode** — an activity frame (Live, Companion, Explore, Invest, Social, Search…).
 
-All three are data validated by kernel parsers.
+All three are data validated by kernel parsers (`src/world/constitution.ts`), loaded
+by `src/config/content.ts`. A server's effective rules are preset + owner overrides,
+checked against the Realm Constitution and the release gate (`RELEASE.warAllowed =
+false` in PEACETIME). See `docs/REALMS.md`.
 
 **Your person travels further than your equipment**: identity and history cross Realm
 boundaries freely; items and wealth cross only as the Realm Constitutions allow.

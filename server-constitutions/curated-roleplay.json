@@ -1,0 +1,24 @@
+{
+  "preset": "CURATED_ROLEPLAY",
+  "name": "Curated Roleplay",
+  "description": "Invite-only, story-forward server with richer AI presence and strict Canonical standards.",
+  "variables": {
+    "war": "OFF",
+    "pvp": "CONSENT",
+    "propertyRisk": "SAFE",
+    "economicRisk": "NORMAL",
+    "crime": "NPC_ONLY",
+    "familiarDanger": "LOW",
+    "technology": "FIXED",
+    "history": "PROGRESSIVE",
+    "politics": "ACTIVE",
+    "persistence": "LONG_TERM",
+    "access": "INVITE",
+    "canonicalStrictness": "STRICT",
+    "aiDensity": "RICH"
+  },
+  "ownerOverridable": [
+    "aiDensity",
+    "politics"
+  ]
+}

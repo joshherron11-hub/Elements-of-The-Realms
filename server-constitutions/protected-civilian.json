@@ -1,0 +1,23 @@
+{
+  "preset": "PROTECTED_CIVILIAN",
+  "name": "Protected Civilian",
+  "description": "Conflict is confined to zones; civilians and their property remain protected.",
+  "variables": {
+    "war": "ZONED",
+    "pvp": "ZONED",
+    "propertyRisk": "SAFE",
+    "economicRisk": "NORMAL",
+    "crime": "NPC_ONLY",
+    "familiarDanger": "LOW",
+    "technology": "FIXED",
+    "history": "PROGRESSIVE",
+    "politics": "ACTIVE",
+    "persistence": "LONG_TERM",
+    "access": "PUBLIC",
+    "canonicalStrictness": "STANDARD",
+    "aiDensity": "MINIMAL"
+  },
+  "ownerOverridable": [
+    "aiDensity"
+  ]
+}

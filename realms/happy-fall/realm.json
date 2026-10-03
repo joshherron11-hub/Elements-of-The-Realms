@@ -1,0 +1,43 @@
+{
+  "$comment": "Happy Fall Realm Constitution. Data only. Art direction metadata is added with the Realm content.",
+  "id": "realm_happy-fall",
+  "name": "Happy Fall",
+  "type": "ANCHORED",
+  "description": "An autumn civilization of market towns, farms and old keeps. History moves forward; the world stays medieval and early-fantasy.",
+  "constitution": {
+    "technologyCeiling": { "technology": "medieval", "magic": "early-fantasy" },
+    "progression": { "history": true, "technology": false },
+    "imports": {
+      "categories": ["food", "trade-good", "tool", "clothing", "document", "familiar-care", "keepsake"],
+      "maxTechnology": "medieval",
+      "maxMagic": "early-fantasy",
+      "requireProvenance": true
+    },
+    "exports": {
+      "categories": ["food", "trade-good", "tool", "clothing", "document", "familiar-care", "keepsake"],
+      "maxTechnology": "medieval",
+      "maxMagic": "early-fantasy",
+      "requireProvenance": true
+    },
+    "economy": { "primaryCurrency": "currency_mark", "marketVolatility": "LOW", "startingPurse": 40 },
+    "crossRealm": {
+      "person": "carried",
+      "identity": "carried",
+      "history": "carried",
+      "reputation": "local",
+      "currency": "none",
+      "items": "within-ceiling",
+      "familiars": "form-shift"
+    },
+    "legalInteractions": ["social", "trade", "gift", "contract", "property", "crafting", "farming", "exploration", "care", "investment", "politics", "learning", "creation"],
+    "servers": {
+      "allowedPresets": ["PEACEFUL", "PRIVATE", "FAMILY_FRIENDS", "CURATED_ROLEPLAY", "EXPERIMENTAL", "FROZEN_ERA"],
+      "defaultPreset": "PEACEFUL"
+    },
+    "pvp": { "max": "CONSENT" },
+    "property": { "ownershipAllowed": true, "maxRisk": "SAFE" },
+    "ai": { "defaultDensity": "MINIMAL", "maxDensity": "CINEMATIC" },
+    "canonicalStrictness": "STANDARD",
+    "persistence": "PERMANENT"
+  }
+}

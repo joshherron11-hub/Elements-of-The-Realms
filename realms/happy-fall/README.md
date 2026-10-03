@@ -1,3 +1,7 @@
 # Happy Fall
 Type `ANCHORED` · technology ceiling: medieval / early-fantasy · art: Chromatic Mythic 2.5D.
-First location: Blackmere. Data files arrive in Phases 4–6.
+
+- `realm.json`: the Realm Constitution
+- `servers/`: concrete servers (default: `blackmere-peaceful.json`, PEACEFUL)
+
+First location: Blackmere. See `docs/REALMS.md`.

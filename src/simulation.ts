@@ -20,12 +20,15 @@ import { IdentityService } from './identity/identity';
 import type { SimContext } from './world/context';
 import { WorldService } from './world/world';
 import type { WorldState } from './world/world-state';
+import type { ResolvedRules } from './world/constitution';
 
 export interface SimulationOptions {
   state: WorldState;
   clock?: Clock;
   ids?: IdFactory;
   events?: EventBus;
+  /** Effective Realm + server rules. Optional so kernel tests can run rule-free. */
+  rules?: ResolvedRules;
 }
 
 /**
@@ -68,6 +71,7 @@ export class Simulation {
       ids: this.kernel.ids,
       events: this.kernel.events,
       rng: new Rng(opts.state.rng),
+      rules: opts.rules,
     };
     const ctx = this.ctx;
 

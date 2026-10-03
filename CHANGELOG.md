@@ -5,6 +5,24 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — Phase 4: Realms + server constitutions
+- Realm types ANCHORED, ASCENDANT, ECHO, FRACTURE, PLANETARY, INTERREALM
+  (`canon/realm-types.json`) and technology/magic scales (`canon/technology.json`).
+- Data-driven Realm Constitution: technology ceiling, progression, imports/exports,
+  economic rules, cross-Realm transfer, legal interaction categories, server
+  restrictions, PvP, property, AI density, Canonical strictness, persistence.
+- Ten server presets as JSON; PEACEFUL is the default and matches the specified
+  variables.
+- Dependency-free content validator reporting every error with its path.
+- `resolveServerRules` checks preset + overrides against Realm caps and the release
+  gate (war blocked in PEACETIME); `allowsInteraction`, `pvpAllowed`.
+- `planRealmTransfer`: person/identity/history always travel; equipment filtered.
+- Happy Fall Realm Constitution and default Blackmere PEACEFUL server; content
+  registry loaded at startup; HUD shows the resolved rules.
+- `orientationPolicyFor(strictness)` uses the hard floor pending Canon approval.
+- 22 new tests (141 total).
+
+
 ### Added — Phase 3: Canonical / identity rules
 - Record layers (`declared`, `observed`, `derived`, `recognized`) on identity and
   evidence records.

@@ -79,6 +79,7 @@ TypeScript (strict) · Vite · Vitest · Three.js
 ## Documentation
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — kernel design and layering
 - [`CANON_GUARDRAILS.md`](CANON_GUARDRAILS.md) — rules the platform must never break
+- [`docs/KERNEL.md`](docs/KERNEL.md) · [`docs/CANONICAL.md`](docs/CANONICAL.md) · [`docs/REALMS.md`](docs/REALMS.md)
 - [`ROADMAP.md`](ROADMAP.md) — build phases
 - [`CHANGELOG.md`](CHANGELOG.md) — what changed
 - [`CLAUDE.md`](CLAUDE.md) — working agreement for AI contributors

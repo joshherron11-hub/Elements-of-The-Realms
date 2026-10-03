@@ -19,8 +19,10 @@ Raw evidence records with verification, reserved Canonical pipeline interfaces a
 validators, Orientation/Recognition guards, Metastrate/Grandmeta raw indexes,
 separated identity contexts with explicit links.
 
-## Phase 4 — Realms + server constitutions ⬜
-Realm types and Realm Constitution; server constitution presets (default `PEACEFUL`).
+## Phase 4 — Realms + server constitutions ✅
+Six Realm types; data-driven Realm Constitution; ten server presets (default
+`PEACEFUL`); validated resolution against Realm caps and the PEACETIME release gate;
+cross-Realm transfer planning; Happy Fall constitution and default Blackmere server.
 
 ## Phase 5 — Modes + Happy Fall ⬜
 Mode definitions; implement Live, Companion, Explore, Invest, Social, Search.
