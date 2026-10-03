@@ -44,8 +44,10 @@ Species data, Familiar service, care loop (feed/rest/bond/status), acquisition,
 following, bond milestones in the Chronicle, three examples (hound, moth, raven),
 companion UI.
 
-## Phase 9 — Chronicle + persistence ⬜
-Personal Chronicle; Realm/Organization Chronicle interfaces; save/load.
+## Phase 9 — Chronicle + persistence ✅
+Complete Personal Chronicle (queries, visibility, summary); Realm/Organization
+Chronicle interfaces; versioned, checksummed saves with migrations; autosave,
+resume with capped catch-up, save/load/new controls.
 
 ## Phase 10 — AI abstraction + Play/Learn/Work/Create compatibility ⬜
 

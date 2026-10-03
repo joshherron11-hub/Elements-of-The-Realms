@@ -115,14 +115,14 @@ export class ContractService {
     c.holder = holder;
     c.acceptedAt = this.ctx.clock.now();
     for (const t of this.tasksOf(id)) t.assignee = holder;
-    emit(this.ctx, 'contract.accepted', { contractId: id, kind: c.kind, title: c.title }, {
+    emit(this.ctx, stake ? 'investment.made' : 'contract.accepted', { contractId: id, kind: c.kind, title: c.title, stake: stake?.amount ?? 0 }, {
       sourceSystem: 'contracts',
       actor: holder.kind === 'actor' ? holder.id : undefined,
       participants: c.issuer.kind === 'actor' ? [c.issuer.id] : [],
       location: c.locationId,
       domain: c.domain,
       outcome: 'accepted',
-      summary: `Accepted contract: ${c.title}`,
+      summary: stake ? `Invested ${stake.amount} in ${c.title}` : `Accepted contract: ${c.title}`,
       chronicle: true,
     });
     return ok(c);
@@ -226,9 +226,24 @@ export class ContractService {
       }
     }
     for (const r of c.terms.rewards) this.applyReward(r, c.issuer, holder, id, 1);
+    if (stake && stakeReturned !== undefined && stakeReturned !== stake.amount) {
+      const lost = stakeReturned < stake.amount;
+      const diff = Math.abs(stake.amount - stakeReturned);
+      emit(this.ctx, lost ? 'economy.loss' : 'economy.gain', { contractId: id, amount: diff, currencyId: stake.currencyId }, {
+        sourceSystem: 'contracts',
+        actor: holder.kind === 'actor' ? holder.id : undefined,
+        location: c.locationId,
+        domain: c.domain,
+        outcome: outcome,
+        summary: lost ? `Lost ${diff} on ${c.title}` : `Made ${diff} on ${c.title}`,
+        chronicle: true,
+      });
+    }
     const summary = stake
       ? `Settled ${c.title}: staked ${stake.amount}, returned ${stakeReturned} (${outcome})`
-      : `Completed contract: ${c.title}`;
+      : c.issuer.kind === 'actor'
+        ? `Helped ${this.ownerName(c.issuer)}: ${c.title}`
+        : `Completed contract: ${c.title}`;
     return ok({ ...this.close(c, 'completed', outcome, summary), stakeReturned });
   }
 

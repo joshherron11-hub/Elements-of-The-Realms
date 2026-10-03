@@ -71,7 +71,21 @@ export class Game {
     this.player = createFigure(this.materials, styleFor(this.materials, [], true));
   }
 
-  start(): void {
+  /** Optional hooks the app wires up (saving lives outside the game loop). */
+  onSave?: () => string | undefined;
+  onLoad?: () => void;
+  onNewGame?: () => void;
+
+  /** What the presentation layer needs to put the player back where they stood. */
+  snapshot(): { sceneId: string; position: [number, number] } {
+    return { sceneId: this.layout.id, position: [this.pos[0], this.pos[1]] };
+  }
+
+  toast(text: string, bad = false): void {
+    this.hud.toast(text, bad);
+  }
+
+  start(resume?: { sceneId?: string; position?: [number, number] }): void {
     // Read-only observation of the simulation: surface notable moments.
     this.sim.kernel.events.on('happening.occurred', (e) => this.hud.toast(`✦ ${(e as { meta?: { summary?: string } }).meta?.summary ?? 'Something happened.'}`));
     this.sim.kernel.events.on('market.price-changed', (e) => {
@@ -81,7 +95,10 @@ export class Game {
     const actor = this.sim.state.actors[this.playerId]!;
     const scene = this.sceneFor(actor.locationId) ?? [...this.layouts.keys()][0]!;
     const layout = this.layouts.get(scene)!;
-    this.enterScene(scene, layout.spawns[actor.locationId ?? ''] ?? layout.playerStart);
+    // Resume where the player stood, if that spot still lies in their current location.
+    const saved = resume?.sceneId === scene && resume.position ? resume.position : undefined;
+    const ok = saved && zoneAt(layout, saved) === actor.locationId;
+    this.enterScene(scene, ok ? saved : layout.spawns[actor.locationId ?? ''] ?? layout.playerStart);
     this.refreshModes();
     this.stage.start((dt) => this.frame(dt));
   }
@@ -284,6 +301,13 @@ export class Game {
     if (key === 'i') return this.hud.openPanel === 'inventory' ? this.hud.close() : this.showInventory();
     if (key === 'j') return this.hud.openPanel === 'journal' ? this.hud.close() : this.showJournal();
     if (key === 'c') return this.hud.openPanel === 'companions' ? this.hud.close() : this.showCompanions();
+    if (key === 'k') {
+      const msg = this.onSave?.();
+      if (msg) this.hud.toast(msg);
+      return;
+    }
+    if (key === 'l') return this.onLoad?.();
+    if (key === 'n') return this.onNewGame?.();
     const n = Number(key);
     if (n >= 1 && n <= 9) {
       const mode = this.implementedModes()[n - 1];

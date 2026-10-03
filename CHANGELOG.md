@@ -5,6 +5,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — Phase 9: Chronicle + persistence
+- Personal Chronicle: query by event family, location, time; ordering, paging,
+  viewer visibility (`canView`), `latest`, `summary`. Realm/Organization Chronicles
+  share the query interface.
+- New Chronicle entries: `investment.made`, `economy.loss` / `economy.gain`;
+  completed NPC contracts read "Helped <name>: <title>".
+- `src/persistence`: storage adapters, `SaveService` (versioned format, FNV-1a
+  checksum, list/export/import/delete), ordered world migrations and normalisation.
+- `src/ui/session.ts`: resume the saved world or found a new one; capped catch-up of
+  time away; presentation snapshot (section + position).
+- Browser: autosave (30 s, tab hidden, page close), K save, L load, N new game,
+  welcome-back message; resumes at the saved spot.
+- `docs/CHRONICLE_AND_SAVES.md`. 19 new tests (216 total).
+
+
 ### Added — Phase 8: Familiars
 - `FamiliarSpecies` data; `FamiliarService` (create, acquire, feed, rest, bond,
   status, offers, time-based care decay, follow-owner, per-Familiar Chronicle

@@ -1,33 +1,78 @@
-import { asId } from './core/ids';
 import { BUILD } from './config/build';
 import { content } from './config/content';
+import { SaveService } from './persistence/saves';
+import { MemoryStorage, WebStorage, type StorageAdapter } from './persistence/storage';
 import { paletteFrom } from './render/stage';
-import { bootstrapWorld, joinRealm } from './seed';
 import { Game } from './ui/game';
 import { loadSceneLayouts } from './ui/scenes';
+import { SAVE_SLOT, openSession, saveSession } from './ui/session';
 
 /**
- * Browser entry point: resolve the server's rules, build the world from
- * content, bring the player in, and hand over to the game loop.
+ * Browser entry point: continue the saved world if there is one, otherwise
+ * found a new one; then hand over to the game loop. Saves automatically.
  */
+const AUTOSAVE_MS = 30_000;
+
 const app = document.getElementById('app');
 if (!app) throw new Error('index.html is missing #app');
 
-const rules = content.rulesFor(BUILD.defaultServer);
-const booted = bootstrapWorld({
-  rules,
-  pack: content.pack(rules.realm.id),
-  modes: content.modes,
-  seed: 20261003,
+function browserStorage(): StorageAdapter {
+  try {
+    const probe = '__eotr_probe__';
+    window.localStorage.setItem(probe, '1');
+    window.localStorage.removeItem(probe);
+    return new WebStorage(window.localStorage);
+  } catch {
+    return new MemoryStorage(); // private mode etc. — play still works, saving lasts for the tab
+  }
+}
+
+const saves = new SaveService(browserStorage(), () => Date.now());
+const session = openSession({
+  content,
+  saves,
+  serverId: BUILD.defaultServer,
+  startLocation: 'location_blackmere-square',
+  newWorldSeed: Math.floor(Math.random() * 2 ** 31),
+  displayName: 'Traveller',
 });
-if (!booted.ok) throw new Error(booted.error.message);
-const sim = booted.value;
+const { sim, playerId } = session;
+const rules = sim.ctx.rules!;
 
-const joined = joinRealm(sim, { displayName: 'Traveller', startAt: asId('location_blackmere-square') });
-if (!joined.ok) throw new Error(joined.error.message);
+const game = new Game(sim, playerId, loadSceneLayouts(), app, paletteFrom(rules.realm.presentation));
 
-const game = new Game(sim, joined.value.actor.id, loadSceneLayouts(), app, paletteFrom(rules.realm.presentation));
-game.start();
+let leaving = false; // set when the page reloads on purpose, so unload does not overwrite the save
+const save = (quiet = false): string | undefined => {
+  if (leaving) return undefined;
+  const r = saveSession(saves, session, game.snapshot());
+  if (!r.ok) return `Could not save: ${r.error.message}`;
+  return quiet ? undefined : `Saved · ${r.value.chronicleEntries} Chronicle entries`;
+};
+game.onSave = () => save();
+game.onLoad = () => {
+  if (!saves.has(SAVE_SLOT)) return game.toast('No save to load yet.', true);
+  leaving = true;
+  window.location.reload(); // the page reopens from the last save
+};
+game.onNewGame = () => {
+  if (!window.confirm('Start a new life in Happy Fall? Your saved world in this browser will be erased.')) return;
+  leaving = true;
+  saves.delete(SAVE_SLOT);
+  window.location.reload();
+};
+
+game.start(session.presentation);
+if (session.resumed) {
+  const mins = Math.round((session.awayMs ?? 0) / 60000);
+  game.toast(`Welcome back to ${sim.state.realm.name}.${mins > 0 ? ` You were away ${mins} minute${mins === 1 ? '' : 's'}.` : ''}`);
+} else {
+  if (session.loadError) game.toast(`Your old save could not be loaded (${session.loadError}). Starting fresh.`, true);
+  game.toast(`You arrive in Blackmere. Talk to people (E), and press K to save.`);
+}
+
+setInterval(() => save(true), AUTOSAVE_MS);
+window.addEventListener('beforeunload', () => save(true));
+document.addEventListener('visibilitychange', () => document.visibilityState === 'hidden' && save(true));
 
 // Debug handle for the browser console and automated smoke tests. Presentation only.
-(window as unknown as { __eotr: unknown }).__eotr = { sim, game, playerId: joined.value.actor.id };
+(window as unknown as { __eotr: unknown }).__eotr = { sim, game, playerId, saves, save };

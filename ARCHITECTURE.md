@@ -126,8 +126,10 @@ separate scenes connected by routes; the Chronicle and world state are one conti
 record.
 
 ## 9. Persistence
-Simulation state is plain data. A persistence adapter (browser `localStorage` first,
-server-side later) serialises a versioned snapshot. Schema versions allow migration.
+Simulation state is plain data. `SaveService` writes a versioned, checksummed snapshot
+through a `StorageAdapter` (browser `localStorage` now, server-side later). Ordered
+schema migrations upgrade old worlds. A saved world is self-contained and is never
+re-seeded from content. See `docs/CHRONICLE_AND_SAVES.md`.
 
 ## 10. AI
 `src/ai` exposes a provider-agnostic service with routing, model selection, cost

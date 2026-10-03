@@ -19,13 +19,42 @@ export interface RecordSpec {
   corrects?: ChronicleEntry['id'];
 }
 
-/** Read access to one chronicle scope. Implemented fully for personal scope. */
-export interface ChronicleView {
-  readonly scope: ChronicleScope;
-  entries(): ChronicleEntry[];
+export interface ChronicleQuery {
+  /** Event types or prefixes ending in '.' (e.g. 'contract.' or 'familiar.acquired'). */
+  events?: string[];
+  location?: string;
+  since?: number;
+  until?: number;
+  /** Include entries where the subject only took part (default true). */
+  includeParticipation?: boolean;
+  /** Only entries this actor is allowed to see (defaults to no filtering for the subject). */
+  viewer?: ActorId;
+  order?: 'oldest-first' | 'newest-first';
+  offset?: number;
+  limit?: number;
 }
 
-/** Interfaces reserved for later phases; queries already work via forScope(). */
+/** Read access to one chronicle scope. */
+export interface ChronicleView {
+  readonly scope: ChronicleScope;
+  entries(query?: ChronicleQuery): ChronicleEntry[];
+}
+
+/** Counts by event family, for summaries ("3 contracts, 1 Familiar, 5 places"). */
+export type ChronicleSummary = Record<string, number>;
+
+/** A person's own history in this Realm: everything they did or took part in. */
+export interface PersonalChronicle extends ChronicleView {
+  readonly scope: { kind: 'personal'; id: ActorId };
+  summary(): ChronicleSummary;
+  /** Most recent first. */
+  latest(n: number): ChronicleEntry[];
+}
+
+/**
+ * Realm and Organization Chronicles share the query interface. Their
+ * collective aggregation (Grandmeta) and prose layers come later.
+ */
 export interface RealmChronicle extends ChronicleView {
   readonly scope: { kind: 'realm'; id: RealmId };
 }
@@ -120,24 +149,66 @@ export class ChronicleService {
     return this.record({ ...spec, corrects: originalId });
   }
 
-  forScope(scope: ChronicleScope): ChronicleEntry[] {
-    return this.ctx.state.chronicle.filter((e) => e.scopes.some((s) => s.kind === scope.kind && s.id === scope.id));
+  forScope(scope: ChronicleScope, query: ChronicleQuery = {}): ChronicleEntry[] {
+    let out = this.ctx.state.chronicle.filter((e) => e.scopes.some((s) => s.kind === scope.kind && s.id === scope.id));
+    if (scope.kind === 'personal' && query.includeParticipation === false) out = out.filter((e) => e.actor === scope.id);
+    if (query.events?.length) out = out.filter((e) => query.events!.some((ev) => (ev.endsWith('.') ? e.event.startsWith(ev) : e.event === ev)));
+    if (query.location) out = out.filter((e) => e.location === query.location);
+    if (query.since !== undefined) out = out.filter((e) => e.timestamp >= query.since!);
+    if (query.until !== undefined) out = out.filter((e) => e.timestamp <= query.until!);
+    if (query.viewer) out = out.filter((e) => this.canView(query.viewer!, e));
+    if (query.order === 'newest-first') out = [...out].reverse();
+    const start = query.offset ?? 0;
+    return query.limit === undefined ? out.slice(start) : out.slice(start, start + query.limit);
   }
 
-  /** An actor's personal Chronicle: everything they did or took part in. */
-  personal(actorId: ActorId): ChronicleView {
+  /**
+   * Who may read an entry:
+   *  private → the actor only · shared → actor and participants ·
+   *  organization → members of the organizations it is scoped to ·
+   *  realm / public → anyone.
+   */
+  canView(viewer: ActorId, e: ChronicleEntry): boolean {
+    if (e.actor === viewer) return true;
+    switch (e.visibility) {
+      case 'public':
+      case 'realm':
+        return true;
+      case 'shared':
+        return e.participants.includes(viewer);
+      case 'organization':
+        return e.scopes.some((s) => s.kind === 'organization' && viewer in (this.ctx.state.organizations[s.id]?.members ?? {}));
+      case 'private':
+        return false;
+    }
+  }
+
+  /** An actor's Personal Chronicle: everything they did or took part in. */
+  personal(actorId: ActorId): PersonalChronicle {
     const scope = { kind: 'personal', id: actorId } as const;
-    return { scope, entries: () => this.forScope(scope) };
+    return {
+      scope,
+      entries: (q) => this.forScope(scope, q),
+      latest: (n) => this.forScope(scope, { order: 'newest-first', limit: n }),
+      summary: () => {
+        const out: ChronicleSummary = {};
+        for (const e of this.forScope(scope)) {
+          const family = e.event.split('.')[0]!;
+          out[family] = (out[family] ?? 0) + 1;
+        }
+        return out;
+      },
+    };
   }
 
   realm(): RealmChronicle {
     const scope = { kind: 'realm', id: this.ctx.state.realm.id } as const;
-    return { scope, entries: () => this.forScope(scope) };
+    return { scope, entries: (q) => this.forScope(scope, q) };
   }
 
   organization(id: OrganizationId): OrganizationChronicle {
     const scope = { kind: 'organization', id } as const;
-    return { scope, entries: () => this.forScope(scope) };
+    return { scope, entries: (q) => this.forScope(scope, q) };
   }
 }
 

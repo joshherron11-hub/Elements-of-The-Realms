@@ -1,2 +1,3 @@
-// persistence module — implemented in later phases. See ROADMAP.md.
-export {};
+export * from './storage';
+export * from './migrations';
+export * from './saves';

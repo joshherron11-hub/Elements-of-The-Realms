@@ -29,7 +29,8 @@ supply *data* for these types; none of them add kernel code.
 | Interaction / Evidence | `Interaction`, `Evidence` (raw only) | `InteractionService` | `src/identity/evidence.ts` |
 | Canonical (reserved) | `DerivedRecord`, `Recognition`, `OrientationAssignment`, `Metastrate`, `Grandmeta` | validators only | `src/identity/canonical/` (see `docs/CANONICAL.md`) |
 | Event | `KernelEvent`, `DomainEvent`, `EventMeta` | `EventBus`, `emit()` | `src/core/events.ts`, `src/world/context.ts` |
-| Chronicle | `ChronicleEntry`, `ChronicleScope` | `ChronicleService` | `src/chronicle/` |
+| Chronicle | `ChronicleEntry`, `ChronicleScope`, `ChronicleQuery`, `PersonalChronicle` | `ChronicleService` | `src/chronicle/` (see `docs/CHRONICLE_AND_SAVES.md`) |
+| Persistence | `SaveFile`, `SaveMeta`, `StorageAdapter` | `SaveService`, `migrateWorld` | `src/persistence/` |
 | WorldState | `WorldState` | `createWorldState()` | `src/world/world-state.ts` |
 | Mode / Intent | `ModeDefinition`, `Intent` | `ModeService` | `src/modes/` (see `docs/MODES.md`) |
 | Search | `SearchSpot` | `SearchService` | `src/world/search.ts` |
