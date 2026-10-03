@@ -54,7 +54,7 @@ export class InteractionService {
       realmId: this.ctx.state.realm.id,
       serverId: this.ctx.state.server.id,
       domain: spec.domain ?? 'PLAY',
-      mode: this.ctx.mode,
+      mode: this.ctx.state.activeModes[spec.actor] ?? this.ctx.mode,
     };
     const interaction: Interaction = {
       id: this.ctx.ids.next('interaction'),
@@ -127,7 +127,7 @@ export class InteractionService {
   attach(): void {
     this.unsubscribe ??= this.ctx.events.on<DomainEvent>('*', (e) => {
       const m = e.meta;
-      if (!m?.chronicle || !m.actor) return;
+      if (!(m?.chronicle || m?.evidence) || !m.actor) return;
       this.record({
         actor: m.actor,
         actionType: e.type,

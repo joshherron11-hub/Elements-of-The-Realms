@@ -16,6 +16,8 @@ export interface ItemDefinition {
   stackable: boolean;
   /** Technology tier, checked against Realm constitutions for imports. */
   techTier?: string;
+  /** Magic tier, checked against Realm constitutions. */
+  magicTier?: string;
   originRealmId?: RealmId;
   description?: string;
 }

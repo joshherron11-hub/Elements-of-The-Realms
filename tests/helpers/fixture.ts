@@ -1,6 +1,12 @@
 import { ManualClock, SequentialIdFactory, asId, provenance, type ActorId, type CurrencyId, type ItemId, type LocationId, type MarketId, type OwnerRef, type RealmId, type RiskProfileId, type ServerId } from '../../src/core';
 import { Simulation } from '../../src/simulation';
 import { createWorldState } from '../../src/world';
+import { parseModes } from '../../src/modes';
+import modesJson from '../../modes/modes.json';
+
+const parsedModes = parseModes(modesJson);
+if (!parsedModes.ok) throw new Error(parsedModes.error.message);
+export const MODES = parsedModes.value;
 
 /**
  * A tiny generic test world — deliberately NOT Happy Fall, to prove the
@@ -36,7 +42,7 @@ export function makeSim(seed = 7) {
     seed,
     now: clock.now(),
   });
-  const sim = new Simulation({ state, clock, ids: new SequentialIdFactory() }).start();
+  const sim = new Simulation({ state, clock, ids: new SequentialIdFactory(), modes: MODES }).start();
   const p = provenance('authored', 'fixture', clock.now());
 
   state.currencies[ID.coin] = { id: ID.coin, name: 'Coin', symbol: 'c', minorPerMajor: 1, realmId: ID.realm };

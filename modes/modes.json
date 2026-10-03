@@ -1,0 +1,242 @@
+{
+  "$comment": "Mode definitions. Data only. \"implemented\" modes have working intents; \"planned\" modes are defined but cannot be entered.",
+  "modes": [
+    {
+      "key": "DUEL",
+      "name": "Duel",
+      "summary": "Consensual one-on-one contests between players.",
+      "status": "planned",
+      "domain": "PLAY",
+      "categories": [
+        "duel"
+      ],
+      "intents": [],
+      "requires": {
+        "pvp": true
+      }
+    },
+    {
+      "key": "WAR",
+      "name": "War",
+      "summary": "Organized conflict between factions. Not part of the PEACETIME release.",
+      "status": "planned",
+      "domain": "PLAY",
+      "categories": [
+        "war"
+      ],
+      "intents": [],
+      "requires": {
+        "war": true
+      }
+    },
+    {
+      "key": "HUNT",
+      "name": "Hunt",
+      "summary": "Tracking and pursuing creatures in the wild. Definition provisional.",
+      "status": "planned",
+      "domain": "PLAY",
+      "categories": [
+        "exploration"
+      ],
+      "intents": []
+    },
+    {
+      "key": "SEARCH",
+      "name": "Search",
+      "summary": "Look for hidden things: lost items, clues, forgotten places.",
+      "status": "implemented",
+      "domain": "PLAY",
+      "categories": [
+        "exploration"
+      ],
+      "intents": [
+        "travel",
+        "search",
+        "talk",
+        "accept-contract",
+        "complete-task"
+      ],
+      "contractKinds": [
+        "search"
+      ]
+    },
+    {
+      "key": "HEIST",
+      "name": "Heist",
+      "summary": "Planned capers against guarded targets. Requires a server that allows player crime.",
+      "status": "planned",
+      "domain": "PLAY",
+      "categories": [
+        "crime"
+      ],
+      "intents": []
+    },
+    {
+      "key": "EMPIRE",
+      "name": "Empire",
+      "summary": "Long-horizon stewardship of holdings, organizations and territory.",
+      "status": "planned",
+      "domain": "PLAY",
+      "categories": [
+        "politics",
+        "property",
+        "trade"
+      ],
+      "intents": []
+    },
+    {
+      "key": "DRIVE",
+      "name": "Drive",
+      "summary": "Travel and logistics as play. Definition pending from the project owner.",
+      "status": "planned",
+      "domain": "PLAY",
+      "categories": [
+        "exploration"
+      ],
+      "intents": []
+    },
+    {
+      "key": "LIVE",
+      "name": "Live",
+      "summary": "Everyday life in a Realm: move, talk, trade, work and keep a home.",
+      "status": "implemented",
+      "domain": "PLAY",
+      "categories": [
+        "social",
+        "trade"
+      ],
+      "intents": [
+        "travel",
+        "talk",
+        "buy",
+        "sell",
+        "gather",
+        "accept-contract",
+        "complete-task",
+        "purchase-property",
+        "search"
+      ]
+    },
+    {
+      "key": "VEIL",
+      "name": "Veil",
+      "summary": "Definition pending from the project owner.",
+      "status": "planned",
+      "domain": "PLAY",
+      "categories": [
+        "social"
+      ],
+      "intents": []
+    },
+    {
+      "key": "FORGE",
+      "name": "Forge",
+      "summary": "Make things: crafting now, world and content creation later.",
+      "status": "planned",
+      "domain": "CREATE",
+      "categories": [
+        "crafting",
+        "creation"
+      ],
+      "intents": []
+    },
+    {
+      "key": "TOURNAMENT",
+      "name": "Tournament",
+      "summary": "Structured competitions with brackets and rules.",
+      "status": "planned",
+      "domain": "PLAY",
+      "categories": [
+        "duel"
+      ],
+      "intents": [],
+      "requires": {
+        "pvp": true
+      }
+    },
+    {
+      "key": "SPECTATE",
+      "name": "Spectate",
+      "summary": "Watch events and other players without taking part.",
+      "status": "planned",
+      "domain": "PLAY",
+      "categories": [],
+      "intents": []
+    },
+    {
+      "key": "COMPANION",
+      "name": "Companion",
+      "summary": "Time with your Familiars: care, bond and wander together.",
+      "status": "implemented",
+      "domain": "PLAY",
+      "categories": [
+        "care"
+      ],
+      "intents": [
+        "travel",
+        "talk",
+        "familiar-status"
+      ]
+    },
+    {
+      "key": "EXPLORE",
+      "name": "Explore",
+      "summary": "Follow roads and paths outward and discover new places.",
+      "status": "implemented",
+      "domain": "PLAY",
+      "categories": [
+        "exploration"
+      ],
+      "intents": [
+        "travel",
+        "gather",
+        "search"
+      ]
+    },
+    {
+      "key": "INVEST",
+      "name": "Invest",
+      "summary": "Put coin to work: ventures, shares and property.",
+      "status": "implemented",
+      "domain": "PLAY",
+      "categories": [
+        "investment"
+      ],
+      "intents": [
+        "travel",
+        "talk",
+        "accept-contract",
+        "complete-task",
+        "purchase-property"
+      ],
+      "contractKinds": [
+        "investment"
+      ]
+    },
+    {
+      "key": "SCHOLAR",
+      "name": "Scholar",
+      "summary": "Study, practice and teach. Foundation for the Learn domain.",
+      "status": "planned",
+      "domain": "LEARN",
+      "categories": [
+        "learning"
+      ],
+      "intents": []
+    },
+    {
+      "key": "SOCIAL",
+      "name": "Social",
+      "summary": "Meet people, keep relationships and take part in community life.",
+      "status": "implemented",
+      "domain": "PLAY",
+      "categories": [
+        "social"
+      ],
+      "intents": [
+        "travel",
+        "talk"
+      ]
+    }
+  ]
+}

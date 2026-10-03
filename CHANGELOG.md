@@ -5,6 +5,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — Phase 5: Modes + Happy Fall
+- `modes/modes.json`: 17 modes. Live, Companion, Explore, Invest, Social and Search
+  are implemented; the rest are defined and cannot be entered.
+- Intent layer (`src/modes`): plain-data player intents executed by `ModeService`
+  after checking the mode, server rules and locality; `available()` lists current
+  options. Per-actor active mode stamped on Chronicle/evidence.
+- `SearchService` and contract-gated search spots.
+- Content packs: parser, merger, cross-reference/ceiling validator;
+  `bootstrapWorld` applies packs through services; `joinRealm` onboards a person.
+- Happy Fall: Chromatic Mythic 2.5D art direction metadata (palette, rendering
+  policy, IP note) used by the renderer; economy pack (Mark currency, 13 original
+  items, market/shipment/venture risk profiles).
+- Talking records raw evidence (`meta.evidence`) without a Chronicle entry.
+- 17 new tests (158 total).
+
+
 ### Added — Phase 4: Realms + server constitutions
 - Realm types ANCHORED, ASCENDANT, ECHO, FRACTURE, PLANETARY, INTERREALM
   (`canon/realm-types.json`) and technology/magic scales (`canon/technology.json`).

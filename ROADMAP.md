@@ -24,9 +24,10 @@ Six Realm types; data-driven Realm Constitution; ten server presets (default
 `PEACEFUL`); validated resolution against Realm caps and the PEACETIME release gate;
 cross-Realm transfer planning; Happy Fall constitution and default Blackmere server.
 
-## Phase 5 — Modes + Happy Fall ⬜
-Mode definitions; implement Live, Companion, Explore, Invest, Social, Search.
-Happy Fall Realm data with Chromatic Mythic 2.5D art metadata.
+## Phase 5 — Modes + Happy Fall ✅
+17 modes as data; Live, Companion, Explore, Invest, Social and Search implemented over
+a data-only intent layer; search spots; content-pack format, validation and
+bootstrap; Happy Fall art direction (Chromatic Mythic 2.5D) and economy pack.
 
 ## Phase 6 — Blackmere ⬜
 Town Square, Tavern, Market, residences, outbound road, farm edge, woodland edge,

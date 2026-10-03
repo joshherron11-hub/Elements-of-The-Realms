@@ -1,7 +1,7 @@
 import { Kernel } from './core';
 import { BUILD } from './config/build';
 import { content } from './config/content';
-import { createStage } from './render/stage';
+import { createStage, paletteFrom } from './render/stage';
 
 /**
  * Browser entry point. Wires the simulation kernel to the presentation stage.
@@ -21,5 +21,5 @@ hud.innerHTML = `<h1>ELEMENTS OF THE REALMS</h1>
 <p>War ${v.war} · PvP ${v.pvp} · Property ${v.propertyRisk} · Crime ${v.crime} · Technology ${v.technology} · AI ${v.aiDensity}</p>
 <p>Blackmere is under construction.</p>`;
 
-const stage = createStage(app);
+const stage = createStage(app, paletteFrom(rules.realm.presentation));
 stage.start((dt) => kernel.tick(dt));

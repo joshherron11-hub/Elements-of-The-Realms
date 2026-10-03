@@ -1,0 +1,195 @@
+{
+  "id": "happy-fall-economy",
+  "realmId": "realm_happy-fall",
+  "currencies": [
+    {
+      "id": "currency_mark",
+      "name": "Mark",
+      "symbol": "mk",
+      "minorPerMajor": 1
+    }
+  ],
+  "items": [
+    {
+      "id": "item_hearth-loaf",
+      "name": "Hearth Loaf",
+      "category": "food",
+      "baseValue": 3,
+      "techTier": "medieval",
+      "description": "A round loaf baked in a stone oven."
+    },
+    {
+      "id": "item_pressed-cider",
+      "name": "Pressed Cider",
+      "category": "food",
+      "baseValue": 4,
+      "techTier": "medieval"
+    },
+    {
+      "id": "item_russet-apples",
+      "name": "Basket of Russet Apples",
+      "category": "food",
+      "baseValue": 5,
+      "techTier": "medieval"
+    },
+    {
+      "id": "item_wheat-sheaf",
+      "name": "Wheat Sheaf",
+      "category": "trade-good",
+      "baseValue": 2,
+      "techTier": "medieval"
+    },
+    {
+      "id": "item_split-timber",
+      "name": "Split Timber",
+      "category": "trade-good",
+      "baseValue": 3,
+      "techTier": "medieval"
+    },
+    {
+      "id": "item_ember-wool",
+      "name": "Ember-dyed Wool",
+      "category": "clothing",
+      "baseValue": 12,
+      "techTier": "medieval"
+    },
+    {
+      "id": "item_lantern-oil",
+      "name": "Lantern Oil",
+      "category": "tool",
+      "baseValue": 6,
+      "techTier": "medieval"
+    },
+    {
+      "id": "item_sealed-letter",
+      "name": "Sealed Letter",
+      "category": "document",
+      "baseValue": 1,
+      "techTier": "medieval"
+    },
+    {
+      "id": "item_courier-parcel",
+      "name": "Courier's Parcel",
+      "category": "trade-good",
+      "baseValue": 8,
+      "techTier": "medieval"
+    },
+    {
+      "id": "item_hound-biscuits",
+      "name": "Hound Biscuits",
+      "category": "familiar-care",
+      "baseValue": 2,
+      "techTier": "medieval",
+      "tags": [
+        "familiar-food"
+      ]
+    },
+    {
+      "id": "item_seed-cake",
+      "name": "Seed Cake",
+      "category": "familiar-care",
+      "baseValue": 2,
+      "techTier": "medieval",
+      "tags": [
+        "familiar-food"
+      ]
+    },
+    {
+      "id": "item_grooming-brush",
+      "name": "Grooming Brush",
+      "category": "familiar-care",
+      "baseValue": 7,
+      "techTier": "medieval",
+      "tags": [
+        "familiar-care-tool"
+      ]
+    },
+    {
+      "id": "item_brass-locket",
+      "name": "Old Brass Locket",
+      "category": "keepsake",
+      "baseValue": 15,
+      "techTier": "medieval",
+      "magicTier": "early-fantasy",
+      "stackable": false,
+      "description": "Warm to the touch, though nobody can say why."
+    }
+  ],
+  "risks": [
+    {
+      "id": "risk_market-drift",
+      "name": "Market drift",
+      "category": "market",
+      "outcomes": [
+        {
+          "key": "glut",
+          "label": "A glut drives prices down",
+          "weight": 2,
+          "valueMultiplier": 0.85
+        },
+        {
+          "key": "steady",
+          "label": "Prices hold",
+          "weight": 5,
+          "valueMultiplier": 1
+        },
+        {
+          "key": "shortage",
+          "label": "A shortage drives prices up",
+          "weight": 2,
+          "valueMultiplier": 1.2
+        }
+      ]
+    },
+    {
+      "id": "risk_shipment",
+      "name": "Road shipment",
+      "category": "shipment",
+      "outcomes": [
+        {
+          "key": "lost",
+          "label": "The shipment was lost on the road",
+          "weight": 1,
+          "valueMultiplier": 0
+        },
+        {
+          "key": "delayed",
+          "label": "Delayed; sold at a discount",
+          "weight": 2,
+          "valueMultiplier": 0.8
+        },
+        {
+          "key": "arrived",
+          "label": "Arrived and sold well",
+          "weight": 5,
+          "valueMultiplier": 1.35
+        }
+      ]
+    },
+    {
+      "id": "risk_small-venture",
+      "name": "Small venture",
+      "category": "investment",
+      "outcomes": [
+        {
+          "key": "failed",
+          "label": "The venture failed",
+          "weight": 1,
+          "valueMultiplier": 0
+        },
+        {
+          "key": "modest",
+          "label": "A modest return",
+          "weight": 4,
+          "valueMultiplier": 1.25
+        },
+        {
+          "key": "thrived",
+          "label": "The venture thrived",
+          "weight": 1,
+          "valueMultiplier": 1.8
+        }
+      ]
+    }
+  ]
+}

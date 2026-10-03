@@ -19,6 +19,9 @@ import { InteractionService } from './identity/evidence';
 import { IdentityService } from './identity/identity';
 import type { SimContext } from './world/context';
 import { WorldService } from './world/world';
+import { SearchService } from './world/search';
+import { ModeService } from './modes/modes';
+import type { ModeDefinition } from './modes/types';
 import type { WorldState } from './world/world-state';
 import type { ResolvedRules } from './world/constitution';
 
@@ -29,6 +32,8 @@ export interface SimulationOptions {
   events?: EventBus;
   /** Effective Realm + server rules. Optional so kernel tests can run rule-free. */
   rules?: ResolvedRules;
+  /** Mode definitions (normally from modes/modes.json). */
+  modes?: readonly ModeDefinition[];
 }
 
 /**
@@ -58,6 +63,8 @@ export class Simulation {
   readonly chronicle: ChronicleService;
   readonly interactions: InteractionService;
   readonly identity: IdentityService;
+  readonly search: SearchService;
+  readonly modes: ModeService;
 
   constructor(opts: SimulationOptions) {
     this.kernel = new Kernel({
@@ -99,6 +106,24 @@ export class Simulation {
     this.chronicle = new ChronicleService(ctx);
     this.interactions = new InteractionService(ctx);
     this.identity = new IdentityService(ctx);
+    this.search = new SearchService(ctx, this.inventory);
+    this.modes = new ModeService(
+      ctx,
+      {
+        actors: this.actors,
+        world: this.world,
+        inventory: this.inventory,
+        economy: this.economy,
+        market: this.market,
+        resources: this.resources,
+        property: this.property,
+        ownership: this.ownership,
+        relationships: this.relationships,
+        contracts: this.contracts,
+        search: this.search,
+      },
+      opts.modes ?? [],
+    );
 
     this.kernel.register({
       id: 'simulation',

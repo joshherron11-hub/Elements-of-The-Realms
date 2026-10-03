@@ -7,8 +7,8 @@ import { describe, expect, it } from 'vitest';
  * on presentation, persistence or AI, nor on ambient time/randomness/DOM.
  */
 const ROOT = join(__dirname, '..', 'src');
-const SIMULATION_DIRS = ['core', 'world', 'entities', 'economy', 'familiars', 'contracts', 'chronicle', 'identity'];
-const SIMULATION_FILES = ['simulation.ts'];
+const SIMULATION_DIRS = ['core', 'world', 'entities', 'economy', 'familiars', 'contracts', 'chronicle', 'identity', 'modes'];
+const SIMULATION_FILES = ['simulation.ts', 'seed.ts'];
 /** The injectable real-time/random implementations are the only allowed exceptions. */
 const AMBIENT_ALLOWED = new Set(['core/clock.ts', 'core/ids.ts']);
 

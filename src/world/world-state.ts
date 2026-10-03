@@ -25,6 +25,7 @@ import type { DeclaredClaim, Evidence, Identity, IdentityLink, Interaction, Pers
 import type { DerivedRecord } from '../identity/canonical/pipeline';
 import type { Recognition } from '../identity/canonical/recognition';
 import type { Location, RealmRef, Route, ServerRef } from './types';
+import type { SearchSpot } from './search';
 
 export const WORLD_SCHEMA_VERSION = 1;
 
@@ -55,6 +56,9 @@ export interface WorldState {
   routes: Record<string, Route>;
   /** ActorId → discovered LocationIds. */
   discoveries: Record<string, string[]>;
+  searchSpots: Record<string, SearchSpot>;
+  /** ActorId → the mode they are currently in. */
+  activeModes: Record<string, string>;
 
   items: Record<string, ItemDefinition>;
   itemInstances: Record<string, ItemInstance>;
@@ -125,6 +129,8 @@ export function createWorldState(opts: NewWorldOptions): WorldState {
     locations: {},
     routes: {},
     discoveries: {},
+    searchSpots: {},
+    activeModes: {},
     items: {},
     itemInstances: {},
     inventories: {},

@@ -23,7 +23,7 @@ export class RelationshipService {
   }
 
   /** Adjust (creating if needed) a directed relationship. Values are clamped. */
-  adjust(from: ActorId, to: ActorId, delta: RelationshipDelta, reason: string): Relationship {
+  adjust(from: ActorId, to: ActorId, delta: RelationshipDelta, reason: string, opts: { chronicle?: boolean } = {}): Relationship {
     const now = this.ctx.clock.now();
     const key = RelationshipService.key(from, to);
     const isNew = !this.ctx.state.relationships[key];
@@ -50,7 +50,7 @@ export class RelationshipService {
       outcome: isNew ? 'formed' : 'changed',
       summary: isNew ? `Came to know ${toName}` : undefined,
       domain: 'PLAY',
-      chronicle: isNew,
+      chronicle: isNew && opts.chronicle !== false,
     });
     return rel;
   }

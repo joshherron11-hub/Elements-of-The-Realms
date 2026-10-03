@@ -91,7 +91,7 @@ export class ChronicleService {
         realmId: this.ctx.state.realm.id,
         serverId: this.ctx.state.server.id,
         domain: spec.domain ?? 'PLAY',
-        mode: this.ctx.mode,
+        mode: (spec.actor && this.ctx.state.activeModes[spec.actor]) || this.ctx.mode,
       },
       participants,
       outcome: spec.outcome,

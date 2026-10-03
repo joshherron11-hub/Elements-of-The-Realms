@@ -22,7 +22,8 @@ Always run `npm run typecheck && npm test` before committing.
 
 ## Layering rules (non-negotiable)
 1. **Simulation** (`src/core`, `src/world`, `src/entities`, `src/economy`, `src/familiars`,
-   `src/contracts`, `src/chronicle`, `src/identity`, `src/simulation.ts`) must not import from
+   `src/contracts`, `src/chronicle`, `src/identity`, `src/modes`, `src/simulation.ts`,
+   `src/seed.ts`) must not import from
    `src/render`, `src/ui`, `src/persistence`, or `src/ai`, and must not touch the DOM,
    `window`, `localStorage`, `Date.now()` or `Math.random()` directly. Use the injected
    `Clock` and `IdFactory`.
@@ -43,8 +44,9 @@ should compose existing services; if logic would be duplicated, move it into the
 owning service instead.
 
 ## Data-driven rule
-Realm definitions (`/realms`), server constitutions (`/server-constitutions`) and canon
-(`/canon`) are data. Adding a Realm, server type, NPC, item or contract should not
+Realm definitions and content packs (`/realms`), server constitutions
+(`/server-constitutions`), modes (`/modes`) and canon (`/canon`) are data, loaded and
+validated by `src/config/content.ts`. Adding a Realm, server type, NPC, item or contract should not
 require editing kernel code.
 
 ## Canon guardrails
@@ -67,4 +69,6 @@ inspect, repair, continue.
 - Ids are branded strings (`Id<'actor'>`), created via `IdFactory`.
 - Tests live in `/tests`, named `*.test.ts`.
 - Use original names and placeholder assets only. Never copy franchise characters/assets.
+- Presentation sends **intents** (`src/modes/types.ts`) to `sim.modes.perform`; it never
+  calls services to change state directly.
 - Update `CHANGELOG.md` with each meaningful change.

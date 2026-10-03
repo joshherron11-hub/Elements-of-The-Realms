@@ -45,7 +45,8 @@ npm run preview    # serve the production bundle
   /ui                   DOM/HUD presentation
   /render               Three.js presentation
   /persistence          Save/load adapters
-  /config               Build-level configuration
+  /modes                Modes and player intents
+  /config               Build config + content loading/validation
 /tests                  Vitest test suites
 /docs                   Design notes and deeper documentation
 ```
@@ -79,7 +80,7 @@ TypeScript (strict) · Vite · Vitest · Three.js
 ## Documentation
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — kernel design and layering
 - [`CANON_GUARDRAILS.md`](CANON_GUARDRAILS.md) — rules the platform must never break
-- [`docs/KERNEL.md`](docs/KERNEL.md) · [`docs/CANONICAL.md`](docs/CANONICAL.md) · [`docs/REALMS.md`](docs/REALMS.md)
+- [`docs/KERNEL.md`](docs/KERNEL.md) · [`docs/CANONICAL.md`](docs/CANONICAL.md) · [`docs/REALMS.md`](docs/REALMS.md) · [`docs/MODES.md`](docs/MODES.md)
 - [`ROADMAP.md`](ROADMAP.md) — build phases
 - [`CHANGELOG.md`](CHANGELOG.md) — what changed
 - [`CLAUDE.md`](CLAUDE.md) — working agreement for AI contributors

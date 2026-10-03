@@ -22,6 +22,8 @@ export interface EventMeta {
   domain?: PlatformDomain;
   visibility?: ChronicleVisibility;
   chronicle?: boolean;
+  /** Record as raw evidence even if not chronicled (e.g. a conversation). */
+  evidence?: boolean;
 }
 
 export interface DomainEvent<P = Record<string, unknown>> extends KernelEvent<string, P> {

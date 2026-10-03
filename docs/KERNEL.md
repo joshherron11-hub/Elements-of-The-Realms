@@ -31,6 +31,9 @@ supply *data* for these types; none of them add kernel code.
 | Event | `KernelEvent`, `DomainEvent`, `EventMeta` | `EventBus`, `emit()` | `src/core/events.ts`, `src/world/context.ts` |
 | Chronicle | `ChronicleEntry`, `ChronicleScope` | `ChronicleService` | `src/chronicle/` |
 | WorldState | `WorldState` | `createWorldState()` | `src/world/world-state.ts` |
+| Mode / Intent | `ModeDefinition`, `Intent` | `ModeService` | `src/modes/` (see `docs/MODES.md`) |
+| Search | `SearchSpot` | `SearchService` | `src/world/search.ts` |
+| Content pack | `ContentPack` | `parseContentPack`, `validatePack`, `applyContentPack`, `bootstrapWorld`, `joinRealm` | `src/world/content-pack.ts`, `src/seed.ts` |
 | Familiar | `Familiar`, `FamiliarCareState` | — (Phase 8) | `src/familiars/types.ts` |
 
 ## How services compose
