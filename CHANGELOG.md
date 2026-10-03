@@ -5,6 +5,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — Phase 6: Blackmere
+- `10-blackmere.json`: 10 locations, 8 routes, six NPCs (innkeeper, merchant,
+  farmer, courier, local official, traveler) with authored dialogue, two markets,
+  orchard and deadwood resource nodes.
+- Actor `profile` (title, greeting, lines); `talk` returns it.
+- Scene layouts (presentation data) for the town, tavern interior and outskirts, with
+  a validating parser; zones map ground to simulation locations.
+- Renderer: toon materials, inverted-hull outlines, painted 2.5D backdrops, props,
+  character figures, follow camera, name labels; palette from Realm art metadata.
+- Browser game: keyboard movement with collision, zone-crossing and exits as
+  `travel` intents, NPC dialogue with contracts/buy/sell/hand-in choices, gather,
+  search, mode bar, inventory and journal panels, toasts.
+- 11 new tests (174 total): area/NPC coverage, reachability, layout consistency
+  (zones, spawns, NPC placement, exits vs. routes), collision, walking → travel.
+
+
 ### Added — Phase 5: Modes + Happy Fall
 - `modes/modes.json`: 17 modes. Live, Companion, Explore, Invest, Social and Search
   are implemented; the rest are defined and cannot be entered.

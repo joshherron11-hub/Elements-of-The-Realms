@@ -33,7 +33,7 @@ export function applyContentPack(sim: Simulation, pack: ContentPack): void {
   };
 
   for (const a of pack.actors) {
-    const created = sim.actors.create({ id: a.id as ActorId, kind: a.kind, name: a.name, locationId: a.locationId as LocationId | undefined, tags: a.tags, provenance: authored });
+    const created = sim.actors.create({ id: a.id as ActorId, kind: a.kind, name: a.name, locationId: a.locationId as LocationId | undefined, tags: a.tags, profile: a.profile, provenance: authored });
     if (!created.ok) throw new Error(`content ${pack.id}: ${created.error.message}`);
     seedCoin({ kind: 'actor', id: a.id as ActorId }, a.purse);
     for (const [itemId, q] of Object.entries(a.inventory)) sim.inventory.add({ kind: 'actor', id: a.id as ActorId }, itemId as never, q, 'seeded');

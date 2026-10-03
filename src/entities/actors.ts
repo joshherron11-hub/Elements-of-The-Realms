@@ -2,7 +2,7 @@ import { err, ok, type Result } from '../core/result';
 import type { ActorId, LocationId, PersonId } from '../core/refs';
 import { provenance, type Provenance } from '../core/provenance';
 import { emit, type SimContext } from '../world/context';
-import type { Actor, ActorController, ActorKind } from './actor';
+import type { Actor, ActorController, ActorKind, ActorProfile } from './actor';
 
 export interface NewActor {
   id?: ActorId;
@@ -12,6 +12,7 @@ export interface NewActor {
   personId?: PersonId;
   locationId?: LocationId;
   tags?: string[];
+  profile?: ActorProfile;
   provenance?: Provenance;
 }
 
@@ -35,6 +36,7 @@ export class ActorService {
       locationId: spec.locationId,
       controller: spec.controller ?? (spec.kind === 'player' ? 'human' : 'scripted'),
       tags: [...(spec.tags ?? [])],
+      profile: spec.profile,
       createdAt: now,
       provenance: spec.provenance ?? provenance('system', 'actors', now, { realmId: this.ctx.state.realm.id }),
     };

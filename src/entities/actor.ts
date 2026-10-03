@@ -12,6 +12,18 @@ export type ActorKind = 'player' | 'npc' | 'familiar' | 'system';
 /** Who drives the actor's decisions. Deterministic NPC logic is 'scripted'. */
 export type ActorController = 'human' | 'scripted' | 'ai-assisted' | 'none';
 
+/**
+ * Authored, deterministic presentation of an actor: what they are called and
+ * what they say. AI-generated dialogue may be layered on later; this is the
+ * baseline that needs no AI.
+ */
+export interface ActorProfile {
+  title?: string;
+  description?: string;
+  greeting?: string;
+  lines?: string[];
+}
+
 export interface Actor {
   readonly id: ActorId;
   kind: ActorKind;
@@ -23,6 +35,7 @@ export interface Actor {
   controller: ActorController;
   /** Free-form descriptive tags, e.g. 'innkeeper', 'merchant'. Not permissions. */
   tags: string[];
+  profile?: ActorProfile;
   createdAt: number;
   provenance: Provenance;
 }

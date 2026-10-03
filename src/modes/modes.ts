@@ -176,7 +176,7 @@ export class ModeService {
         d.relationships.adjust(other.id, actorId, { familiarity: 2 }, 'conversation', { chronicle: false });
         emit(this.ctx, 'social.talked', { with: other.id }, { sourceSystem: 'social', actor: actorId, participants: [other.id], location: actor.locationId, evidence: true });
         const offers = this.offersHere(actorId, other.id).map((c) => ({ contractId: c.id, title: c.title, kind: c.kind }));
-        return done(`Spoke with ${other.name}`, { with: other.id, offers });
+        return done(`Spoke with ${other.name}`, { with: other.id, offers, greeting: other.profile?.greeting ?? null, lines: other.profile?.lines ?? [] });
       }
       case 'buy': {
         const m = this.ctx.state.markets[intent.marketId];

@@ -1,0 +1,464 @@
+{
+ "id": "blackmere-outskirts",
+ "name": "Blackmere Outskirts",
+ "size": [
+  76,
+  64
+ ],
+ "ground": "moss",
+ "backdrops": [
+  {
+   "kind": "hills",
+   "distance": 40,
+   "height": 12,
+   "color": "crimson"
+  },
+  {
+   "kind": "treeline",
+   "distance": 34,
+   "height": 9,
+   "color": "moss"
+  }
+ ],
+ "zones": [
+  {
+   "locationId": "location_blackmere-east-road",
+   "rect": [
+    -38,
+    -7,
+    -6,
+    7
+   ]
+  },
+  {
+   "locationId": "location_brindle-farm",
+   "rect": [
+    -6,
+    0,
+    38,
+    32
+   ]
+  },
+  {
+   "locationId": "location_hollowmere-wood",
+   "rect": [
+    -6,
+    -32,
+    38,
+    0
+   ]
+  }
+ ],
+ "spawns": {
+  "location_blackmere-east-road": [
+   -26,
+   0
+  ],
+  "location_brindle-farm": [
+   8,
+   7
+  ],
+  "location_hollowmere-wood": [
+   8,
+   -6
+  ]
+ },
+ "playerStart": [
+  -28,
+  0
+ ],
+ "exits": [
+  {
+   "id": "to-town",
+   "at": [
+    -37,
+    0
+   ],
+   "radius": 2.2,
+   "label": "Return to Blackmere",
+   "to": {
+    "scene": "blackmere-town",
+    "locationId": "location_blackmere-market",
+    "at": [
+     28,
+     0
+    ]
+   }
+  }
+ ],
+ "npcs": {
+  "actor_hester-brindle": [
+   19,
+   9
+  ]
+ },
+ "nodes": {
+  "rnode_brindle-orchard": [
+   9,
+   14
+  ],
+  "rnode_hollowmere-deadwood": [
+   13,
+   -9
+  ]
+ },
+ "paths": [
+  {
+   "rect": [
+    -38,
+    -1.6,
+    38,
+    1.6
+   ],
+   "color": "path"
+  }
+ ],
+ "props": [
+  {
+   "type": "field",
+   "at": [
+    20,
+    20
+   ],
+   "size": [
+    18,
+    12,
+    0.2
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "building",
+   "at": [
+    30,
+    9
+   ],
+   "size": [
+    7,
+    5,
+    5
+   ],
+   "color": "timber",
+   "roof": "roof",
+   "label": "Brindle farmhouse"
+  },
+  {
+   "type": "fence",
+   "at": [
+    11,
+    26.5
+   ],
+   "size": [
+    18,
+    0.3,
+    1
+   ]
+  },
+  {
+   "type": "orchard",
+   "at": [
+    9,
+    14
+   ]
+  },
+  {
+   "type": "orchard",
+   "at": [
+    5,
+    18
+   ]
+  },
+  {
+   "type": "orchard",
+   "at": [
+    13,
+    18
+   ]
+  },
+  {
+   "type": "deadwood",
+   "at": [
+    13,
+    -9
+   ]
+  },
+  {
+   "type": "rock",
+   "at": [
+    -14,
+    5
+   ]
+  },
+  {
+   "type": "rock",
+   "at": [
+    24,
+    -4
+   ]
+  },
+  {
+   "type": "signpost",
+   "at": [
+    -8,
+    3
+   ],
+   "label": "Blackmere \u2190 \u00b7 \u2192 Brindle / Hollowmere"
+  },
+  {
+   "type": "tree",
+   "at": [
+    -30,
+    -5
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    -24,
+    -5
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    -18,
+    -5
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    -12,
+    -5
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    -30,
+    5
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    -24,
+    5
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    -18,
+    5
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    -12,
+    5
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    0,
+    -14
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    0,
+    -20
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "tree",
+   "at": [
+    0,
+    -26
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    6,
+    -14
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "tree",
+   "at": [
+    6,
+    -20
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    6,
+    -26
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "tree",
+   "at": [
+    12,
+    -14
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    12,
+    -20
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "tree",
+   "at": [
+    12,
+    -26
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    18,
+    -14
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "tree",
+   "at": [
+    18,
+    -20
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    18,
+    -26
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "tree",
+   "at": [
+    24,
+    -14
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    24,
+    -20
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "tree",
+   "at": [
+    24,
+    -26
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    30,
+    -14
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "tree",
+   "at": [
+    30,
+    -20
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    30,
+    -26
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "tree",
+   "at": [
+    36,
+    -14
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    36,
+    -20
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "tree",
+   "at": [
+    36,
+    -26
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    4,
+    -8
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "tree",
+   "at": [
+    22,
+    -9
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    30,
+    -8
+   ],
+   "color": "ember"
+  }
+ ]
+}

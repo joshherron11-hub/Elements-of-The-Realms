@@ -29,9 +29,10 @@ cross-Realm transfer planning; Happy Fall constitution and default Blackmere ser
 a data-only intent layer; search spots; content-pack format, validation and
 bootstrap; Happy Fall art direction (Chromatic Mythic 2.5D) and economy pack.
 
-## Phase 6 — Blackmere ⬜
-Town Square, Tavern, Market, residences, outbound road, farm edge, woodland edge,
-Blackmere Keep. Player movement, camera, interaction, six NPCs.
+## Phase 6 — Blackmere ✅
+Town Square, Tavern, Market, Hearth Row, East Road, Brindle Farm Edge, Hollowmere
+Woodland Edge, Keep Gatehouse across three sections; movement with collision, follow
+camera, zone-driven travel, exits, NPC dialogue/trade, gathering, search, journal.
 
 ## Phase 7 — Economy, contracts, property ⬜
 Inventory, currency, market, resources, routes, property model, reputation,

@@ -4,31 +4,28 @@ import * as THREE from 'three';
  * Presentation layer bootstrap (Three.js).
  *
  * The stage only draws. It reads simulation state, but never mutates it and
- * never owns gameplay rules. Swapping the renderer later must not touch
- * /src/core or any simulation module.
+ * never owns gameplay rules. Swapping the renderer later must not touch any
+ * simulation module.
  *
- * Art direction target: CHROMATIC MYTHIC 2.5D — high-contrast autumn palette,
- * strong silhouettes, cel-style toon shading, layered painterly depth.
- * Everything here is an original placeholder.
+ * Art direction: CHROMATIC MYTHIC 2.5D (see the Realm's presentation data).
  */
-export interface Stage {
-  readonly scene: THREE.Scene;
-  readonly camera: THREE.PerspectiveCamera;
-  readonly renderer: THREE.WebGLRenderer;
-  start(onFrame?: (dtMs: number) => void): void;
-  dispose(): void;
-}
 
 /** Fallback palette; the Realm's art direction metadata overrides it. */
 export const PALETTE = {
   sky: 0x2b1b2e,
+  skyHorizon: 0x7a3b2e,
   fog: 0x4a2a2a,
   ground: 0x6b4a2b,
+  path: 0x9a7a52,
   ember: 0xd9642b,
   gold: 0xe8b04a,
+  crimson: 0xa3302a,
   moss: 0x5d6b3a,
   stone: 0x55505a,
+  timber: 0x5a3a24,
+  roof: 0x7d2e22,
   ink: 0x120c0c,
+  light: 0xffd9a8,
 };
 
 export type Palette = typeof PALETTE;
@@ -44,59 +41,37 @@ export function paletteFrom(presentation: Record<string, unknown> | undefined): 
   return out;
 }
 
-/** A 3-step gradient map gives the flat, cel-shaded look. */
-function toonGradient(): THREE.DataTexture {
-  const data = new Uint8Array([90, 170, 255]);
-  const tex = new THREE.DataTexture(data, data.length, 1, THREE.RedFormat);
-  tex.minFilter = THREE.NearestFilter;
-  tex.magFilter = THREE.NearestFilter;
-  tex.needsUpdate = true;
-  return tex;
+export interface Stage {
+  readonly scene: THREE.Scene;
+  readonly camera: THREE.PerspectiveCamera;
+  readonly renderer: THREE.WebGLRenderer;
+  /** Replace the current section's content. */
+  setContent(group: THREE.Group, opts: { interior: boolean }): void;
+  /** Elevated three-quarter follow camera. */
+  follow(target: THREE.Vector3, dtMs: number): void;
+  start(onFrame: (dtMs: number) => void): void;
+  dispose(): void;
 }
 
-export function createStage(container: HTMLElement, palette: Palette = PALETTE): Stage {
-  const P = palette;
+export function createStage(container: HTMLElement, P: Palette = PALETTE): Stage {
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(P.sky);
-  scene.fog = new THREE.Fog(P.fog, 40, 110);
-
-  const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 200);
-  camera.position.set(0, 20, 38);
-  camera.lookAt(0, 3, -4);
-
+  const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, 300);
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
   container.appendChild(renderer.domElement);
 
-  const gradientMap = toonGradient();
-  const toon = (color: number) => new THREE.MeshToonMaterial({ color, gradientMap });
+  const hemi = new THREE.HemisphereLight(P.light, P.sky, 1.1);
+  const sun = new THREE.DirectionalLight(0xffb070, 1.7);
+  sun.position.set(-14, 24, 10);
+  scene.add(hemi, sun);
 
-  scene.add(new THREE.HemisphereLight(0xffd9a8, 0x2a1a20, 0.9));
-  const sun = new THREE.DirectionalLight(0xffb070, 1.6);
-  sun.position.set(-12, 20, 8);
-  scene.add(sun);
-
-  const ground = new THREE.Mesh(new THREE.CircleGeometry(40, 48), toon(P.ground));
-  ground.rotation.x = -Math.PI / 2;
-  scene.add(ground);
-
-  // Placeholder silhouettes: a keep and a ring of autumn trees.
-  const keep = new THREE.Mesh(new THREE.BoxGeometry(6, 10, 6), toon(P.stone));
-  keep.position.set(0, 5, -18);
-  scene.add(keep);
-  const tower = new THREE.Mesh(new THREE.ConeGeometry(4.4, 5, 4), toon(P.ink));
-  tower.position.set(0, 12.5, -18);
-  tower.rotation.y = Math.PI / 4;
-  scene.add(tower);
-
-  for (let i = 0; i < 14; i++) {
-    const a = (i / 14) * Math.PI * 2;
-    const r = 20 + (i % 3) * 3;
-    const tree = new THREE.Mesh(new THREE.ConeGeometry(1.6, 4.5, 6), toon(i % 2 ? P.ember : P.gold));
-    tree.position.set(Math.cos(a) * r, 2.25, Math.sin(a) * r);
-    scene.add(tree);
-  }
+  let content: THREE.Group | undefined;
+  let interior = false;
+  const offsetOut = new THREE.Vector3(0, 17, 14);
+  const offsetIn = new THREE.Vector3(0, 11, 8.5);
+  const lookAt = new THREE.Vector3();
 
   const onResize = () => {
     camera.aspect = container.clientWidth / container.clientHeight;
@@ -110,11 +85,32 @@ export function createStage(container: HTMLElement, palette: Palette = PALETTE):
     scene,
     camera,
     renderer,
+    setContent(group, opts) {
+      if (content) {
+        scene.remove(content);
+        content.traverse((o) => {
+          if (o instanceof THREE.Mesh) o.geometry.dispose();
+        });
+      }
+      content = group;
+      interior = opts.interior;
+      scene.add(group);
+      scene.background = new THREE.Color(interior ? P.ink : P.sky);
+      scene.fog = interior ? new THREE.Fog(P.ink, 18, 40) : new THREE.Fog(P.fog, 38, 110);
+      hemi.intensity = interior ? 0.75 : 1.1;
+    },
+    follow(target, dtMs) {
+      const desired = target.clone().add(interior ? offsetIn : offsetOut);
+      const k = 1 - Math.exp(-dtMs / 140);
+      camera.position.lerp(desired, k);
+      lookAt.lerp(target.clone().add(new THREE.Vector3(0, 1, 0)), k);
+      camera.lookAt(lookAt);
+    },
     start(onFrame) {
       renderer.setAnimationLoop((t) => {
         const dt = Math.min(t - last, 100);
         last = t;
-        onFrame?.(dt);
+        onFrame(dt);
         renderer.render(scene, camera);
       });
     },

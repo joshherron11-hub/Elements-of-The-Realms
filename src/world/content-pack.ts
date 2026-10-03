@@ -21,7 +21,7 @@ export interface PackItem { id: string; name: string; category: string; tags: st
 export interface PackResource { id: string; name: string; yieldsItemId: string }
 export interface PackLocation { id: string; name: string; kind: string; parentId?: string; tags: string[]; sceneKey?: string; description?: string }
 export interface PackRoute { id: string; from: string; to: string; kind: string; travelTimeMs: number; status: string; bidirectional: boolean; tags: string[] }
-export interface PackActor { id: string; kind: 'npc' | 'familiar' | 'system'; name: string; locationId?: string; tags: string[]; purse: number; inventory: Record<string, number>; description?: string }
+export interface PackActor { id: string; kind: 'npc' | 'familiar' | 'system'; name: string; locationId?: string; tags: string[]; purse: number; inventory: Record<string, number>; profile?: { title?: string; description?: string; greeting?: string; lines?: string[] } }
 export interface PackOrganization { id: string; kind: string; name: string; domain: 'PLAY' | 'LEARN' | 'WORK' | 'CREATE'; members: { actorId: string; roleIds: string[] }[]; tags: string[]; purse: number }
 export interface PackRole { id: string; organizationId: string; name: string; permissions: string[] }
 export interface PackMarket { id: string; name: string; locationId?: string; vendor: OwnerRef; currencyId?: string; priceIndex: number; listings: Record<string, { basePrice: number; buyable: boolean; sellable: boolean; sellSpread: number }> }
@@ -163,7 +163,16 @@ export function parseContentPack(raw: unknown, source = 'pack'): Result<ContentP
         tags: x.tags === undefined ? [] : v.arr(x.tags, `${p}.tags`, (t, tp) => v.str(t, tp)),
         purse: int(v, x.purse ?? 0, `${p}.purse`),
         inventory: Object.fromEntries(Object.entries(inv).map(([k, q]) => [k, int(v, q, `${p}.inventory.${k}`, 1)])),
-        description: v.optStr(x.description, `${p}.description`),
+        profile: x.profile === undefined ? undefined : (() => {
+          const po = v.obj(x.profile, `${p}.profile`);
+          v.noExtraKeys(po, ['title', 'description', 'greeting', 'lines'], `${p}.profile`);
+          return {
+            title: v.optStr(po.title, `${p}.profile.title`),
+            description: v.optStr(po.description, `${p}.profile.description`),
+            greeting: v.optStr(po.greeting, `${p}.profile.greeting`),
+            lines: po.lines === undefined ? undefined : v.arr(po.lines, `${p}.profile.lines`, (l, lp) => v.str(l, lp)),
+          };
+        })(),
       };
     }),
     organizations: list('organizations', (x, p) => ({
