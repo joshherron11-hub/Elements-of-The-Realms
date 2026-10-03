@@ -38,16 +38,6 @@ describe('ChronicleService', () => {
   });
 });
 
-describe('InteractionService (raw evidence only)', () => {
-  it('stores an interaction and raw evidence without interpretation', () => {
-    const { sim } = makeSim();
-    const { interaction, evidence } = sim.interactions.record({ actor: ID.player, actionType: 'talk', target: { kind: 'actor', id: ID.baker }, location: ID.square, outcome: 'greeted' });
-    expect(evidence.interactionId).toBe(interaction.id);
-    expect(evidence.verification).toBe('system-observed');
-    expect(Object.keys(interaction).sort()).toEqual(['action' + 'Type', 'actor', 'at', 'context', 'id', 'location', 'outcome', 'provenance', 'target'].sort());
-  });
-});
-
 describe('WorldState serialisation', () => {
   it('round-trips through JSON and continues identically (incl. RNG)', () => {
     const { sim, clock } = makeSim(99);

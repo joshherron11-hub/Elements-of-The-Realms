@@ -5,6 +5,28 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — Phase 3: Canonical / identity rules
+- Record layers (`declared`, `observed`, `derived`, `recognized`) on identity and
+  evidence records.
+- Self-contained raw `Evidence` (actor, target, time, location, context, action type,
+  outcome, provenance, verification) with append-only verification history and strict
+  transition rules (no self-verification, no economic source).
+- Chronicle-worthy actor events are automatically recorded as raw interactions.
+- `IdentityService`: Person + UNIVERSAL identity, one identity per context (REALM per
+  Realm), declared-claim log, explicit revocable cross-context links.
+- Reserved Canonical pipeline (`DerivedRecord`, `CanonicalDeriver`) with
+  `validateDerivedRecord`; `validateOrientation` (≥ 2 distinct interactions, hard
+  floor); `Recognition` + `validateRecognition`.
+- Metastrate and Grandmeta as raw indexes; other concepts reserved with no value slot.
+- `canon/canonical.json` reference data; `docs/CANONICAL.md`.
+- Tests: Canonical guards, identity separation, verification rules, canon/code
+  consistency, and an architecture test that keeps the economic and evidence loops apart.
+
+### Changed
+- `InteractionService` moved to `src/identity/evidence.ts`; `WorldState` gains
+  `claims`, `identityLinks` and reserved `canonical` storage.
+
+
 ### Added — Phase 2: Universal kernel
 - Core: seeded serialisable `Rng`, shared id aliases and reference shapes
   (`OwnerRef`, `AssetRef`, `ScopeRef`, `PlatformDomain`), `Provenance`, math helpers.

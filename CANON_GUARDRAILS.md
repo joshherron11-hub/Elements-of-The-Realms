@@ -36,6 +36,13 @@ Metamethodology Quotient.
 - **Metastrate** = an individual's accumulated experiential state.
 - **Grandmeta** = collective accumulated historical memory.
 
+### How these are enforced in code
+See `docs/CANONICAL.md`. In short: records carry a `layer`; derived records must cite
+inputs from the previous stage, use a Canon-approved method and contain no
+score/rank/worth/suitability keys; Orientation needs ≥ 2 distinct interactions (hard
+floor); Recognition needs a Signature and an authorized, non-self, non-economic
+verifier; reserved concepts have no value slot.
+
 ## People are not scores
 - No universal human score. No Universal Human Rank.
 - Never infer job suitability or human worth from Orientation or any Canonical data.

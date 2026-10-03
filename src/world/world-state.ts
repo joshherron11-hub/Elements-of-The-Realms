@@ -21,7 +21,9 @@ import type {
 import type { Contract, Task } from '../contracts/types';
 import type { ChronicleEntry } from '../chronicle/types';
 import type { Familiar } from '../familiars/types';
-import type { Evidence, Identity, Interaction, Person } from '../identity/types';
+import type { DeclaredClaim, Evidence, Identity, IdentityLink, Interaction, Person } from '../identity/types';
+import type { DerivedRecord } from '../identity/canonical/pipeline';
+import type { Recognition } from '../identity/canonical/recognition';
 import type { Location, RealmRef, Route, ServerRef } from './types';
 
 export const WORLD_SCHEMA_VERSION = 1;
@@ -40,6 +42,9 @@ export interface WorldState {
 
   persons: Record<string, Person>;
   identities: Record<string, Identity>;
+  /** Append-only log of self-declared statements (DECLARED layer). */
+  claims: DeclaredClaim[];
+  identityLinks: IdentityLink[];
   actors: Record<string, Actor>;
 
   organizations: Record<string, Organization>;
@@ -82,6 +87,14 @@ export interface WorldState {
   chronicle: ChronicleEntry[];
   interactions: Record<string, Interaction>;
   evidence: Record<string, Evidence>;
+  /**
+   * Reserved Canonical storage. Derived records and Recognition stay empty
+   * until Canon defines the derivation methods. Kept apart from raw evidence.
+   */
+  canonical: {
+    derived: Record<string, DerivedRecord>;
+    recognitions: Record<string, Recognition>;
+  };
 
   /** Small open-ended world flags (quest gates, toggles). */
   flags: Record<string, string | number | boolean>;
@@ -103,6 +116,8 @@ export function createWorldState(opts: NewWorldOptions): WorldState {
     rng: Rng.createState(opts.seed),
     persons: {},
     identities: {},
+    claims: [],
+    identityLinks: [],
     actors: {},
     organizations: {},
     roles: {},
@@ -130,6 +145,7 @@ export function createWorldState(opts: NewWorldOptions): WorldState {
     chronicle: [],
     interactions: {},
     evidence: {},
+    canonical: { derived: {}, recognitions: {} },
     flags: {},
   };
 }

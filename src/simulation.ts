@@ -15,7 +15,8 @@ import { RiskService } from './economy/risk';
 import { ActorService } from './entities/actors';
 import { AuthorityService, OrganizationService } from './entities/organizations';
 import { RelationshipService, ReputationService } from './entities/social';
-import { InteractionService } from './identity/interactions';
+import { InteractionService } from './identity/evidence';
+import { IdentityService } from './identity/identity';
 import type { SimContext } from './world/context';
 import { WorldService } from './world/world';
 import type { WorldState } from './world/world-state';
@@ -53,6 +54,7 @@ export class Simulation {
   readonly contracts: ContractService;
   readonly chronicle: ChronicleService;
   readonly interactions: InteractionService;
+  readonly identity: IdentityService;
 
   constructor(opts: SimulationOptions) {
     this.kernel = new Kernel({
@@ -92,15 +94,22 @@ export class Simulation {
     });
     this.chronicle = new ChronicleService(ctx);
     this.interactions = new InteractionService(ctx);
+    this.identity = new IdentityService(ctx);
 
     this.kernel.register({
       id: 'simulation',
-      init: () => this.chronicle.attach(),
+      init: () => {
+        this.chronicle.attach();
+        this.interactions.attach();
+      },
       tick: (dt) => {
         this.resources.tick(dt);
         this.contracts.tick();
       },
-      dispose: () => this.chronicle.detach(),
+      dispose: () => {
+        this.interactions.detach();
+        this.chronicle.detach();
+      },
     });
   }
 

@@ -33,4 +33,18 @@ describe('architecture boundaries', () => {
       expect(code, `${rel} uses ambient time/randomness/DOM`).not.toMatch(/Date\.now\(|Math\.random\(|\bwindow\.|\bdocument\.|localStorage/);
     }
   });
+
+  it('the evidence/Canonical loop does not depend on the economic loop, and vice versa', () => {
+    const canonicalFiles = [...files(join(ROOT, 'identity'))];
+    for (const f of canonicalFiles) {
+      const src = readFileSync(f, 'utf8');
+      expect(src, relative(ROOT, f)).not.toMatch(/from\s+['"][^'"]*\/(economy|contracts|familiars)(\/[^'"]*)?['"]/);
+    }
+    for (const dir of ['economy', 'contracts', 'familiars']) {
+      for (const f of files(join(ROOT, dir))) {
+        const src = readFileSync(f, 'utf8');
+        expect(src, relative(ROOT, f)).not.toMatch(/from\s+['"][^'"]*\/identity(\/[^'"]*)?['"]/);
+      }
+    }
+  });
 });

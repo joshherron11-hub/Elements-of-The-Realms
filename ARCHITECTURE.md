@@ -92,12 +92,17 @@ in the kernel.
   evidence or rewritten history.
 
 The two loops may read each other's *records* (a purchase is an interaction), but no
-economic operation may write to derived Canonical state.
+economic operation may write to derived Canonical state. This is enforced at module
+level (`src/identity` and `src/economy|contracts|familiars` never import each other)
+and at record level (economic systems are rejected as authors of derived records or
+Recognition). See `docs/CANONICAL.md`.
 
 ## 6. Identity contexts
 One person, many contexts: Universal, Realm, Work, Learning, Creator, Private, Shared
 identities plus Canonical Evidence. Contexts are separate records linked to one
-person; visibility is per context. There is no universal score or rank.
+person; visibility is per context, and a person's own contexts see each other only
+through explicit, revocable links. There is no universal score or rank. Records carry
+a `layer` (`declared`, `observed`, `derived`, `recognized`), and the layers never merge.
 
 ## 7. Realms, servers, modes
 - **Realm** — a civilization with a type (`ANCHORED`, `ASCENDANT`, `ECHO`, `FRACTURE`,

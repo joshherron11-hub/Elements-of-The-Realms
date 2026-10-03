@@ -1,0 +1,43 @@
+{
+  "$comment": "Canonical architecture reference data. Structure only. Changing anything here changes Canon and requires the project owner's approval.",
+  "pipeline": [
+    "INTERACTION",
+    "MODALITIES",
+    "CONSTITUENCIES",
+    "DICHOTOMIES",
+    "POLARITIES",
+    "AFFINITY",
+    "SIGNATURE",
+    "RECOGNITION"
+  ],
+  "concepts": [
+    { "key": "GRANDMETA", "name": "Grandmeta", "status": "working-definition", "definition": "Collective accumulated historical memory." },
+    { "key": "METASTRATE", "name": "Metastrate", "status": "working-definition", "definition": "Individual accumulated experiential state." },
+    { "key": "INFOSTRATE", "name": "Infostrate", "status": "reserved", "definition": null },
+    { "key": "METATHYMOS", "name": "Metathymos", "status": "reserved", "definition": null },
+    { "key": "METAMETRICS", "name": "Metametrics", "status": "reserved", "definition": null },
+    { "key": "METASTRATEGY", "name": "Metastrategy", "status": "reserved", "definition": null },
+    { "key": "METAMETHODOLOGY_QUOTIENT", "name": "Metamethodology Quotient", "status": "reserved", "definition": null }
+  ],
+  "rawEvidenceFields": [
+    "actor",
+    "target",
+    "time",
+    "location",
+    "context",
+    "actionType",
+    "outcome",
+    "provenance",
+    "verification"
+  ],
+  "identityContexts": ["UNIVERSAL", "REALM", "WORK", "LEARNING", "CREATOR", "PRIVATE", "SHARED"],
+  "rules": {
+    "orientationMinDistinctInteractionsFloor": 2,
+    "universalHumanRank": false,
+    "universalHumanScore": false,
+    "inferJobSuitabilityFromOrientation": false,
+    "inferHumanWorthFromOrientation": false,
+    "moneyCanBuyCanonicalTruth": false,
+    "ownershipDefinesRecognition": false
+  }
+}

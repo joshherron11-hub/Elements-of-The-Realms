@@ -14,8 +14,10 @@ Faction, Clan, Ownership, Property, Contract, Resource, Inventory, Route, Relati
 Risk, Authority, Reputation, Provenance, Interaction, Evidence, Event, Chronicle,
 WorldState, Familiar, Item, Currency, Market, Task, Location, Role, Permission. Services, `WorldState`, `Simulation` facade, 91 tests.
 
-## Phase 3 — Canonical / identity ⬜
-Raw evidence records, reserved Canonical pipeline interfaces, identity contexts.
+## Phase 3 — Canonical / identity ✅
+Raw evidence records with verification, reserved Canonical pipeline interfaces and
+validators, Orientation/Recognition guards, Metastrate/Grandmeta raw indexes,
+separated identity contexts with explicit links.
 
 ## Phase 4 — Realms + server constitutions ⬜
 Realm types and Realm Constitution; server constitution presets (default `PEACEFUL`).
