@@ -26,6 +26,7 @@ import type { DerivedRecord } from '../identity/canonical/pipeline';
 import type { Recognition } from '../identity/canonical/recognition';
 import type { Location, RealmRef, Route, ServerRef } from './types';
 import type { SearchSpot } from './search';
+import type { Happening } from './happenings';
 
 export const WORLD_SCHEMA_VERSION = 1;
 
@@ -57,6 +58,7 @@ export interface WorldState {
   /** ActorId → discovered LocationIds. */
   discoveries: Record<string, string[]>;
   searchSpots: Record<string, SearchSpot>;
+  happenings: Record<string, Happening>;
   /** ActorId → the mode they are currently in. */
   activeModes: Record<string, string>;
 
@@ -130,6 +132,7 @@ export function createWorldState(opts: NewWorldOptions): WorldState {
     routes: {},
     discoveries: {},
     searchSpots: {},
+    happenings: {},
     activeModes: {},
     items: {},
     itemInstances: {},

@@ -61,6 +61,12 @@ export class Game {
   }
 
   start(): void {
+    // Read-only observation of the simulation: surface notable moments.
+    this.sim.kernel.events.on('happening.occurred', (e) => this.hud.toast(`✦ ${(e as { meta?: { summary?: string } }).meta?.summary ?? 'Something happened.'}`));
+    this.sim.kernel.events.on('market.price-changed', (e) => {
+      const p = e.payload as { marketId: string; reason: string };
+      this.hud.toast(`${this.sim.state.markets[p.marketId]?.name ?? 'Market'}: ${p.reason}`);
+    });
     const actor = this.sim.state.actors[this.playerId]!;
     const scene = this.sceneFor(actor.locationId) ?? [...this.layouts.keys()][0]!;
     const layout = this.layouts.get(scene)!;
@@ -78,9 +84,11 @@ export class Game {
     return this.layout.id;
   }
 
-  /** Teleport within the current section (debug / e2e only; no simulation effect until a zone is crossed). */
+  /** Teleport within the current section (debug / e2e only). Zone changes still go through travel intents. */
   debugPlace(at: Vec2): void {
+    const before = this.pos;
     this.pos = [...at];
+    this.onMoved(before);
   }
 
   /** Perform an intent, show its outcome, and return it. */
@@ -280,15 +288,22 @@ export class Game {
       onChoose: doIt({ kind: 'accept-contract', contractId: c.id }),
     }));
 
-    const handOver: Choice[] = this.sim.modes
-      .available(this.playerId)
-      .filter((i): i is Extract<Intent, { kind: 'complete-task' }> => i.kind === 'complete-task')
-      .filter((i) => {
-        const req = this.sim.state.tasks[i.taskId]?.requirement;
-        const issuer = this.sim.state.contracts[this.sim.state.tasks[i.taskId]?.contractId ?? '']?.issuer;
-        return (req?.kind === 'deliver' && req.to === npcId) || (issuer?.kind === 'actor' && issuer.id === npcId);
-      })
-      .map((i) => ({ label: this.sim.state.tasks[i.taskId]!.title, onChoose: doIt(i) }));
+    const handOver: Choice[] = [];
+    for (const c of this.sim.contracts.heldBy(this.self)) {
+      if (c.status !== 'accepted') continue;
+      for (const t of this.sim.contracts.tasksOf(c.id)) {
+        if (t.status !== 'open') continue;
+        const forThem = (t.requirement.kind === 'deliver' && t.requirement.to === npcId) || (c.issuer.kind === 'actor' && c.issuer.id === npcId);
+        if (!forThem) continue;
+        const ready = this.sim.contracts.check(t.id, this.playerId);
+        handOver.push({
+          label: t.title,
+          detail: !allowed('complete-task') ? `not in ${def.name} mode` : ready.ok ? c.title : ready.error.message,
+          disabled: !ready.ok || !allowed('complete-task'),
+          onChoose: doIt({ kind: 'complete-task', taskId: t.id }),
+        });
+      }
+    }
 
     const buy: Choice[] = [];
     const sell: Choice[] = [];
@@ -320,6 +335,17 @@ export class Game {
       }
     }
 
+    const deeds: Choice[] = npc.tags.includes('official')
+      ? Object.values(this.sim.state.properties)
+          .filter((p) => p.forSale)
+          .map((p) => ({
+            label: `${p.name} — ${this.money(p.value)}`,
+            detail: `${this.sim.state.locations[p.locationId]?.name ?? ''}${allowed('purchase-property') ? '' : ` (not in ${def.name} mode)`}`,
+            disabled: !allowed('purchase-property') || !this.sim.economy.canAfford(this.self, p.currencyId, p.value),
+            onChoose: doIt({ kind: 'purchase-property', propertyId: p.id }),
+          }))
+      : [];
+
     this.hud.dialogue({
       name: npc.name,
       title: npc.profile?.title,
@@ -330,6 +356,7 @@ export class Game {
         { heading: 'Work offered', choices: offers },
         { heading: 'Buy', choices: buy },
         { heading: 'Sell', choices: sell },
+        { heading: 'Deeds for sale', choices: deeds },
       ],
     });
   }
@@ -361,8 +388,16 @@ export class Game {
       .slice(-40)
       .reverse()
       .map((e) => `${e.summary ?? e.event}${e.location ? ` · ${s.locations[e.location]?.name ?? ''}` : ''}`);
+    const scopeName = (k: string, id?: string) =>
+      (k === 'location' ? s.locations[id ?? '']?.name : k === 'organization' ? s.organizations[id ?? '']?.name : undefined) ?? `${k} ${id ?? ''}`;
+    const standing = this.sim.reputation.standingsOf(this.self).map((r) => `${scopeName(r.scope.kind, r.scope.id)}: ${r.value > 0 ? '+' : ''}${r.value}`);
+    const people = Object.values(s.relationships)
+      .filter((r) => r.to === this.playerId)
+      .map((r) => `${s.actors[r.from]?.name ?? r.from} — regard ${r.regard}, trust ${r.trust}, familiarity ${r.familiarity}`);
     this.hud.list('journal', 'Journal', 'Your Chronicle in Happy Fall', [
       { heading: 'Contracts', rows: contracts },
+      { heading: 'Standing (always local, never a rank)', rows: standing },
+      { heading: 'How people regard you', rows: people },
       { heading: 'Chronicle', rows: entries },
     ]);
   }

@@ -34,9 +34,10 @@ Town Square, Tavern, Market, Hearth Row, East Road, Brindle Farm Edge, Hollowmer
 Woodland Edge, Keep Gatehouse across three sections; movement with collision, follow
 camera, zone-driven travel, exits, NPC dialogue/trade, gathering, search, journal.
 
-## Phase 7 — Economy, contracts, property ⬜
-Inventory, currency, market, resources, routes, property model, reputation,
-relationships, organizations; first contracts, investment and non-combat risk.
+## Phase 7 — Economy, contracts, property ✅
+Merchant, search and investment contracts; a social happening; market drift; property
+deeds via the civic office; council, guilds, clan and faction placeholders; journal
+standing view.
 
 ## Phase 8 — Familiars ⬜
 Species, bond, care loop (feed/rest/bond/status), provenance, three examples.

@@ -20,6 +20,7 @@ import { IdentityService } from './identity/identity';
 import type { SimContext } from './world/context';
 import { WorldService } from './world/world';
 import { SearchService } from './world/search';
+import { HappeningService } from './world/happenings';
 import { ModeService } from './modes/modes';
 import type { ModeDefinition } from './modes/types';
 import type { WorldState } from './world/world-state';
@@ -64,6 +65,7 @@ export class Simulation {
   readonly interactions: InteractionService;
   readonly identity: IdentityService;
   readonly search: SearchService;
+  readonly happenings: HappeningService;
   readonly modes: ModeService;
 
   constructor(opts: SimulationOptions) {
@@ -87,9 +89,9 @@ export class Simulation {
     this.ownership = new OwnershipService(ctx);
     this.inventory = new InventoryService(ctx);
     this.economy = new EconomyService(ctx);
-    this.market = new MarketService(ctx, this.economy, this.inventory);
-    this.resources = new ResourceService(ctx, this.inventory);
     this.risk = new RiskService(ctx);
+    this.market = new MarketService(ctx, this.economy, this.inventory, this.risk);
+    this.resources = new ResourceService(ctx, this.inventory);
     this.property = new PropertyService(ctx, this.ownership, this.economy);
     this.organizations = new OrganizationService(ctx);
     this.authority = new AuthorityService(ctx, this.ownership, this.world);
@@ -107,6 +109,7 @@ export class Simulation {
     this.interactions = new InteractionService(ctx);
     this.identity = new IdentityService(ctx);
     this.search = new SearchService(ctx, this.inventory);
+    this.happenings = new HappeningService(ctx, this.relationships, this.reputation);
     this.modes = new ModeService(
       ctx,
       {
@@ -130,12 +133,15 @@ export class Simulation {
       init: () => {
         this.chronicle.attach();
         this.interactions.attach();
+        this.happenings.attach();
       },
       tick: (dt) => {
         this.resources.tick(dt);
+        this.market.tick();
         this.contracts.tick();
       },
       dispose: () => {
+        this.happenings.detach();
         this.interactions.detach();
         this.chronicle.detach();
       },

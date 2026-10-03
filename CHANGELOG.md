@@ -5,6 +5,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — Phase 7: Economy, contracts, property
+- `20-blackmere-life.json`: merchant contract (Apples for Quill's), search contract
+  (The Lost Satchel), investment (A Share in the Cider Press), social happening
+  (A toast with a stranger), two properties for sale, five organizations (council,
+  two guilds, clan and faction placeholders), hidden finds in Hollowmere Wood.
+- `wait` task requirement; periodic market `drift` through risk profiles (market
+  fluctuation); `HappeningService` for data-driven social events; property purchase
+  at the property or a `civic` office.
+- UI: hand-over list with readiness, deeds at the Reeve, journal standing and
+  relationships, toasts for happenings and price changes; debug teleport now goes
+  through travel intents.
+- `docs/ECONOMY.md`. 9 new tests (184 total).
+
+
 ### Added — Phase 6: Blackmere
 - `10-blackmere.json`: 10 locations, 8 routes, six NPCs (innkeeper, merchant,
   farmer, courier, local official, traveler) with authored dialogue, two markets,

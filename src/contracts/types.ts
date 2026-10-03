@@ -65,6 +65,8 @@ export type TaskRequirement =
   | { readonly kind: 'acquire'; readonly itemId: ItemId; readonly quantity: number }
   | { readonly kind: 'visit'; readonly locationId: LocationId }
   | { readonly kind: 'talk'; readonly actorId: ActorId }
+  /** Satisfied once this long has passed since the contract was accepted (a season, a voyage). */
+  | { readonly kind: 'wait'; readonly durationMs: number }
   | { readonly kind: 'custom'; readonly key: string };
 
 export type TaskStatus = 'open' | 'done' | 'failed';

@@ -3,6 +3,7 @@ import { Validator, rankOf } from '../core/schema';
 import type { OwnerRef, ScopeRef } from '../core/refs';
 import type { Reward, TaskRequirement, ContractTerms } from '../contracts/types';
 import type { SearchSpot } from './search';
+import type { Happening } from './happenings';
 import { MAGIC_SCALE, TECHNOLOGY_SCALE, type RealmDefinition } from './realm';
 
 /**
@@ -24,7 +25,7 @@ export interface PackRoute { id: string; from: string; to: string; kind: string;
 export interface PackActor { id: string; kind: 'npc' | 'familiar' | 'system'; name: string; locationId?: string; tags: string[]; purse: number; inventory: Record<string, number>; profile?: { title?: string; description?: string; greeting?: string; lines?: string[] } }
 export interface PackOrganization { id: string; kind: string; name: string; domain: 'PLAY' | 'LEARN' | 'WORK' | 'CREATE'; members: { actorId: string; roleIds: string[] }[]; tags: string[]; purse: number }
 export interface PackRole { id: string; organizationId: string; name: string; permissions: string[] }
-export interface PackMarket { id: string; name: string; locationId?: string; vendor: OwnerRef; currencyId?: string; priceIndex: number; listings: Record<string, { basePrice: number; buyable: boolean; sellable: boolean; sellSpread: number }> }
+export interface PackMarket { id: string; name: string; locationId?: string; vendor: OwnerRef; currencyId?: string; priceIndex: number; drift?: { riskProfileId: string; everyMs: number }; listings: Record<string, { basePrice: number; buyable: boolean; sellable: boolean; sellSpread: number }> }
 export interface PackResourceNode { id: string; resourceId: string; locationId: string; amount: number; capacity: number; regenPerHour: number }
 export interface PackProperty { id: string; name: string; kind: string; locationId: string; value: number; currencyId?: string; forSale: boolean; owner?: OwnerRef; tags: string[] }
 export interface PackRisk { id: string; name: string; category: string; outcomes: { key: string; label: string; weight: number; valueMultiplier: number }[] }
@@ -47,9 +48,10 @@ export interface ContentPack {
   risks: PackRisk[];
   contracts: PackContract[];
   searchSpots: Omit<SearchSpot, 'foundBy'>[];
+  happenings: Omit<Happening, 'seenBy'>[];
 }
 
-const LISTS = ['currencies', 'items', 'resources', 'locations', 'routes', 'actors', 'organizations', 'roles', 'markets', 'resourceNodes', 'properties', 'risks', 'contracts', 'searchSpots'] as const;
+const LISTS = ['currencies', 'items', 'resources', 'locations', 'routes', 'actors', 'organizations', 'roles', 'markets', 'resourceNodes', 'properties', 'risks', 'contracts', 'searchSpots', 'happenings'] as const;
 
 const LOCATION_KINDS = ['region', 'settlement', 'district', 'building', 'room', 'wilderness', 'road'] as const;
 const ROUTE_KINDS = ['path', 'road', 'river', 'sea', 'portal'] as const;
@@ -72,7 +74,7 @@ function int(v: Validator, raw: unknown, p: string, min = 0): number {
 
 function requirement(v: Validator, raw: unknown, p: string): TaskRequirement {
   const o = v.obj(raw, p);
-  const kind = v.oneOf(o.kind, ['deliver', 'acquire', 'visit', 'talk', 'custom'] as const, `${p}.kind`);
+  const kind = v.oneOf(o.kind, ['deliver', 'acquire', 'visit', 'talk', 'wait', 'custom'] as const, `${p}.kind`);
   switch (kind) {
     case 'deliver':
       return { kind, itemId: v.str(o.itemId, `${p}.itemId`) as never, quantity: int(v, o.quantity, `${p}.quantity`, 1), to: v.str(o.to, `${p}.to`) as never };
@@ -82,6 +84,8 @@ function requirement(v: Validator, raw: unknown, p: string): TaskRequirement {
       return { kind, locationId: v.str(o.locationId, `${p}.locationId`) as never };
     case 'talk':
       return { kind, actorId: v.str(o.actorId, `${p}.actorId`) as never };
+    case 'wait':
+      return { kind, durationMs: int(v, o.durationMs, `${p}.durationMs`, 1) };
     case 'custom':
       return { kind, key: v.str(o.key, `${p}.key`) };
   }
@@ -197,6 +201,10 @@ export function parseContentPack(raw: unknown, source = 'pack'): Result<ContentP
         vendor: owner(v, x.vendor, `${p}.vendor`),
         currencyId: v.optStr(x.currencyId, `${p}.currencyId`),
         priceIndex: x.priceIndex === undefined ? 1 : v.num(x.priceIndex, `${p}.priceIndex`, 0.2, 5),
+        drift: x.drift === undefined ? undefined : (() => {
+          const d = v.obj(x.drift, `${p}.drift`);
+          return { riskProfileId: v.str(d.riskProfileId, `${p}.drift.riskProfileId`), everyMs: int(v, d.everyMs, `${p}.drift.everyMs`, 1000) };
+        })(),
         listings: Object.fromEntries(
           Object.entries(listings).map(([itemId, l]) => {
             const lp = `${p}.listings.${itemId}`;
@@ -267,6 +275,37 @@ export function parseContentPack(raw: unknown, source = 'pack'): Result<ContentP
       description: v.str(x.description, `${p}.description`),
       requiresFlag: v.optStr(x.requiresFlag, `${p}.requiresFlag`),
     })),
+    happenings: list('happenings', (x, p) => {
+      const t = v.obj(x.trigger, `${p}.trigger`);
+      const tk = v.oneOf(t.kind, ['talk', 'arrive'] as const, `${p}.trigger.kind`);
+      const e = v.obj(x.effects ?? {}, `${p}.effects`);
+      v.noExtraKeys(e, ['relationships', 'reputation', 'flag'], `${p}.effects`);
+      return {
+        id: v.str(x.id, `${p}.id`),
+        kind: v.str(x.kind, `${p}.kind`),
+        title: v.str(x.title, `${p}.title`),
+        summary: v.str(x.summary, `${p}.summary`),
+        trigger: tk === 'talk' ? { kind: tk, actorId: v.str(t.actorId, `${p}.trigger.actorId`) } : { kind: tk, locationId: v.str(t.locationId, `${p}.trigger.locationId`) },
+        effects: {
+          relationships: e.relationships === undefined ? undefined : v.arr(e.relationships, `${p}.effects.relationships`, (r, rp) => {
+            const ro = v.obj(r, rp);
+            return {
+              with: v.str(ro.with, `${rp}.with`),
+              regard: ro.regard === undefined ? undefined : v.num(ro.regard, `${rp}.regard`, -100, 100),
+              trust: ro.trust === undefined ? undefined : v.num(ro.trust, `${rp}.trust`, -100, 100),
+              familiarity: ro.familiarity === undefined ? undefined : v.num(ro.familiarity, `${rp}.familiarity`, 0, 100),
+            };
+          }),
+          reputation: e.reputation === undefined ? undefined : v.arr(e.reputation, `${p}.effects.reputation`, (r, rp) => {
+            const ro = v.obj(r, rp);
+            const so = v.obj(ro.scope, `${rp}.scope`);
+            return { scope: { kind: v.oneOf(so.kind, SCOPE_KINDS, `${rp}.scope.kind`), id: v.optStr(so.id, `${rp}.scope.id`) }, amount: v.num(ro.amount, `${rp}.amount`, -100, 100) };
+          }),
+          flag: v.optStr(e.flag, `${p}.effects.flag`),
+        },
+        requiresFlag: v.optStr(x.requiresFlag, `${p}.requiresFlag`),
+      };
+    }),
   };
   return v.ok ? ok(pack) : err('INVALID_CONTENT', v.errors.join('\n'));
 }
@@ -319,6 +358,7 @@ export function validatePack(pack: ContentPack, realm: RealmDefinition): Result<
     need(ownerOk(m.vendor), `market ${m.id} has unknown vendor`);
     need(has('locations', m.locationId), `market ${m.id} is at unknown location`);
     need(has('currencies', m.currencyId), `market ${m.id} uses unknown currency`);
+    need(!m.drift || has('risks', m.drift.riskProfileId), `market ${m.id} drifts with unknown risk profile`);
     for (const i of Object.keys(m.listings)) need(has('items', i), `market ${m.id} lists unknown item ${i}`);
   }
   for (const n of pack.resourceNodes) need(has('resources', n.resourceId) && has('locations', n.locationId), `resource node ${n.id} has bad references`);
@@ -341,5 +381,9 @@ export function validatePack(pack: ContentPack, realm: RealmDefinition): Result<
     }
   }
   for (const s of pack.searchSpots) need(has('locations', s.locationId) && has('items', s.itemId), `search spot ${s.id} has bad references`);
+  for (const h of pack.happenings) {
+    need(h.trigger.kind === 'talk' ? has('actors', h.trigger.actorId) : has('locations', h.trigger.locationId), `happening ${h.id} has an unknown trigger target`);
+    for (const r of h.effects.relationships ?? []) need(has('actors', r.with), `happening ${h.id} involves unknown actor ${r.with}`);
+  }
   return problems.length ? err('INVALID_CONTENT', problems.join('\n')) : ok(true);
 }

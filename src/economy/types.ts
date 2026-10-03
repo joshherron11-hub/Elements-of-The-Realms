@@ -79,6 +79,8 @@ export interface Market {
   listings: Record<string, MarketListing>; // keyed by ItemId
   /** Multiplier applied to all prices; drifts with market conditions. 1 = normal. */
   priceIndex: number;
+  /** Optional periodic price drift resolved through a risk profile (non-combat market risk). */
+  drift?: { riskProfileId: RiskProfileId; everyMs: number; nextAt?: number };
 }
 
 /** A raw resource type (grain, timber, ore) and the item it yields when gathered. */

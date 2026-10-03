@@ -53,7 +53,7 @@ export function applyContentPack(sim: Simulation, pack: ContentPack): void {
     seedCoin({ kind: 'organization', id: o.id as OrganizationId }, o.purse);
   }
   for (const m of pack.markets) {
-    s.markets[m.id] = { ...m, id: m.id as never, locationId: m.locationId as never, currencyId: (m.currencyId ?? primary) as never };
+    s.markets[m.id] = { ...m, id: m.id as never, locationId: m.locationId as never, currencyId: (m.currencyId ?? primary) as never, drift: m.drift ? { riskProfileId: m.drift.riskProfileId as never, everyMs: m.drift.everyMs } : undefined };
   }
   for (const n of pack.resourceNodes) s.resourceNodes[n.id] = { ...n, id: n.id as never, resourceId: n.resourceId as never, locationId: n.locationId as never };
   for (const p of pack.properties) {
@@ -64,6 +64,7 @@ export function applyContentPack(sim: Simulation, pack: ContentPack): void {
     sim.contracts.offer({ id: c.id as never, kind: c.kind, title: c.title, description: c.description, domain: c.domain, issuer: c.issuer, tasks: c.tasks, terms: c.terms, locationId: c.locationId as never, tags: c.tags, provenance: authored });
   }
   for (const sp of pack.searchSpots) s.searchSpots[sp.id] = { ...sp, foundBy: [] };
+  for (const h of pack.happenings) s.happenings[h.id] = { ...h, seenBy: [] };
 }
 
 export interface BootstrapOptions {

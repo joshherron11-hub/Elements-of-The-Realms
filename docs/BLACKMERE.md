@@ -35,7 +35,8 @@ Market and the East Road.
 | Local official | Reeve Aldous Crane | Keep Gatehouse | keeps the property records |
 | Traveler | Sela Vantry | The Lantern & Ladle | |
 
-All names, dialogue and visuals are original placeholders.
+All names, dialogue and visuals are original placeholders. Contracts, property and
+social events are listed in `docs/ECONOMY.md`.
 
 ## How the browser game stays out of the rules
 - **Walking** is presentation-only, with positions inside a section. Crossing into

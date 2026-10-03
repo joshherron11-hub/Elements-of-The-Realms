@@ -7,3 +7,4 @@ export * from './server';
 export * from './constitution';
 export * from './search';
 export * from './content-pack';
+export * from './happenings';

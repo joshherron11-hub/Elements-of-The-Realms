@@ -1,5 +1,5 @@
 import { err, ok, type Result } from '../core/result';
-import type { ActorId, ContractId, OwnerRef } from '../core/refs';
+import type { ActorId, ContractId, LocationId, OwnerRef } from '../core/refs';
 import type { ContractService } from '../contracts/contracts';
 import type { EconomyService } from '../economy/economy';
 import type { InventoryService } from '../economy/inventory';
@@ -134,9 +134,20 @@ export class ModeService {
         }
       }
     }
-    if (want('purchase-property')) for (const p of Object.values(s.properties)) if (p.forSale && p.locationId === here) out.push({ kind: 'purchase-property', propertyId: p.id });
+    if (want('purchase-property')) for (const p of Object.values(s.properties)) if (p.forSale && this.canTransactProperty(here, p.locationId)) out.push({ kind: 'purchase-property', propertyId: p.id });
     if (want('familiar-status') && this.deps.ownership.assetsOf(self, 'familiar').length) out.push({ kind: 'familiar-status' });
     return out;
+  }
+
+  /**
+   * Property can be bought where it stands, or at a civic office (a location
+   * tagged 'civic', where deeds are recorded) in the same settlement.
+   */
+  canTransactProperty(here: LocationId, propertyAt: LocationId): boolean {
+    if (here === propertyAt) return true;
+    const loc = this.ctx.state.locations[here];
+    if (!loc?.tags.includes('civic') || !loc.parentId) return false;
+    return this.deps.world.isWithin(propertyAt, loc.parentId);
   }
 
   /** Offered contracts the actor can take up here, filtered by the mode's contract kinds. */
@@ -221,6 +232,10 @@ export class ModeService {
         return done(s ? `${s.contract.title}: ${s.outcome}` : `Done: ${r.value.task.title}`, { task: r.value.task.id, settlement: s ? { contractId: s.contract.id as ContractId, outcome: s.outcome, stakeReturned: s.stakeReturned } : undefined });
       }
       case 'purchase-property': {
+        const prop = this.ctx.state.properties[intent.propertyId];
+        if (prop && (!actor.locationId || !this.canTransactProperty(actor.locationId, prop.locationId))) {
+          return err('NOT_PRESENT', 'deeds are signed at the property or at the civic office');
+        }
         const r = d.property.purchase(self, intent.propertyId);
         return r.ok ? done(`You now own ${r.value.name}`, { propertyId: r.value.id }) : r;
       }

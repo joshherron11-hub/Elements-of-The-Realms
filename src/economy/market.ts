@@ -4,6 +4,7 @@ import type { ItemId, MarketId, OwnerRef } from '../core/refs';
 import { emit, type SimContext } from '../world/context';
 import type { EconomyService } from './economy';
 import type { InventoryService } from './inventory';
+import type { RiskService } from './risk';
 import type { Market } from './types';
 
 export type TradeSide = 'buy' | 'sell';
@@ -27,7 +28,32 @@ export class MarketService {
     private readonly ctx: SimContext,
     private readonly economy: EconomyService,
     private readonly inventory: InventoryService,
+    private readonly risk?: RiskService,
   ) {}
+
+  /**
+   * Market fluctuation: each market with a drift profile periodically draws an
+   * outcome (glut / steady / shortage) and its price index moves to match.
+   */
+  tick(): void {
+    if (!this.risk) return;
+    const now = this.ctx.clock.now();
+    for (const m of Object.values(this.ctx.state.markets)) {
+      const d = m.drift;
+      if (!d) continue;
+      if (d.nextAt === undefined) {
+        d.nextAt = now + d.everyMs;
+        continue;
+      }
+      if (now < d.nextAt) continue;
+      d.nextAt = now + d.everyMs;
+      const r = this.risk.resolve(d.riskProfileId, 1000);
+      if (!r.ok) continue;
+      const target = r.value.returned / 1000;
+      if (Math.abs(target - m.priceIndex) < 1e-9) continue;
+      this.setPriceIndex(m.id, target, r.value.outcome.label);
+    }
+  }
 
   get(id: MarketId): Market | undefined {
     return this.ctx.state.markets[id];

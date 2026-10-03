@@ -154,6 +154,14 @@ export class ContractService {
         if (!other || other.locationId !== actor.locationId) return err('NOT_PRESENT', 'they are not here');
         return ok(true);
       }
+      case 'wait': {
+        const contract = task.contractId ? this.get(task.contractId) : undefined;
+        const since = contract?.acceptedAt;
+        if (since === undefined) return err('NOT_STARTED', 'the waiting has not begun');
+        const left = since + req.durationMs - this.ctx.clock.now();
+        if (left > 0) return err('NOT_YET', `not yet — about ${Math.ceil(left / 1000)}s to go`);
+        return ok(true);
+      }
       case 'custom':
         return ok(true);
     }

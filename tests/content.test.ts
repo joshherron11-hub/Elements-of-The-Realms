@@ -11,7 +11,7 @@ const testPlace = (): ContentPack =>
     { ...emptyPack(), locations: [{ id: 'location_test-green', name: 'Test Green', kind: 'district', tags: [] }] },
   ]);
 function emptyPack(): ContentPack {
-  return { id: 'extra', realmId: 'realm_happy-fall', currencies: [], items: [], resources: [], locations: [], routes: [], actors: [], organizations: [], roles: [], markets: [], resourceNodes: [], properties: [], risks: [], contracts: [], searchSpots: [] };
+  return { id: 'extra', realmId: 'realm_happy-fall', currencies: [], items: [], resources: [], locations: [], routes: [], actors: [], organizations: [], roles: [], markets: [], resourceNodes: [], properties: [], risks: [], contracts: [], searchSpots: [], happenings: [] };
 }
 
 describe('Happy Fall content', () => {
