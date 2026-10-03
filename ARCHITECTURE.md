@@ -38,9 +38,35 @@ kernel. Tests use `ManualClock` and `SequentialIdFactory`.
 - `EventBus` — synchronous in-process pub/sub; handler failures are isolated.
 - `Kernel` — hosts `KernelModule`s with `init` / `tick` / `dispose` lifecycle.
 
-Every system (economy, familiars, contracts, chronicle…) is a `KernelModule`.
 Systems announce facts on the `EventBus`; observers (Chronicle, persistence, UI,
 AI) subscribe. This is how simulation stays ignorant of who watches it.
+
+## 3a. Universal kernel services (implemented)
+All simulation state lives in one plain-data `WorldState` (`src/world/world-state.ts`).
+Services receive a `SimContext` (`state`, `clock`, `ids`, `events`, seeded `rng`) and
+each owns exactly one concern:
+
+| Service | Owns |
+|---|---|
+| `ActorService` | actors |
+| `WorldService` | locations, routes, travel, path-finding, discovery |
+| `OwnershipService` | the single ownership registry for every distinct asset |
+| `InventoryService` | fungible item stacks |
+| `EconomyService` | wallets, the ledger, mint/burn/transfer |
+| `MarketService` | prices over a vendor (reuses economy + inventory) |
+| `PropertyService` | property purchase (reuses ownership + economy) |
+| `ResourceService` | resource nodes, gathering, regeneration |
+| `RiskService` | weighted outcome resolution over the seeded RNG |
+| `OrganizationService` | membership (organizations, factions, clans, guilds…) |
+| `AuthorityService` | permission checks (ownership, roles, grants, nested scopes) |
+| `RelationshipService` / `ReputationService` | directed relationships; scoped reputation |
+| `ContractService` | contracts and tasks (reuses economy, inventory, risk, reputation, relationships, world) |
+| `ChronicleService` | append-only history, fed from the event bus |
+| `InteractionService` | raw interaction + evidence records (no interpretation) |
+
+`Simulation` (`src/simulation.ts`) wires them together and registers one kernel
+module that ticks resources and contract deadlines. See `docs/KERNEL.md` for the
+full concept map.
 
 ## 4. Composition, not special cases
 Activities are compositions of shared primitives, never bespoke subsystems:

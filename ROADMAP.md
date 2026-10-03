@@ -2,17 +2,17 @@
 
 Status: ✅ done · 🚧 in progress · ⬜ planned
 
-## Phase 1 — Project foundation 🚧
+## Phase 1 — Project foundation ✅
 - ✅ Repository structure, TypeScript, Vite, Vitest, Three.js
 - ✅ Core runtime: ids, clock, result, event bus, kernel module host
 - ✅ Foundation documents
 - ✅ Placeholder Three.js stage (Chromatic Mythic palette, toon shading)
 
-## Phase 2 — Universal kernel ⬜
+## Phase 2 — Universal kernel ✅
 Generic types and services: Actor, Identity, Realm, ServerConstitution, Organization,
 Faction, Clan, Ownership, Property, Contract, Resource, Inventory, Route, Relationship,
 Risk, Authority, Reputation, Provenance, Interaction, Evidence, Event, Chronicle,
-WorldState, Familiar, Item, Currency, Market, Task, Location, Role, Permission.
+WorldState, Familiar, Item, Currency, Market, Task, Location, Role, Permission. Services, `WorldState`, `Simulation` facade, 91 tests.
 
 ## Phase 3 — Canonical / identity ⬜
 Raw evidence records, reserved Canonical pipeline interfaces, identity contexts.

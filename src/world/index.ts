@@ -1,2 +1,4 @@
-// world module — implemented in later phases. See ROADMAP.md.
-export {};
+export * from './types';
+export * from './world-state';
+export * from './context';
+export * from './world';

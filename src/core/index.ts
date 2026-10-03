@@ -3,3 +3,7 @@ export * from './clock';
 export * from './result';
 export * from './events';
 export * from './kernel';
+export * from './rng';
+export * from './refs';
+export * from './provenance';
+export * from './math';

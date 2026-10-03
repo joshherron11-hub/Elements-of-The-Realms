@@ -1,2 +1,8 @@
-// economy module — implemented in later phases. See ROADMAP.md.
-export {};
+export * from './types';
+export * from './ownership';
+export * from './inventory';
+export * from './economy';
+export * from './market';
+export * from './resources';
+export * from './risk';
+export * from './property';

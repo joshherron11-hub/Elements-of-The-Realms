@@ -22,7 +22,7 @@ Always run `npm run typecheck && npm test` before committing.
 
 ## Layering rules (non-negotiable)
 1. **Simulation** (`src/core`, `src/world`, `src/entities`, `src/economy`, `src/familiars`,
-   `src/contracts`, `src/chronicle`, `src/identity`) must not import from
+   `src/contracts`, `src/chronicle`, `src/identity`, `src/simulation.ts`) must not import from
    `src/render`, `src/ui`, `src/persistence`, or `src/ai`, and must not touch the DOM,
    `window`, `localStorage`, `Date.now()` or `Math.random()` directly. Use the injected
    `Clock` and `IdFactory`.
@@ -34,6 +34,13 @@ Always run `npm run typecheck && npm test` before committing.
    deterministic state changes.
 5. Modules communicate through the `Kernel` services and the `EventBus`, not by
    reaching into each other's internals.
+
+Rule 1 is enforced by `tests/architecture.test.ts`.
+
+## Where things live
+See `docs/KERNEL.md` for the concept → type → service → file map. New gameplay
+should compose existing services; if logic would be duplicated, move it into the
+owning service instead.
 
 ## Data-driven rule
 Realm definitions (`/realms`), server constitutions (`/server-constitutions`) and canon

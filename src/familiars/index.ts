@@ -1,2 +1,1 @@
-// familiars module — implemented in later phases. See ROADMAP.md.
-export {};
+export * from './types';

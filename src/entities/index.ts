@@ -1,2 +1,9 @@
-// entities module — implemented in later phases. See ROADMAP.md.
-export {};
+export * from './actor';
+export * from './organization';
+export * from './authority';
+export * from './item';
+export * from './relationship';
+export * from './reputation';
+export * from './actors';
+export * from './social';
+export * from './organizations';
