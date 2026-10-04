@@ -7,6 +7,7 @@ import type { ReadableSpec, SceneLayout, Vec2 } from '../render/layout';
 import { Materials } from '../render/materials';
 import { createStage, type Palette, type Stage } from '../render/stage';
 import { detectQuality, type GraphicsQuality } from '../render/quality';
+import { targetDecal } from '../render/textures';
 import { Ambient } from '../render/ambient';
 import { lightingAt, type Lighting } from '../render/lighting';
 import type { Simulation } from '../simulation';
@@ -143,7 +144,7 @@ export class Game {
     this.currency = (sim.ctx.rules?.realm.constitution.economy.primaryCurrency ?? Object.keys(sim.state.currencies)[0]) as CurrencyId;
     this.player = createFigure(this.materials, styleFor(this.materials, [], true));
     this.palette = palette;
-    this.tapRing = new THREE.Mesh(new THREE.RingGeometry(0.35, 0.5, 24), new THREE.MeshBasicMaterial({ color: palette.gold, transparent: true, opacity: 0.8 }));
+    this.tapRing = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.3), new THREE.MeshBasicMaterial({ map: targetDecal(), color: palette.gold, transparent: true, opacity: 0.85, depthWrite: false }));
     this.tapRing.rotation.x = -Math.PI / 2;
     this.tapRing.position.y = 0.05;
     this.pointer = new PointerControls(this.stage.renderer.domElement, () => this.stage.camera, (t) => this.onTap(t.ground));

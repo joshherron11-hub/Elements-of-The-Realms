@@ -5,6 +5,25 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed — Blackmere Art Pass 1: placeholder geometry removed (presentation only)
+- New art kit (`src/render/kit/geo.ts`, `kit/props.ts`): lathe, board, slab, tube,
+  cluster, jitter, ribbed folds, world-scaled UVs and a merging `Assembly` with
+  crack-free outlines; semantic materials (wood, stone, plaster, shingle, straw,
+  weave, metal, painted, glow); painted surface textures and ground decals.
+- Every prop rebuilt as a crafted model: houses (half-timbered or stone, shingle
+  roofs, shuttered leaded windows, plank doors, chimneys, hanging signs), market
+  stalls (trestles, curved striped canopies, valances, goods), barrels, crates, sacks,
+  tables, benches, the bar, hearth, well, notice board, signposts, lamp posts,
+  lanterns, banners, bunting, fences, pens, woodpiles, pumpkins, flowers, planters,
+  trees, bushes, rocks, haystack, scarecrow, cart, bed, chest, shelf, shrine,
+  memorial, boat, rug, walls, gatehouse and keep.
+- Characters, Familiars and animals rebuilt with shaped bodies, faces, hair, hats and
+  gear; same animation rig.
+- Debug rings replaced by painted decals (exit chevrons, gather glints, tap target);
+  square leaf particles replaced by leaf sprites; tree ring, hedges, grass and leaf
+  scatter use kit geometry.
+- `tests/artkit.test.ts`; smoke clock check now accepts any Day-1 morning time.
+
 ### Changed — Blackmere visual rescue (presentation only)
 - Full-viewport, safe-area-aware canvas with ResizeObserver; closer, aspect-aware
   three-quarter camera clamped to the section; wheel/pinch/key zoom.

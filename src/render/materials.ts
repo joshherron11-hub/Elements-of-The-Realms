@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import type { Palette } from './stage';
+import { Assembly } from './kit/geo';
+import { plasterTexture, shingleTexture, stoneTexture, strawTexture, weaveTexture, woodTexture } from './textures';
 
 /**
  * Shared cel-shaded materials for Chromatic Mythic.
@@ -58,10 +60,71 @@ export class Materials {
     return this.memo(`tex:${map.uuid}:${color}`, () => new THREE.MeshToonMaterial({ color, map, gradientMap: this.gradient }));
   }
 
-  /** Toon plus a stepped rim light: for characters and Familiars. */
-  character(color: number): THREE.MeshToonMaterial {
-    return this.memo(`char:${color}`, () => {
-      const m = new THREE.MeshToonMaterial({ color, gradientMap: this.gradient });
+  // ── Art kit: one material language for the whole Realm ──────────────────
+  /** Wood: grain, knots and plank seams, tinted. */
+  wood(color: number = this.palette.timber): THREE.MeshToonMaterial {
+    return this.textured(woodTexture(), lighten(color, 1.35));
+  }
+
+  /** Dressed stone courses. */
+  stone(color: number = this.palette.stone): THREE.MeshToonMaterial {
+    return this.textured(stoneTexture(), lighten(color, 1.45));
+  }
+
+  /** Lime plaster for walls. */
+  plaster(color = 0xe8d4b0): THREE.MeshToonMaterial {
+    return this.textured(plasterTexture(), color);
+  }
+
+  /** Roof shingles. */
+  shingle(color: number = this.palette.roof): THREE.MeshToonMaterial {
+    return this.textured(shingleTexture(), lighten(color, 1.4));
+  }
+
+  straw(color = 0xd9b45a): THREE.MeshToonMaterial {
+    return this.textured(strawTexture(), color);
+  }
+
+  /** Burlap, canvas and homespun cloth. */
+  weave(color: number): THREE.MeshToonMaterial {
+    return this.textured(weaveTexture(), lighten(color, 1.1));
+  }
+
+  /** Wrought iron: dark, with a cool sheen from the rim light. */
+  metal(color = 0x34303a): THREE.MeshToonMaterial {
+    return this.character(color);
+  }
+
+  /** Any painted surface (signs, banners, rugs). Double-sided for cloth. */
+  painted(map: THREE.Texture, doubleSided = false): THREE.MeshToonMaterial {
+    return this.memo(`painted:${map.uuid}:${doubleSided}`, () => new THREE.MeshToonMaterial({ map, gradientMap: this.gradient, side: doubleSided ? THREE.DoubleSide : THREE.FrontSide }));
+  }
+
+  /** Ink outline shell that expands along smoothed normals (see `withOutlineNormals`). */
+  inkShell(width: number): THREE.ShaderMaterial | THREE.MeshBasicMaterial {
+    return this.memo(`ink:${width}`, () => {
+      const mat = new THREE.MeshBasicMaterial({ color: this.palette.ink, side: THREE.BackSide });
+      mat.onBeforeCompile = (shader) => {
+        shader.uniforms.outlineWidth = { value: width };
+        shader.vertexShader = `attribute vec3 outlineNormal;\nuniform float outlineWidth;\n${shader.vertexShader}`.replace(
+          '#include <begin_vertex>',
+          '#include <begin_vertex>\ntransformed += normalize(outlineNormal) * outlineWidth;',
+        );
+      };
+      mat.customProgramCacheKey = () => `eotr-ink-${width}`;
+      return mat;
+    });
+  }
+
+  /** Start a new merged prop. */
+  kit(outlineWidth = 0.035): Assembly {
+    return new Assembly((w) => this.inkShell(w), outlineWidth);
+  }
+
+  /** Toon plus a stepped rim light: for characters and Familiars. Optional painted map (cloth, hair). */
+  character(color: number, map?: THREE.Texture): THREE.MeshToonMaterial {
+    return this.memo(`char:${color}:${map?.uuid ?? ''}`, () => {
+      const m = new THREE.MeshToonMaterial({ color, gradientMap: this.gradient, map: map ?? null });
       m.onBeforeCompile = (shader) => {
         shader.uniforms.rimColor = this.rim.color;
         shader.uniforms.rimStrength = this.rim.strength;
@@ -81,9 +144,9 @@ export class Materials {
   }
 
   /** Unlit and over-bright: windows, lamps, embers. `power` > 1 feeds selective bloom. */
-  glow(color: number, power = 2.2, opacity = 1): THREE.MeshBasicMaterial {
-    return this.memo(`glow:${color}:${power}:${opacity}`, () => {
-      const m = new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(power), toneMapped: false, transparent: opacity < 1, opacity });
+  glow(color: number, power = 2.2, opacity = 1, map?: THREE.Texture): THREE.MeshBasicMaterial {
+    return this.memo(`glow:${color}:${power}:${opacity}:${map?.uuid ?? ''}`, () => {
+      const m = new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(power), toneMapped: false, transparent: opacity < 1, opacity, map: map ?? null });
       m.userData.baseColor = color;
       m.userData.power = power;
       return m;
@@ -111,4 +174,9 @@ export class Materials {
   part(geometry: THREE.BufferGeometry, color: number, outline = true, thickness = 0.05): THREE.Group {
     return this.mesh(geometry, color, outline, thickness, this.character(color));
   }
+}
+
+/** Brighten a colour (textures are mid-grey patterns, so tints need a lift). */
+function lighten(c: number, k: number): number {
+  return new THREE.Color(c).multiplyScalar(k).getHex();
 }

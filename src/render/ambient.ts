@@ -5,7 +5,7 @@ import { animateFigure, createAnimal, createFigure } from './figures';
 import type { ExtraSpec, SceneLayout, Vec2 } from './layout';
 import type { Lighting } from './lighting';
 import type { Materials } from './materials';
-import { softDisc } from './textures';
+import { leafSprite, softDisc } from './textures';
 
 /**
  * Ambient life: presentation only. Leaves drift, dust motes hang in the light,
@@ -60,6 +60,7 @@ export class Ambient {
   private readonly flames: THREE.Object3D[] = [];
   private readonly halos: THREE.Sprite[] = [];
   private readonly exitGlows: THREE.Mesh[] = [];
+  private readonly glints: THREE.Mesh[] = [];
 
   constructor(
     private readonly layout: SceneLayout,
@@ -89,7 +90,7 @@ export class Ambient {
       this.leaves = points(
         n,
         (i) => [(hash(i) - 0.5) * W, hash(i + 99) * 12, (hash(i + 7) - 0.5) * D],
-        new THREE.PointsMaterial({ size: 0.34, vertexColors: true, transparent: true, opacity: 0.95 }),
+        new THREE.PointsMaterial({ size: 0.42, map: leafSprite(), vertexColors: true, transparent: true, alphaTest: 0.4, depthWrite: false }),
         (i) => palette[i % 3]!,
       );
       group.add(this.leaves);
@@ -129,6 +130,7 @@ export class Ambient {
       if (o.name === 'flame') this.flames.push(o);
       if (o.name === 'lamp-halo') this.halos.push(o as THREE.Sprite);
       if (o.name === 'exit-glow') this.exitGlows.push(o as THREE.Mesh);
+      if (o.name === 'node-glint') this.glints.push(o as THREE.Mesh);
     });
     for (const l of built.nightLights) {
       const mat = (l as THREE.Mesh).material as THREE.MeshBasicMaterial | undefined;
@@ -259,7 +261,11 @@ export class Ambient {
       mat.color.copy(base).multiplyScalar(0.45 + lit * (power - 0.45));
     }
     for (const h of this.halos) h.material.opacity = lit * (0.42 + Math.sin(t * 2.3 + h.position.x) * 0.06);
-    for (const g of this.exitGlows) (g.material as THREE.MeshBasicMaterial).opacity = 0.25 + Math.sin(t * 2.4) * 0.12;
+    for (const g of this.exitGlows) (g.material as THREE.MeshBasicMaterial).opacity = 0.32 + Math.sin(t * 2.4) * 0.14;
+    for (const g of this.glints) {
+      g.rotation.z = t * 0.3;
+      (g.material as THREE.MeshBasicMaterial).opacity = 0.55 + Math.sin(t * 3.1) * 0.25;
+    }
     for (const w of this.built.group.children) {
       if (w.name === 'water-shine') w.position.x += Math.sin(t * 0.6) * 0.004;
       if (w.name === 'backdrop') w.position.x = camera.position.x * (w.userData.parallax as number);

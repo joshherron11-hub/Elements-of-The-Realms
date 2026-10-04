@@ -1,11 +1,13 @@
 import * as THREE from 'three';
 import type { Materials } from './materials';
-import { softDisc } from './textures';
+import { softDisc, weaveTexture } from './textures';
+import { board, cluster, hash, jitter, lathe, ribbed, slab, tube, type Assembly, type V3 } from './kit/geo';
 
 /**
- * Stylized characters and Familiars for Chromatic Mythic. Original designs, no
- * external assets: chunky proportions, a big readable head, a role-specific hat
- * or garment for the silhouette, rim-lit cel materials and an ink outline.
+ * Characters and Familiars for Chromatic Mythic: original designs, no external
+ * assets. Bodies are turned and shaped (lathe tunics with folds, tapered
+ * sleeves and trousers, booted feet, mitten hands), heads carry faces, hair and
+ * a role hat, and everything is cel-shaded with a rim light and an ink line.
  *
  * Every figure is a root group (position + facing) holding a soft ground
  * shadow and a `rig` (pose). Animation moves the rig only, so the shadow stays
@@ -17,6 +19,7 @@ export interface FigureStyle {
   body: number;
   accent: number;
   skin?: number;
+  hair?: number;
   height?: number;
   role?: Role;
 }
@@ -36,7 +39,9 @@ interface Rig {
   seed: number;
 }
 
-const SKIN = [0xe7c39a, 0xc99a6e, 0x9c6b48, 0xf0d2b0];
+const SKIN = [0xe7c39a, 0xc99a6e, 0x9c6b48, 0xf0d2b0, 0xb07a52];
+const HAIR = [0x3a2416, 0x6b3a1e, 0xc9a060, 0x2a1a1a, 0x8a4a2a, 0xb8b0a4];
+const LEATHER = 0x3a2416;
 
 function shadowDisc(radius: number): THREE.Mesh {
   const m = new THREE.Mesh(
@@ -54,17 +59,51 @@ function rigOf(g: THREE.Object3D): Rig | undefined {
   return g.userData.rig as Rig | undefined;
 }
 
-/** Limb with its pivot at the top, so rotation.x swings it. */
-function limb(m: Materials, len: number, radius: number, color: number, at: [number, number, number]): THREE.Group {
-  const pivot = new THREE.Group();
-  const part = m.part(new THREE.CapsuleGeometry(radius, len, 3, 8), color, true, 0.035);
-  part.position.y = -len / 2 - radius * 0.5;
-  pivot.add(part);
-  pivot.position.set(...at);
-  return pivot;
+/** Repeat a lathe's own UVs so cloth weave reads at body scale. */
+function uvScale(geo: THREE.BufferGeometry, su: number, sv: number): THREE.BufferGeometry {
+  const uv = geo.getAttribute('uv') as THREE.BufferAttribute | undefined;
+  if (uv) for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * su, uv.getY(i) * sv);
+  return geo;
 }
 
-/** A person. Height ~2.5 m in world units: big enough to read on a phone. */
+/** Cloth: rim-lit cel material with a fine weave. */
+const cloth = (m: Materials, color: number) => m.character(color, weaveTexture());
+
+/** Scale a 2D outline by k. */
+const sc = (pts: [number, number][], k: number) => pts.map(([x, y]) => [x * k, y * k] as [number, number]);
+
+// ── People ───────────────────────────────────────────────────────────────────
+
+/** A face: eyes with a catch-light, brows, a nose, ears, cheeks, a mouth. */
+function face(a: Assembly, m: Materials, k: number, skin: number, brow: number, seed: number): void {
+  const R = 0.34 * k;
+  a.add(new THREE.SphereGeometry(R, 16, 12), m.character(skin), { s: [1, 1.08, 1] });
+  a.add(new THREE.SphereGeometry(0.075 * k, 8, 6), m.character(skin), { p: [0, -0.02 * k, R * 0.98], s: [0.8, 0.75, 1] }, { outline: false });
+  for (const x of [-1, 1]) {
+    a.add(new THREE.SphereGeometry(0.075 * k, 8, 6), m.character(skin), { p: [x * R * 0.98, 0, 0], s: [0.5, 1, 0.8] }, { outline: false });
+    a.add(new THREE.SphereGeometry(0.052 * k, 8, 6), m.toon(0x1a1014), { p: [x * 0.12 * k, 0.06 * k, R * 0.9], s: [0.8, 1.15, 0.5] }, { outline: false });
+    a.add(new THREE.SphereGeometry(0.016 * k, 5, 4), m.glow(0xffffff, 1), { p: [x * 0.12 * k + 0.015 * k, 0.085 * k, R * 0.93] }, { outline: false });
+    a.add(board(0.12 * k, 0.03 * k, 0.03 * k), m.toon(brow), { p: [x * 0.13 * k, 0.17 * k, R * 0.86], r: [0, 0, x * (-0.15 + (hash(seed) - 0.5) * 0.3)] }, { outline: false });
+    a.add(new THREE.CircleGeometry(0.05 * k, 8), m.toon(0xe0907a), { p: [x * 0.2 * k, -0.07 * k, R * 0.84], r: [0, x * 0.5, 0] }, { outline: false });
+  }
+  a.add(board(0.1 * k, 0.022 * k, 0.02 * k), m.toon(0x6a2a24), { p: [0, -0.14 * k, R * 0.92] }, { outline: false });
+}
+
+/** Hair styles: 0 cropped, 1 long, 2 bun, 3 braid, 4 bald with beard, 5 cropped with beard. */
+function hair(a: Assembly, m: Materials, k: number, color: number, style: number, seed: number): void {
+  const R = 0.36 * k;
+  const mat = m.character(color);
+  if (style !== 4) {
+    a.add(jitter(new THREE.SphereGeometry(R, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), 0.03 * k, seed), mat, { p: [0, 0.03 * k, -0.02 * k], s: [1.04, 1.06, 1.06] });
+    a.add(cluster([[-0.15 * k, 0, 0, 0.11 * k], [0, 0.02 * k, 0, 0.12 * k], [0.15 * k, 0, 0, 0.11 * k]], seed), mat, { p: [0, 0.2 * k, 0.24 * k] }, { outline: false });
+  }
+  if (style === 1) a.add(jitter(lathe(sc([[0.3, 0], [0.34, -0.25], [0.28, -0.5], [0.0, -0.55]], k), 10), 0.02 * k, seed), mat, { p: [0, 0.05 * k, -0.08 * k], s: [1, 1, 0.7] });
+  if (style === 2) a.add(new THREE.SphereGeometry(0.15 * k, 8, 6), mat, { p: [0, 0.22 * k, -0.3 * k] });
+  if (style === 3) a.add(tube([[0, 0, -0.3 * k], [0.05 * k, -0.25 * k, -0.36 * k], [0.02 * k, -0.6 * k, -0.3 * k]], 0.07 * k, 8, 6), mat);
+  if (style === 4 || style === 5) a.add(cluster([[0, 0, 0, 0.16 * k], [-0.1 * k, 0.05 * k, -0.02 * k, 0.12 * k], [0.1 * k, 0.05 * k, -0.02 * k, 0.12 * k]], seed), mat, { p: [0, -0.24 * k, 0.24 * k] });
+}
+
+/** A whole person. Height ~2.5 m in world units: big enough to read on a phone. */
 export function createFigure(m: Materials, style: FigureStyle): THREE.Group {
   const P = m.palette;
   const root = new THREE.Group();
@@ -73,177 +112,161 @@ export function createFigure(m: Materials, style: FigureStyle): THREE.Group {
   const h = style.height ?? 2.5;
   const k = h / 2.5;
   const role = style.role ?? 'villager';
-  const skin = style.skin ?? SKIN[(style.body + style.accent) % SKIN.length]!;
-  const dark = P.ink;
+  const seed = (style.body % 97) + (style.accent % 13) * 7 + Math.round(h * 10);
+  const skin = style.skin ?? SKIN[seed % SKIN.length]!;
+  const hairColor = style.hair ?? HAIR[(seed >> 1) % HAIR.length]!;
   const robe = role === 'official';
+  const skirt = role === 'innkeeper';
+  const L = (pts: [number, number][]) => sc(pts, k);
 
-  const legLen = 0.62 * k;
-  const hip = 0.95 * k;
-  const legL = limb(m, legLen, 0.13 * k, robe ? style.body : P.timber, [-0.17 * k, hip, 0]);
-  const legR = limb(m, legLen, 0.13 * k, robe ? style.body : P.timber, [0.17 * k, hip, 0]);
-  for (const leg of [legL, legR]) {
-    const boot = m.mesh(new THREE.BoxGeometry(0.24 * k, 0.16 * k, 0.36 * k), dark, false);
-    boot.position.set(0, -legLen - 0.2 * k, 0.06 * k);
-    leg.add(boot);
-  }
+  // Legs: tapered trousers and shaped boots, pivoting at the hip.
+  const legLen = 0.66 * k;
+  const hip = 0.98 * k;
+  const leg = (x: number) => {
+    const pivot = new THREE.Group();
+    pivot.position.set(x, hip, 0);
+    const a = m.kit(0.03);
+    if (!robe) a.add(uvScale(lathe(L([[0.1, -0.66], [0.12, -0.45], [0.15, -0.12], [0.16, 0]]), 10), 3, 1), cloth(m, role === 'player' ? 0x4a3a30 : P.timber));
+    const boot: [number, number][] = [[-0.12, 0], [0.24, 0], [0.29, 0.06], [0.22, 0.13], [0.08, 0.15], [0.07, 0.34], [-0.12, 0.34]];
+    a.add(slab(L(boot), 0.22 * k, 0.02 * k), m.character(LEATHER), { p: [0, -legLen - 0.06 * k, 0.02 * k], r: [0, -Math.PI / 2, 0] });
+    pivot.add(a.build());
+    return pivot;
+  };
+  const legL = leg(-0.17 * k);
+  const legR = leg(0.17 * k);
   rig.add(legL, legR);
 
-  // Torso: a tapered tunic (a long robe for officials) — the main colour block.
-  const torsoH = (robe ? 1.25 : 0.85) * k;
-  const torso = m.part(new THREE.CylinderGeometry(0.34 * k, (robe ? 0.56 : 0.46) * k, torsoH, 10), style.body, true, 0.06);
-  torso.position.y = hip + torsoH / 2 - (robe ? 0.42 * k : 0);
-  rig.add(torso);
-  const belt = new THREE.Mesh(new THREE.TorusGeometry(0.4 * k, 0.05 * k, 6, 18), m.character(style.accent));
-  belt.rotation.x = Math.PI / 2;
-  belt.position.y = hip + 0.12 * k;
-  rig.add(belt);
+  // Torso: a turned tunic with folds (a long robe for the Reeve, a skirt for the innkeeper).
+  const body = m.kit(0.045);
+  const hem = robe ? -0.95 : skirt ? -0.72 : -0.28;
+  const flare = robe ? 0.6 : skirt ? 0.56 : 0.48;
+  const torso = ribbed(lathe(L([[flare, hem], [flare * 0.92, hem + 0.12], [0.44, 0], [0.38, 0.28], [0.43, 0.56], [0.45, 0.7], [0.36, 0.82], [0.16, 0.9], [0.0, 0.9]]), 16), 8, 0.03);
+  body.add(uvScale(torso, 4, 2), cloth(m, style.body), { p: [0, hip, 0] });
+  body.add(new THREE.TorusGeometry(0.41 * k, 0.05 * k, 6, 20), m.character(LEATHER), { p: [0, hip + 0.1 * k, 0], r: [Math.PI / 2, 0, 0], s: [1, 0.85, 1] }, { outline: false });
+  body.add(board(0.13 * k, 0.11 * k, 0.04 * k), m.metal(0xc9973a), { p: [0, hip + 0.1 * k, 0.36 * k] }, { outline: false });
+  body.add(lathe(L([[0.13, 0], [0.12, 0.16]]), 10), m.character(skin), { p: [0, hip + 0.86 * k, 0] }, { outline: false });
+  // Shoulders: a short collar / mantle in the accent colour.
+  body.add(uvScale(lathe(L([[0.5, -0.12], [0.47, -0.02], [0.36, 0.08], [0.18, 0.12]]), 14), 4, 1), cloth(m, style.accent), { p: [0, hip + 0.78 * k, 0] });
 
-  const shoulder = hip + 0.78 * k;
-  const armL = limb(m, 0.55 * k, 0.1 * k, style.body, [-0.42 * k, shoulder, 0]);
-  const armR = limb(m, 0.55 * k, 0.1 * k, style.body, [0.42 * k, shoulder, 0]);
-  for (const arm of [armL, armR]) {
-    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.11 * k, 8, 6), m.character(skin));
-    hand.position.y = -0.8 * k;
-    arm.add(hand);
-  }
-  armL.rotation.z = -0.12;
-  armR.rotation.z = 0.12;
+  const shoulder = hip + 0.76 * k;
+  const arm = (x: number) => {
+    const pivot = new THREE.Group();
+    pivot.position.set(x, shoulder, 0);
+    const a = m.kit(0.03);
+    a.add(uvScale(lathe(L([[0.13, -0.62], [0.12, -0.55], [0.1, -0.3], [0.13, -0.05], [0.12, 0.05]]), 10), 3, 1), cloth(m, style.body));
+    a.add(new THREE.SphereGeometry(0.1 * k, 10, 8), m.character(skin), { p: [0, -0.72 * k, 0.02 * k], s: [1, 1.1, 0.8] });
+    a.add(new THREE.SphereGeometry(0.04 * k, 6, 5), m.character(skin), { p: [x > 0 ? -0.07 * k : 0.07 * k, -0.68 * k, 0.07 * k] }, { outline: false });
+    pivot.add(a.build());
+    pivot.rotation.z = x > 0 ? 0.1 : -0.1;
+    return pivot;
+  };
+  const armL = arm(-0.46 * k);
+  const armR = arm(0.46 * k);
   rig.add(armL, armR);
 
-  // Head: oversized for readability.
-  const headY = shoulder + 0.38 * k;
+  // Head: face, hair and the role hat.
+  const headY = shoulder + 0.42 * k;
   const head = new THREE.Group();
   head.position.y = headY;
-  const skull = m.part(new THREE.SphereGeometry(0.33 * k, 14, 12), skin, true, 0.05);
-  head.add(skull);
-  for (const side of [-1, 1]) {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.045 * k, 6, 5), new THREE.MeshBasicMaterial({ color: dark }));
-    eye.position.set(side * 0.12 * k, 0.03 * k, 0.29 * k);
-    head.add(eye);
-  }
-  rig.add(head);
+  const ha = m.kit(0.035);
+  face(ha, m, k, skin, hairColor === 0xb8b0a4 ? 0x7a7068 : 0x2a1a12, seed);
+  const hairStyle = role === 'official' ? 4 : role === 'innkeeper' ? 2 : role === 'farmer' ? 3 : role === 'merchant' ? 5 : seed % 4;
+  if (role !== 'player' && role !== 'traveler') hair(ha, m, k, role === 'official' ? 0xb8b0a4 : hairColor, hairStyle, seed);
+  const hat = (o: THREE.BufferGeometry, color: number, at: V3, opts: { r?: V3; map?: THREE.Texture } = {}) => ha.add(o, m.character(color, opts.map), { p: at, r: opts.r });
 
-  // Role silhouette: the one shape you recognise from across the square.
-  const add = (o: THREE.Object3D, parent: THREE.Object3D = head) => parent.add(o);
   switch (role) {
     case 'player': {
-      const hood = m.part(new THREE.ConeGeometry(0.42 * k, 0.62 * k, 10), style.accent, true, 0.05);
-      hood.position.y = 0.3 * k;
-      hood.rotation.x = -0.18;
-      add(hood);
-      const cape = m.part(new THREE.CylinderGeometry(0.36 * k, 0.62 * k, 1.2 * k, 10, 1, true, Math.PI * 0.6, Math.PI * 0.8), style.accent, false);
-      cape.position.set(0, hip + 0.35 * k, -0.06 * k);
-      cape.rotation.y = Math.PI;
-      rig.add(cape);
-      const scarf = new THREE.Mesh(new THREE.TorusGeometry(0.3 * k, 0.09 * k, 6, 14), m.character(P.gold));
-      scarf.rotation.x = Math.PI / 2;
-      scarf.position.y = shoulder + 0.08 * k;
-      rig.add(scarf);
+      // A pointed hood with a soft fold, a travelling cloak and a scarf.
+      // A rounded hood with a soft drooping tail, framing the face — not a cone.
+      const hood = jitter(lathe(L([[0.42, -0.2], [0.46, 0.02], [0.44, 0.24], [0.36, 0.42], [0.22, 0.54], [0.08, 0.6], [0.0, 0.6]]), 16), 0.015 * k, seed);
+      hat(uvScale(hood, 3, 1), style.accent, [0, 0.04 * k, -0.06 * k], { r: [-0.15, 0, 0], map: weaveTexture() });
+      ha.add(tube([[0, 0.5 * k, -0.2 * k], [0, 0.52 * k, -0.42 * k], [0.04 * k, 0.32 * k, -0.6 * k], [0.06 * k, 0.1 * k, -0.62 * k]], 0.075 * k, 10, 6), m.character(style.accent, weaveTexture()));
+      ha.add(new THREE.TorusGeometry(0.36 * k, 0.06 * k, 6, 18, Math.PI * 1.3), m.character(new THREE.Color(style.accent).multiplyScalar(0.75).getHex()), { p: [0, 0.02 * k, 0.2 * k], r: [0, 0, -Math.PI * 0.15] }, { outline: false });
+      const cape = new THREE.CylinderGeometry(0.44 * k, 0.6 * k, 1.15 * k, 16, 1, true, Math.PI * 0.55, Math.PI * 0.9);
+      body.add(uvScale(cape, 3, 2), m.character(style.accent, weaveTexture()), { p: [0, hip + 0.3 * k, -0.04 * k], r: [0, Math.PI, 0] }, { outline: false });
+      body.add(new THREE.TorusGeometry(0.28 * k, 0.1 * k, 8, 16), cloth(m, P.gold), { p: [0, shoulder + 0.1 * k, 0], r: [Math.PI / 2, 0, 0] });
+      body.add(slab(L([[-0.08, 0], [0.08, 0], [0.06, -0.4], [-0.06, -0.38]]), 0.04 * k), cloth(m, P.gold), { p: [0.14 * k, shoulder + 0.05 * k, 0.32 * k], r: [0.2, 0, 0.15] }, { outline: false });
       break;
     }
     case 'innkeeper': {
-      const scarf = m.part(new THREE.SphereGeometry(0.35 * k, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2), style.accent, true, 0.04);
-      scarf.position.y = 0.06 * k;
-      add(scarf);
-      const apron = new THREE.Mesh(new THREE.PlaneGeometry(0.62 * k, 0.9 * k), m.character(P.light));
-      apron.position.set(0, hip + 0.18 * k, 0.47 * k);
-      apron.rotation.x = -0.18;
-      rig.add(apron);
+      hat(new THREE.TorusGeometry(0.33 * k, 0.07 * k, 6, 18), style.accent, [0, 0.16 * k, 0], { r: [Math.PI / 2 - 0.25, 0, 0] });
+      hat(new THREE.SphereGeometry(0.08 * k, 6, 5), style.accent, [0.24 * k, 0.24 * k, -0.2 * k]);
+      body.add(slab(L([[-0.32, 0], [0.32, 0], [0.36, -0.95], [-0.36, -0.95]]), 0.03 * k, 0.01), cloth(m, 0xf3ead8), { p: [0, hip + 0.42 * k, 0.43 * k], r: [-0.1, 0, 0] });
+      body.add(tube([[-0.3 * k, hip + 0.1 * k, 0.42 * k], [-0.42 * k, hip + 0.1 * k, 0], [-0.3 * k, hip + 0.05 * k, -0.4 * k]], 0.025 * k, 6, 4), cloth(m, 0xf3ead8), {}, { outline: false });
       break;
     }
     case 'merchant': {
-      const brim = m.part(new THREE.CylinderGeometry(0.62 * k, 0.62 * k, 0.06 * k, 14), style.accent, true, 0.04);
-      brim.position.y = 0.28 * k;
-      add(brim);
-      const crown = m.part(new THREE.CylinderGeometry(0.26 * k, 0.32 * k, 0.32 * k, 10), style.accent, false);
-      crown.position.y = 0.45 * k;
-      add(crown);
-      const feather = new THREE.Mesh(new THREE.ConeGeometry(0.05 * k, 0.5 * k, 4), m.character(P.crimson));
-      feather.position.set(0.24 * k, 0.6 * k, -0.05 * k);
-      feather.rotation.z = -0.6;
-      add(feather);
-      const pack = m.part(new THREE.BoxGeometry(0.5 * k, 0.6 * k, 0.3 * k), P.timber);
-      pack.position.set(0, shoulder - 0.3 * k, -0.45 * k);
-      rig.add(pack);
+      hat(lathe(L([[0.7, 0.0], [0.68, 0.05], [0.42, 0.06], [0.32, 0.08], [0.3, 0.36], [0.22, 0.42], [0.0, 0.43]]), 18), style.accent, [0, 0.24 * k, 0], { r: [0.05, 0, 0.06] });
+      hat(new THREE.TorusGeometry(0.31 * k, 0.04 * k, 4, 16), P.crimson, [0, 0.34 * k, 0], { r: [Math.PI / 2, 0, 0] });
+      ha.add(slab(L([[0, 0], [0.12, 0.3], [0.08, 0.62], [-0.02, 0.3]]), 0.02 * k), m.character(P.crimson), { p: [0.3 * k, 0.35 * k, -0.1 * k], r: [0, 0.3, -0.5] }, { outline: false });
+      for (const s of [-1, 1]) ha.add(tube([[0, 0, 0], [s * 0.08 * k, -0.02 * k, 0], [s * 0.14 * k, 0.03 * k, -0.02 * k]], 0.025 * k, 6, 4), m.character(hairColor), { p: [0, -0.08 * k, 0.32 * k] }, { outline: false });
+      body.add(board(0.55 * k, 0.65 * k, 0.3 * k, 0.05 * k), m.character(LEATHER), { p: [0, shoulder - 0.3 * k, -0.45 * k] });
+      body.add(lathe(L([[0.12, -0.32], [0.13, -0.3], [0.13, 0.3], [0.12, 0.32]]), 10), cloth(m, P.moss), { p: [0, shoulder + 0.1 * k, -0.45 * k], r: [0, 0, Math.PI / 2] });
       break;
     }
     case 'farmer': {
-      const straw = m.part(new THREE.ConeGeometry(0.55 * k, 0.3 * k, 12), P.gold, true, 0.04);
-      straw.position.y = 0.34 * k;
-      add(straw);
-      const scythe = new THREE.Group();
-      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.03 * k, 0.03 * k, 1.6 * k, 5), m.toon(P.timber));
-      shaft.position.y = -0.3 * k;
-      scythe.add(shaft);
-      armR.add(scythe);
+      hat(jitter(lathe(L([[0.62, 0.0], [0.58, 0.04], [0.3, 0.08], [0.26, 0.28], [0.12, 0.36], [0.0, 0.37]]), 16), 0.02 * k, seed), 0xd9b45a, [0, 0.26 * k, 0], { r: [0.12, 0, -0.05] });
+      hat(new THREE.TorusGeometry(0.27 * k, 0.035 * k, 4, 14), P.crimson, [0, 0.36 * k, 0], { r: [Math.PI / 2 + 0.12, 0, 0] });
       break;
     }
     case 'courier': {
-      const cap = m.part(new THREE.SphereGeometry(0.35 * k, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2.2), style.accent, true, 0.04);
-      cap.position.y = 0.08 * k;
-      add(cap);
-      const peak = new THREE.Mesh(new THREE.BoxGeometry(0.42 * k, 0.04 * k, 0.24 * k), m.character(style.accent));
-      peak.position.set(0, 0.14 * k, 0.32 * k);
-      add(peak);
-      const bag = m.part(new THREE.BoxGeometry(0.42 * k, 0.36 * k, 0.16 * k), P.timber);
-      bag.position.set(0.42 * k, hip + 0.05 * k, 0.12 * k);
-      rig.add(bag);
-      const strap = new THREE.Mesh(new THREE.TorusGeometry(0.46 * k, 0.03 * k, 4, 18), m.character(P.timber));
-      strap.position.y = hip + 0.5 * k;
-      strap.rotation.set(0.1, 0, 0.75);
-      rig.add(strap);
+      hat(lathe(L([[0.37, 0], [0.36, 0.1], [0.28, 0.24], [0.0, 0.28]]), 14), style.accent, [0, 0.12 * k, 0]);
+      ha.add(slab(L([[-0.2, 0], [0.2, 0], [0.16, 0.2], [-0.16, 0.2]]), 0.03 * k), m.character(style.accent), { p: [0, 0.13 * k, 0.3 * k], r: [-Math.PI / 2 + 0.25, 0, 0] });
+      body.add(board(0.46 * k, 0.38 * k, 0.16 * k, 0.04 * k), m.character(LEATHER), { p: [0.44 * k, hip + 0.05 * k, 0.12 * k] });
+      body.add(slab(L([[-0.23, 0], [0.23, 0], [0.18, -0.22], [-0.18, -0.22]]), 0.02 * k), m.character(0x5a3a24), { p: [0.44 * k, hip + 0.24 * k, 0.21 * k] }, { outline: false });
+      body.add(new THREE.TorusGeometry(0.48 * k, 0.03 * k, 4, 20), m.character(LEATHER), { p: [0, hip + 0.48 * k, 0], r: [0.1, 0, 0.75] }, { outline: false });
       break;
     }
     case 'official': {
-      const hat = m.part(new THREE.CylinderGeometry(0.26 * k, 0.3 * k, 0.6 * k, 10), dark, true, 0.04);
-      hat.position.y = 0.48 * k;
-      add(hat);
-      const band = new THREE.Mesh(new THREE.TorusGeometry(0.29 * k, 0.04 * k, 4, 14), m.character(style.accent));
-      band.rotation.x = Math.PI / 2;
-      band.position.y = 0.25 * k;
-      add(band);
-      const chain = new THREE.Mesh(new THREE.TorusGeometry(0.3 * k, 0.035 * k, 4, 16), m.glow(P.gold, 1.2));
-      chain.rotation.x = Math.PI / 2.6;
-      chain.position.set(0, shoulder - 0.08 * k, 0.12 * k);
-      rig.add(chain);
+      hat(lathe(L([[0.36, 0], [0.35, 0.04], [0.27, 0.06], [0.29, 0.62], [0.3, 0.66], [0.0, 0.67]]), 14), P.ink, [0, 0.22 * k, 0]);
+      hat(new THREE.TorusGeometry(0.285 * k, 0.045 * k, 4, 16), style.accent, [0, 0.36 * k, 0], { r: [Math.PI / 2, 0, 0] });
+      body.add(new THREE.TorusGeometry(0.3 * k, 0.04 * k, 6, 18), m.metal(0xc9973a), { p: [0, shoulder - 0.02 * k, 0.1 * k], r: [Math.PI / 2.4, 0, 0] }, { outline: false });
+      body.add(new THREE.CylinderGeometry(0.08 * k, 0.08 * k, 0.03 * k, 10), m.glow(P.gold, 1.2), { p: [0, shoulder - 0.25 * k, 0.4 * k], r: [Math.PI / 2, 0, 0] }, { outline: false });
+      body.add(board(0.12 * k, 1.5 * k, 0.03 * k), cloth(m, style.accent), { p: [0, hip - 0.1 * k, 0.5 * k], r: [-0.07, 0, 0] }, { outline: false });
       break;
     }
     case 'traveler': {
-      const hood = m.part(new THREE.ConeGeometry(0.44 * k, 0.7 * k, 10), style.accent, true, 0.05);
-      hood.position.y = 0.32 * k;
-      add(hood);
-      const staff = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * k, 0.04 * k, 2.4 * k, 5), m.toon(P.timber));
-      staff.position.set(0.55 * k, 1.2 * k, 0.2 * k);
-      rig.add(staff);
-      const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.1 * k), m.glow(P.gold, 2.4));
-      gem.position.set(0.55 * k, 2.45 * k, 0.2 * k);
-      rig.add(gem);
+      const hood = jitter(lathe(L([[0.45, -0.2], [0.47, 0.05], [0.42, 0.3], [0.28, 0.55], [0.12, 0.72], [0.0, 0.78]]), 14), 0.02 * k, seed);
+      hat(uvScale(hood, 3, 1), style.accent, [0, 0.04 * k, -0.05 * k], { r: [-0.2, 0, 0], map: weaveTexture() });
       break;
     }
     case 'patron':
     case 'villager': {
-      const cap = m.part(new THREE.SphereGeometry(0.34 * k, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2), style.accent, true, 0.04);
-      cap.position.y = 0.08 * k;
-      add(cap);
+      if (seed % 3 === 0) hat(lathe(L([[0.37, 0], [0.36, 0.1], [0.24, 0.24], [0.0, 0.27]]), 12), style.accent, [0, 0.14 * k, -0.02 * k]);
       break;
     }
   }
+  head.add(ha.build('head'));
+  rig.add(body.build('body'));
+  rig.add(head);
 
-  root.add(shadowDisc(0.75 * k));
-  root.userData.rig = { rig, head, armL, armR, legL, legR, kind: 'person', seed: (style.body % 97) + (style.accent % 13) } satisfies Rig;
+  if (role === 'traveler') {
+    // A walking staff with a glowing stone, held in the right hand.
+    const staff = m.kit(0.03);
+    staff.add(jitter(lathe(L([[0.05, -1.4], [0.045, 0.6], [0.07, 0.7], [0.04, 0.85]]), 6), 0.01, seed), m.wood(0x6b4428));
+    const sObj = staff.build();
+    sObj.position.set(0.02 * k, -0.72 * k, 0.1 * k);
+    armR.add(sObj);
+    const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.1 * k), m.glow(P.gold, 2.4));
+    gem.position.set(0.02 * k, 0.05 * k, 0.1 * k);
+    armR.add(gem);
+  }
+
+  root.add(shadowDisc(0.78 * k));
+  root.userData.rig = { rig, head, armL, armR, legL, legR, kind: 'person', seed: seed % 50 } satisfies Rig;
   return root;
 }
 
 /** Colour styles per NPC tag; keeps characters readable at a distance. */
 export function styleFor(m: Materials, tags: string[], isPlayer = false): FigureStyle {
   const P = m.palette;
-  if (isPlayer) return { body: P.light, accent: P.ember, role: 'player', height: 2.55 };
-  if (tags.includes('innkeeper')) return { body: P.crimson, accent: P.gold, role: 'innkeeper' };
-  if (tags.includes('merchant')) return { body: P.gold, accent: P.timber, role: 'merchant' };
-  if (tags.includes('farmer')) return { body: P.moss, accent: P.gold, role: 'farmer' };
-  if (tags.includes('courier')) return { body: P.ember, accent: P.ink, role: 'courier' };
-  if (tags.includes('official')) return { body: P.ink, accent: P.crimson, role: 'official' };
-  if (tags.includes('traveler')) return { body: P.stone, accent: P.moss, role: 'traveler' };
+  if (isPlayer) return { body: 0xe8d8b8, accent: P.ember, role: 'player', height: 2.55, skin: 0xe7c39a };
+  if (tags.includes('innkeeper')) return { body: P.crimson, accent: P.gold, role: 'innkeeper', hair: 0x8a4a2a };
+  if (tags.includes('merchant')) return { body: P.gold, accent: 0x5a3a24, role: 'merchant', hair: 0x3a2416 };
+  if (tags.includes('farmer')) return { body: P.moss, accent: 0xc9a060, role: 'farmer', hair: 0xc9a060 };
+  if (tags.includes('courier')) return { body: P.ember, accent: 0x2a3a4a, role: 'courier', hair: 0x2a1a1a };
+  if (tags.includes('official')) return { body: 0x2a2030, accent: P.crimson, role: 'official' };
+  if (tags.includes('traveler')) return { body: 0x6a6a7a, accent: P.moss, role: 'traveler' };
   return { body: P.stone, accent: P.light, role: 'villager' };
 }
 
@@ -334,69 +357,78 @@ export function animateFigure(root: THREE.Object3D, p: PoseInput): void {
   }
 }
 
-/** Original placeholder Familiar figures: a hound, a glowing moth, a raven. */
+
+// ── Familiars ────────────────────────────────────────────────────────────────
+
+/** Leg pivot with a tapered leg and a paw. */
+function pawLeg(m: Materials, color: number, paw: number, at: V3, len: number): THREE.Group {
+  const pivot = new THREE.Group();
+  pivot.position.set(...at);
+  const a = m.kit(0.025);
+  a.add(lathe([[0.06, -len], [0.07, -len * 0.6], [0.1, -len * 0.15], [0.09, 0]], 8), m.character(color));
+  a.add(new THREE.SphereGeometry(0.075, 8, 6), m.character(paw), { p: [0, -len, 0.03], s: [1, 0.6, 1.3] });
+  pivot.add(a.build());
+  return pivot;
+}
+
+/** Original Familiar figures: a russet hound, a lantern moth, a keep raven. */
 export function createFamiliarFigure(m: Materials, figure: string): THREE.Group {
   const P = m.palette;
   const root = new THREE.Group();
   const rig = new THREE.Group();
   root.add(rig);
   if (figure === 'hound') {
-    const body = m.part(new THREE.CapsuleGeometry(0.3, 0.5, 4, 10), P.ember, true, 0.05);
-    body.rotation.x = Math.PI / 2;
-    body.position.y = 0.62;
-    rig.add(body);
-    const chest = m.part(new THREE.SphereGeometry(0.26, 10, 8), P.light, false);
-    chest.position.set(0, 0.6, 0.38);
-    rig.add(chest);
+    const russet = P.ember;
+    const a = m.kit(0.04);
+    // Deep chest, tucked waist: a turned body laid along z.
+    a.add(lathe([[0.05, -0.55], [0.2, -0.48], [0.25, -0.25], [0.24, 0.0], [0.31, 0.25], [0.29, 0.42], [0.14, 0.56], [0.0, 0.58]], 14), m.character(russet), { p: [0, 0.68, 0], r: [Math.PI / 2, 0, 0] });
+    a.add(new THREE.SphereGeometry(0.22, 10, 8), m.character(P.light), { p: [0, 0.6, 0.4], s: [0.9, 1, 0.8] }, { outline: false });
+    a.add(new THREE.TorusGeometry(0.2, 0.05, 6, 16), m.character(P.crimson), { p: [0, 0.86, 0.48], r: [1.2, 0, 0] }, { outline: false });
+    a.add(new THREE.CylinderGeometry(0.06, 0.06, 0.02, 10), m.metal(0xc9973a), { p: [0, 0.68, 0.64], r: [1.3, 0, 0] }, { outline: false });
+    rig.add(a.build('hound-body'));
     const head = new THREE.Group();
-    head.position.set(0, 0.98, 0.58);
-    const skull = m.part(new THREE.SphereGeometry(0.28, 12, 10), P.ember, true, 0.05);
-    head.add(skull);
-    const snout = m.part(new THREE.BoxGeometry(0.2, 0.17, 0.28), P.light, false);
-    snout.position.set(0, -0.07, 0.27);
-    head.add(snout);
-    const nose = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 5), new THREE.MeshBasicMaterial({ color: P.ink }));
-    nose.position.set(0, -0.02, 0.42);
-    head.add(nose);
-    for (const x of [-0.2, 0.2]) {
-      const ear = m.part(new THREE.ConeGeometry(0.11, 0.34, 4), P.timber, false);
-      ear.position.set(x, 0.18, -0.04);
-      ear.rotation.z = x > 0 ? -0.5 : 0.5;
-      head.add(ear);
-      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.045, 6, 5), new THREE.MeshBasicMaterial({ color: P.ink }));
-      eye.position.set(x * 0.5, 0.06, 0.24);
-      head.add(eye);
+    head.position.set(0, 1.0, 0.62);
+    const ha = m.kit(0.035);
+    ha.add(new THREE.SphereGeometry(0.25, 12, 10), m.character(russet), { s: [1, 0.95, 1.05] });
+    ha.add(lathe([[0.15, 0], [0.14, 0.12], [0.11, 0.24], [0.06, 0.3], [0.0, 0.31]], 10), m.character(P.light), { p: [0, -0.07, 0.15], r: [Math.PI / 2, 0, 0] });
+    ha.add(new THREE.SphereGeometry(0.06, 8, 6), m.toon(0x1a1014), { p: [0, -0.04, 0.46], s: [1.2, 0.9, 1] }, { outline: false });
+    for (const x of [-1, 1]) {
+      ha.add(slab([[0, 0], [0.12, -0.05], [0.14, -0.3], [0.04, -0.38], [-0.04, -0.2]], 0.04), m.character(0x8a3a1a), { p: [x * 0.2, 0.12, -0.02], r: [0, x * 0.3, x * -0.35] });
+      ha.add(new THREE.SphereGeometry(0.045, 8, 6), m.toon(0x1a1014), { p: [x * 0.11, 0.06, 0.21] }, { outline: false });
+      ha.add(new THREE.SphereGeometry(0.014, 5, 4), m.glow(0xffffff, 1), { p: [x * 0.11 + 0.012, 0.075, 0.25] }, { outline: false });
     }
+    head.add(ha.build('hound-head'));
     rig.add(head);
-    const legs: THREE.Group[] = [];
-    for (const [x, z] of [[-0.17, 0.32], [0.17, -0.32], [0.17, 0.32], [-0.17, -0.32]] as const) {
-      const pivot = new THREE.Group();
-      pivot.position.set(x, 0.42, z);
-      const leg = m.part(new THREE.CapsuleGeometry(0.07, 0.26, 2, 6), P.timber, false);
-      leg.position.y = -0.22;
-      pivot.add(leg);
-      rig.add(pivot);
-      legs.push(pivot);
-    }
+    const legs = ([[-0.15, 0.55, 0.32], [0.15, 0.55, -0.34], [0.15, 0.55, 0.32], [-0.15, 0.55, -0.34]] as V3[]).map((at) => pawLeg(m, russet, P.light, at, 0.42));
+    for (const l of legs) rig.add(l);
     const tail = new THREE.Group();
-    tail.position.set(0, 0.78, -0.5);
-    const tailMesh = m.part(new THREE.ConeGeometry(0.07, 0.5, 5), P.ember, false);
-    tailMesh.rotation.x = -2.2;
-    tailMesh.position.set(0, 0.12, -0.15);
-    tail.add(tailMesh);
+    tail.position.set(0, 0.8, -0.5);
+    const ta = m.kit(0.025);
+    ta.add(tube([[0, 0, 0], [0, 0.15, -0.15], [0, 0.35, -0.2], [0, 0.5, -0.12]], 0.06, 10, 6), m.character(russet));
+    ta.add(new THREE.SphereGeometry(0.07, 8, 6), m.character(P.light), { p: [0, 0.5, -0.12] }, { outline: false });
+    tail.add(ta.build());
     rig.add(tail);
-    root.add(shadowDisc(0.7));
+    root.add(shadowDisc(0.75));
     root.userData.rig = { rig, head, tail, legs, kind: 'hound', seed: 3 } satisfies Rig;
   } else if (figure === 'moth') {
-    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.09, 0.22, 3, 8), m.glow(P.light, 1.6));
+    // A soft glowing body, feathered antennae, and lobed wings that catch the light.
+    const body = new THREE.Mesh(lathe([[0, -0.26], [0.07, -0.2], [0.1, -0.05], [0.09, 0.08], [0.11, 0.14], [0.08, 0.22], [0, 0.26]], 10), m.glow(P.light, 1.6));
     body.rotation.x = Math.PI / 2;
     rig.add(body);
+    const ant = m.kit(0.01);
+    for (const x of [-1, 1]) ant.add(tube([[0, 0, 0.24], [x * 0.08, 0.12, 0.36], [x * 0.18, 0.18, 0.4]], 0.012, 8, 3), m.toon(P.gold), {}, { outline: false });
+    rig.add(ant.build());
     const wings: THREE.Object3D[] = [];
+    const wingShape: [number, number][] = [[0, 0.04], [0.18, 0.22], [0.42, 0.3], [0.56, 0.18], [0.5, 0.0], [0.38, -0.12], [0.44, -0.3], [0.3, -0.38], [0.12, -0.24], [0, -0.06]];
     for (const side of [-1, 1]) {
       const pivot = new THREE.Group();
-      const wing = new THREE.Mesh(new THREE.CircleGeometry(0.34, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(P.gold).multiplyScalar(1.6), transparent: true, opacity: 0.85, side: THREE.DoubleSide, toneMapped: false }));
-      wing.position.x = side * 0.32;
+      const wing = new THREE.Mesh(slab(wingShape.map(([x, y]) => [x * side, y] as [number, number]), 0.01), new THREE.MeshBasicMaterial({ color: new THREE.Color(P.gold).multiplyScalar(1.6), transparent: true, opacity: 0.8, side: THREE.DoubleSide, toneMapped: false }));
+      wing.rotation.x = -Math.PI / 2;
       pivot.add(wing);
+      const spot = new THREE.Mesh(new THREE.CircleGeometry(0.06, 10), new THREE.MeshBasicMaterial({ color: 0x5a2a14, side: THREE.DoubleSide }));
+      spot.rotation.x = -Math.PI / 2;
+      spot.position.set(side * 0.3, 0.012, -0.1);
+      pivot.add(spot);
       rig.add(pivot);
       wings.push(pivot);
     }
@@ -408,41 +440,30 @@ export function createFamiliarFigure(m: Materials, figure: string): THREE.Group 
     root.add(shadowDisc(0.35));
     root.userData.rig = { rig, wings, kind: 'moth', seed: 7 } satisfies Rig;
   } else {
-    const body = m.part(new THREE.SphereGeometry(0.32, 10, 8), P.ink, true, 0.05);
-    body.scale.set(0.9, 0.85, 1.3);
-    body.position.y = 0.5;
-    rig.add(body);
+    const ink = 0x1e1a24;
+    const a = m.kit(0.035);
+    a.add(lathe([[0.0, -0.42], [0.16, -0.3], [0.27, -0.05], [0.26, 0.15], [0.16, 0.3], [0.0, 0.34]], 12), m.character(ink), { p: [0, 0.5, 0], r: [Math.PI / 2 - 0.35, 0, 0] });
+    a.add(slab([[-0.2, 0], [0.2, 0], [0.24, -0.38], [0.08, -0.3], [0, -0.42], [-0.08, -0.3], [-0.24, -0.38]], 0.03), m.character(ink), { p: [0, 0.4, -0.35], r: [-Math.PI / 2 + 0.5, 0, 0] });
+    for (const x of [-0.08, 0.08]) a.add(tube([[x, 0.28, 0.04], [x, 0.12, 0.06], [x, 0.0, 0.1]], 0.02, 4, 3), m.toon(P.gold), {}, { outline: false });
+    rig.add(a.build('raven-body'));
     const head = new THREE.Group();
     head.position.set(0, 0.86, 0.3);
-    head.add(m.part(new THREE.SphereGeometry(0.2, 10, 8), P.ink, true, 0.04));
-    const beak = m.part(new THREE.ConeGeometry(0.07, 0.3, 5), P.gold, false);
-    beak.rotation.x = Math.PI / 2;
-    beak.position.set(0, -0.03, 0.26);
-    head.add(beak);
-    for (const x of [-0.09, 0.09]) {
-      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.035, 6, 5), m.glow(P.gold, 1.8));
-      eye.position.set(x, 0.05, 0.16);
-      head.add(eye);
-    }
+    const ha = m.kit(0.03);
+    ha.add(new THREE.SphereGeometry(0.19, 10, 8), m.character(ink));
+    ha.add(lathe([[0.07, 0], [0.05, 0.14], [0.01, 0.3], [0, 0.31]], 8), m.character(0x3a3440), { p: [0, -0.03, 0.12], r: [Math.PI / 2 + 0.15, 0, 0] });
+    for (const x of [-0.09, 0.09]) ha.add(new THREE.SphereGeometry(0.035, 6, 5), m.glow(P.gold, 1.8), { p: [x, 0.05, 0.15] }, { outline: false });
+    head.add(ha.build());
     rig.add(head);
     const wings: THREE.Object3D[] = [];
+    const feather: [number, number][] = [[0, 0.08], [0.1, 0.1], [0.14, -0.1], [0.12, -0.42], [0.06, -0.5], [0.04, -0.36], [0, -0.44], [-0.02, -0.2]];
     for (const side of [-1, 1]) {
       const pivot = new THREE.Group();
-      pivot.position.set(side * 0.26, 0.62, 0);
-      const wing = m.part(new THREE.BoxGeometry(0.08, 0.36, 0.62), P.stone, false);
-      wing.position.set(side * 0.04, -0.12, -0.05);
-      pivot.add(wing);
+      pivot.position.set(side * 0.24, 0.62, 0.05);
+      const wa = m.kit(0.025);
+      wa.add(slab(feather, 0.05), m.character(0x2e2a36), { p: [side * 0.02, 0, 0], r: [-Math.PI / 2 + 0.3, side * 0.15, 0] });
+      pivot.add(wa.build());
       rig.add(pivot);
       wings.push(pivot);
-    }
-    const tail = m.part(new THREE.BoxGeometry(0.22, 0.05, 0.4), P.ink, false);
-    tail.position.set(0, 0.42, -0.45);
-    tail.rotation.x = 0.4;
-    rig.add(tail);
-    for (const x of [-0.1, 0.1]) {
-      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.24, 4), m.toon(P.gold));
-      leg.position.set(x, 0.12, 0.02);
-      rig.add(leg);
     }
     root.add(shadowDisc(0.45));
     root.userData.rig = { rig, head, wings, kind: 'raven', seed: 11 } satisfies Rig;
@@ -456,92 +477,76 @@ export function createAnimal(m: Materials, kind: 'chicken' | 'sheep' | 'crow' | 
   const root = new THREE.Group();
   const rig = new THREE.Group();
   root.add(rig);
-  let head: THREE.Group;
+  const head = new THREE.Group();
   let tail: THREE.Object3D | undefined;
+  let legs: THREE.Object3D[] | undefined;
+  const a = m.kit(0.03);
+  const ha = m.kit(0.025);
   switch (kind) {
     case 'chicken': {
-      const body = m.part(new THREE.SphereGeometry(0.28, 10, 8), color ?? P.light, true, 0.04);
-      body.position.y = 0.36;
-      body.scale.set(0.9, 0.9, 1.15);
-      rig.add(body);
-      head = new THREE.Group();
-      head.position.set(0, 0.66, 0.2);
-      head.add(m.part(new THREE.SphereGeometry(0.14, 8, 6), color ?? P.light, true, 0.03));
-      const comb = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.14), m.character(P.crimson));
-      comb.position.y = 0.14;
-      head.add(comb);
-      const beak = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.12, 4), m.character(P.gold));
-      beak.rotation.x = Math.PI / 2;
-      beak.position.z = 0.15;
-      head.add(beak);
-      rig.add(head);
-      tail = m.part(new THREE.ConeGeometry(0.12, 0.26, 5), color ?? P.light, false);
-      tail.position.set(0, 0.5, -0.28);
-      tail.rotation.x = -0.9;
-      rig.add(tail);
+      const c = color ?? 0xf3ead8;
+      a.add(lathe([[0, -0.3], [0.2, -0.2], [0.26, 0.0], [0.22, 0.18], [0.12, 0.26], [0, 0.28]], 10), m.character(c), { p: [0, 0.4, 0], r: [Math.PI / 2 - 0.25, 0, 0] });
+      a.add(slab([[-0.12, 0], [0.12, 0], [0.16, 0.3], [0.04, 0.22], [0, 0.34], [-0.04, 0.22], [-0.16, 0.3]], 0.04), m.character(c), { p: [0, 0.42, -0.26], r: [-0.6, 0, 0] });
+      for (const x of [-0.06, 0.06]) a.add(tube([[x, 0.2, 0], [x, 0.08, 0.02], [x, 0.0, 0.06]], 0.02, 4, 3), m.toon(P.gold), {}, { outline: false });
+      head.position.set(0, 0.68, 0.2);
+      ha.add(new THREE.SphereGeometry(0.12, 8, 6), m.character(c));
+      ha.add(slab([[-0.06, 0], [0.06, 0], [0.05, 0.08], [0.02, 0.05], [0, 0.1], [-0.02, 0.05], [-0.05, 0.08]], 0.03), m.character(P.crimson), { p: [0, 0.1, 0], r: [0, Math.PI / 2, 0] }, { outline: false });
+      ha.add(lathe([[0.035, 0], [0, 0.12]], 5), m.toon(P.gold), { p: [0, -0.01, 0.1], r: [Math.PI / 2, 0, 0] }, { outline: false });
+      ha.add(new THREE.SphereGeometry(0.035, 6, 5), m.character(P.crimson), { p: [0, -0.08, 0.08] }, { outline: false });
       root.add(shadowDisc(0.35));
       break;
     }
     case 'sheep': {
-      const body = m.part(new THREE.SphereGeometry(0.55, 10, 8), color ?? 0xf3ead8, true, 0.05);
-      body.scale.set(0.95, 0.85, 1.25);
-      body.position.y = 0.75;
-      rig.add(body);
-      head = new THREE.Group();
-      head.position.set(0, 0.9, 0.68);
-      head.add(m.part(new THREE.BoxGeometry(0.3, 0.34, 0.38), P.ink, true, 0.03));
-      rig.add(head);
-      for (const [x, z] of [[-0.25, 0.35], [0.25, 0.35], [-0.25, -0.35], [0.25, -0.35]] as const) {
-        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.4, 5), m.character(P.ink));
-        leg.position.set(x, 0.2, z);
-        rig.add(leg);
+      const wool = color ?? 0xf3ead8;
+      a.add(cluster([[0, 0, 0, 0.45], [0.3, 0.05, 0.2, 0.32], [-0.3, 0.05, 0.2, 0.32], [0.25, 0.05, -0.3, 0.32], [-0.25, 0.05, -0.3, 0.32], [0, 0.25, 0, 0.32]], 5), m.character(wool), { p: [0, 0.78, 0] });
+      head.position.set(0, 0.92, 0.6);
+      ha.add(lathe([[0.0, -0.22], [0.14, -0.14], [0.16, 0.04], [0.1, 0.18], [0, 0.2]], 10), m.character(0x2a2028), { r: [Math.PI / 2 + 0.3, 0, 0] });
+      for (const x of [-1, 1]) {
+        ha.add(slab([[0, 0], [0.16, 0.04], [0.18, -0.04]], 0.03), m.character(0x2a2028), { p: [x * 0.12, 0.05, -0.05], r: [0, x > 0 ? 0 : Math.PI, -0.3] }, { outline: false });
+        ha.add(new THREE.SphereGeometry(0.03, 5, 4), m.glow(0xffffff, 1), { p: [x * 0.09, 0.06, 0.12] }, { outline: false });
       }
+      ha.add(cluster([[0, 0, 0, 0.12]], 3), m.character(wool), { p: [0, 0.16, -0.06] }, { outline: false });
+      legs = ([[-0.22, 0.5, 0.3], [0.22, 0.5, -0.3], [0.22, 0.5, 0.3], [-0.22, 0.5, -0.3]] as V3[]).map((at) => pawLeg(m, 0x2a2028, 0x2a2028, at, 0.45));
+      for (const l of legs) rig.add(l);
       root.add(shadowDisc(0.8));
       break;
     }
     case 'crow': {
-      const body = m.part(new THREE.SphereGeometry(0.2, 8, 6), color ?? P.ink, true, 0.04);
-      body.scale.set(0.9, 0.85, 1.4);
-      body.position.y = 0.25;
-      rig.add(body);
-      head = new THREE.Group();
-      head.position.set(0, 0.44, 0.18);
-      head.add(m.part(new THREE.SphereGeometry(0.12, 8, 6), color ?? P.ink, false));
-      const beak = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.16, 4), m.character(P.stone));
-      beak.rotation.x = Math.PI / 2;
-      beak.position.z = 0.14;
-      head.add(beak);
-      rig.add(head);
+      const c = color ?? 0x1e1a24;
+      a.add(lathe([[0.0, -0.3], [0.12, -0.2], [0.18, 0.0], [0.15, 0.14], [0.0, 0.2]], 10), m.character(c), { p: [0, 0.28, 0], r: [Math.PI / 2 - 0.3, 0, 0] });
+      a.add(slab([[-0.1, 0], [0.1, 0], [0.12, -0.24], [0, -0.3], [-0.12, -0.24]], 0.02), m.character(c), { p: [0, 0.25, -0.25], r: [-Math.PI / 2 + 0.4, 0, 0] }, { outline: false });
+      head.position.set(0, 0.46, 0.17);
+      ha.add(new THREE.SphereGeometry(0.11, 8, 6), m.character(c));
+      ha.add(lathe([[0.04, 0], [0.0, 0.17]], 6), m.character(0x3a3440), { p: [0, -0.02, 0.08], r: [Math.PI / 2, 0, 0] }, { outline: false });
       root.add(shadowDisc(0.25));
       break;
     }
     case 'cat': {
       const c = color ?? P.ember;
-      const body = m.part(new THREE.CapsuleGeometry(0.17, 0.42, 3, 8), c, true, 0.04);
-      body.rotation.x = Math.PI / 2;
-      body.position.y = 0.32;
-      rig.add(body);
-      head = new THREE.Group();
-      head.position.set(0, 0.52, 0.36);
-      head.add(m.part(new THREE.SphereGeometry(0.17, 10, 8), c, true, 0.03));
-      for (const x of [-0.09, 0.09]) {
-        const ear = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.14, 4), m.character(c));
-        ear.position.set(x, 0.15, 0);
-        head.add(ear);
+      a.add(lathe([[0.0, -0.32], [0.14, -0.26], [0.17, -0.05], [0.16, 0.15], [0.12, 0.28], [0, 0.3]], 10), m.character(c), { p: [0, 0.34, 0], r: [Math.PI / 2, 0, 0] });
+      head.position.set(0, 0.55, 0.36);
+      ha.add(new THREE.SphereGeometry(0.16, 10, 8), m.character(c), { s: [1.1, 0.95, 1] });
+      for (const x of [-1, 1]) {
+        ha.add(slab([[-0.06, 0], [0.06, 0], [0, 0.14]], 0.03), m.character(c), { p: [x * 0.09, 0.12, 0], r: [0, 0, -x * 0.25] });
+        ha.add(new THREE.SphereGeometry(0.03, 6, 5), m.glow(0x9adf6a, 1.3), { p: [x * 0.06, 0.03, 0.14], s: [0.8, 1.2, 0.6] }, { outline: false });
       }
-      rig.add(head);
-      const t = new THREE.Group();
-      t.position.set(0, 0.36, -0.36);
-      const tm = m.part(new THREE.CylinderGeometry(0.04, 0.05, 0.55, 5), c, false);
-      tm.position.set(0, 0.22, -0.05);
-      tm.rotation.x = -0.35;
-      t.add(tm);
-      rig.add(t);
-      tail = t;
+      ha.add(new THREE.SphereGeometry(0.025, 5, 4), m.toon(0xe0907a), { p: [0, -0.02, 0.16] }, { outline: false });
+      const tt = new THREE.Group();
+      tt.position.set(0, 0.38, -0.32);
+      const tk = m.kit(0.02);
+      tk.add(tube([[0, 0, 0], [0, 0.2, -0.15], [0.05, 0.45, -0.1], [0.12, 0.55, 0.0]], 0.04, 10, 5), m.character(c));
+      tt.add(tk.build());
+      rig.add(tt);
+      tail = tt;
+      legs = ([[-0.09, 0.22, 0.2], [0.09, 0.22, -0.2], [0.09, 0.22, 0.2], [-0.09, 0.22, -0.2]] as V3[]).map((at) => pawLeg(m, c, c, at, 0.18));
+      for (const l of legs) rig.add(l);
       root.add(shadowDisc(0.4));
       break;
     }
   }
-  root.userData.rig = { rig, head: head!, tail, kind: 'animal', seed: Math.floor((color ?? 5) % 17) } satisfies Rig;
+  rig.add(a.build(kind));
+  head.add(ha.build());
+  rig.add(head);
+  root.userData.rig = { rig, head, tail, legs, kind: 'animal', seed: Math.floor((color ?? 5) % 17) + kind.length } satisfies Rig;
   return root;
 }

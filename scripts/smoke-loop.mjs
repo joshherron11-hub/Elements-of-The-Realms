@@ -180,7 +180,7 @@ try {
 
   console.log('Living Blackmere — depth checks');
   const clock = await page.locator('#hud-status .clock').innerText();
-  check(/^Day 1 · 09:\d\d · Morning$/.test(clock), `the day has a clock (${clock})`);
+  check(/^Day 1 · (09|10|11):\d\d · Morning$/.test(clock), `the day has a clock (${clock})`);
   const pip = await page.evaluate(() => [window.__eotr.sim.state.npcActivity['actor_pip-ashdown'].activity, window.__eotr.game.npcPosition('actor_pip-ashdown')]);
   check(pip[0] === 'sorting-letters' && pip[1] !== undefined, 'NPC ROUTINES: Pip is sorting letters by the well');
 

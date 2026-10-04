@@ -71,3 +71,29 @@ Layered panels with an ember-gold rule, status card with chips, a segmented mode
 key-badge prompts, name plates, speech bubbles with tails, a minimap with building
 blocks and a caption, a vignette, and a phone layout with joystick, action buttons,
 a scrollable mode bar and bottom-sheet panels.
+
+## Art kit (Art Pass 1)
+Every visible object is built from the art kit in `src/render/kit/`, not from raw primitives.
+
+- **Geometry** (`kit/geo.ts`): turned profiles (`lathe`), softened boards (`board`),
+  extruded outlines (`slab`, `slabShape`), bent rods (`tube`), faceted clusters
+  (`cluster`), seeded hand-made `jitter`, radial `ribbed` folds, and world-scaled
+  `projectUv` so every texture keeps one scale. `Assembly` merges all parts of a prop
+  that share a material into one mesh and draws one crack-free ink outline from
+  smoothed outline normals.
+- **Materials** (`Materials`): `wood`, `stone`, `plaster`, `shingle`, `straw`, `weave`
+  (burlap and cloth), `metal`, `painted` (signs, banners, rugs), `glow` (glass and
+  fire, optionally leaded), `character` (rim-lit, optionally textured).
+- **Painted surfaces** (`textures.ts`): wood grain, end grain, barrel staves, stone
+  courses, plaster, shingles, straw, weave, stripes, rug, leaded lattice, paper notices,
+  lettered signboards with emblems, banner devices, runes, and ground decals (exit
+  chevrons, gather glints, tap target), plus a leaf sprite.
+- **Props** (`kit/props.ts`): every prop type is a crafted model; collision still
+  comes only from layout footprints.
+- **Characters** (`figures.ts`): turned tunics with folds, sleeves and trousers,
+  booted feet, mitten hands, faces with eyes, brows, nose, ears, cheeks and mouth,
+  six hair styles, role hats and gear; shaped Familiars and animals. The animation
+  rig is unchanged.
+
+Budget (town square, LOW): ~350 draw calls (unchanged by merging), ~105k triangles,
+29 textures. Measured in software rendering; real-GPU profiling is still to do.
