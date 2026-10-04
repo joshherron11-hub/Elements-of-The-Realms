@@ -1,0 +1,26 @@
+{
+  "$provisional": "First-pass variable values for this preset; tune freely. Only PEACEFUL values are specified by the project owner.",
+  "preset": "FAMILY_FRIENDS",
+  "name": "Family & Friends",
+  "description": "Invite-only and gentle: no crime, no danger to Familiars, low economic risk.",
+  "variables": {
+    "war": "OFF",
+    "pvp": "OFF",
+    "propertyRisk": "SAFE",
+    "economicRisk": "LOW",
+    "crime": "NONE",
+    "familiarDanger": "NONE",
+    "technology": "FIXED",
+    "history": "PROGRESSIVE",
+    "politics": "NONE",
+    "persistence": "LONG_TERM",
+    "access": "INVITE",
+    "canonicalStrictness": "STANDARD",
+    "aiDensity": "MINIMAL"
+  },
+  "ownerOverridable": [
+    "economicRisk",
+    "aiDensity",
+    "politics"
+  ]
+}

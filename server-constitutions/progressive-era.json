@@ -1,0 +1,25 @@
+{
+  "$provisional": "First-pass variable values for this preset; tune freely. Only PEACEFUL values are specified by the project owner.",
+  "preset": "PROGRESSIVE_ERA",
+  "name": "Progressive Era",
+  "description": "History and technology both advance. Requires a Realm whose technology may progress.",
+  "variables": {
+    "war": "OFF",
+    "pvp": "OFF",
+    "propertyRisk": "SAFE",
+    "economicRisk": "NORMAL",
+    "crime": "NPC_ONLY",
+    "familiarDanger": "LOW",
+    "technology": "PROGRESSIVE",
+    "history": "PROGRESSIVE",
+    "politics": "ACTIVE",
+    "persistence": "LONG_TERM",
+    "access": "PUBLIC",
+    "canonicalStrictness": "STANDARD",
+    "aiDensity": "MINIMAL"
+  },
+  "ownerOverridable": [
+    "aiDensity",
+    "economicRisk"
+  ]
+}

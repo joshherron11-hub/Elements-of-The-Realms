@@ -1,0 +1,12 @@
+{
+  "$comment": "Realm type definitions. Changing these changes Canon.",
+  "types": [
+    { "type": "ANCHORED", "definition": "History progresses; the technology ceiling stays fixed.", "history": "progresses", "technology": "fixed" },
+    { "type": "ASCENDANT", "definition": "History and technology may progress.", "history": "progresses", "technology": "progresses" },
+    { "type": "ECHO", "definition": "A preserved historical state or replayable epoch.", "history": "frozen", "technology": "fixed" },
+    { "type": "FRACTURE", "definition": "An alternate historical branch.", "history": "progresses", "technology": "configurable" },
+    { "type": "PLANETARY", "definition": "A planet-scale civilization.", "history": "progresses", "technology": "configurable" },
+    { "type": "INTERREALM", "definition": "A controlled space where multiple Realm civilizations may meet.", "history": "progresses", "technology": "configurable" }
+  ],
+  "coreRule": "YOUR PERSON TRAVELS FURTHER THAN YOUR EQUIPMENT."
+}

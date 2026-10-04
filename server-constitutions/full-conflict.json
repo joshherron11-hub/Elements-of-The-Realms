@@ -1,0 +1,22 @@
+{
+  "$provisional": "First-pass variable values for this preset; tune freely. Only PEACEFUL values are specified by the project owner.",
+  "preset": "FULL_CONFLICT",
+  "name": "Full Conflict",
+  "description": "Open conflict with raidable property and high stakes. Not available in the first release.",
+  "variables": {
+    "war": "FULL",
+    "pvp": "OPEN",
+    "propertyRisk": "RAIDABLE",
+    "economicRisk": "HIGH",
+    "crime": "PLAYER",
+    "familiarDanger": "HIGH",
+    "technology": "FIXED",
+    "history": "PROGRESSIVE",
+    "politics": "FULL",
+    "persistence": "LONG_TERM",
+    "access": "PUBLIC",
+    "canonicalStrictness": "STRICT",
+    "aiDensity": "MINIMAL"
+  },
+  "ownerOverridable": []
+}

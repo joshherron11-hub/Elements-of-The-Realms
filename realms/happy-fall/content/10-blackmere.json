@@ -1,0 +1,381 @@
+{
+  "$provisional": "PROVISIONAL PLACEHOLDERS: NPC names, the Mark currency, prices, rewards, stakes, rates and all other numbers in this file are provisional and not Canon. Change them here freely; no code changes are needed. Approved names: Happy Fall, Blackmere. See docs/PROVISIONAL.md.",
+  "id": "blackmere",
+  "realmId": "realm_happy-fall",
+  "locations": [
+    {
+      "id": "location_happy-fall",
+      "name": "Happy Fall",
+      "kind": "region",
+      "description": "Rolling autumn country of market towns, farms and old keeps."
+    },
+    {
+      "id": "location_blackmere",
+      "name": "Blackmere",
+      "kind": "settlement",
+      "parentId": "location_happy-fall",
+      "description": "A market town on the black-watered mere, under the old Keep."
+    },
+    {
+      "id": "location_blackmere-square",
+      "name": "Blackmere Town Square",
+      "kind": "district",
+      "parentId": "location_blackmere",
+      "sceneKey": "blackmere-town",
+      "tags": [
+        "public",
+        "start"
+      ],
+      "description": "Cobbles, a well, and the notice board everyone pretends not to read."
+    },
+    {
+      "id": "location_blackmere-market",
+      "name": "Blackmere Market",
+      "kind": "district",
+      "parentId": "location_blackmere",
+      "sceneKey": "blackmere-town",
+      "tags": [
+        "public",
+        "market"
+      ],
+      "description": "Stalls under ember-coloured awnings."
+    },
+    {
+      "id": "location_blackmere-hearth-row",
+      "name": "Hearth Row",
+      "kind": "district",
+      "parentId": "location_blackmere",
+      "sceneKey": "blackmere-town",
+      "tags": [
+        "residential"
+      ],
+      "description": "A crooked lane of cottages with smoking chimneys."
+    },
+    {
+      "id": "location_blackmere-keep",
+      "name": "Blackmere Keep \u2014 Gatehouse",
+      "kind": "building",
+      "parentId": "location_blackmere",
+      "sceneKey": "blackmere-town",
+      "tags": [
+        "civic",
+        "partial-access"
+      ],
+      "description": "The Reeve keeps office in the gatehouse. The inner Keep stays shut."
+    },
+    {
+      "id": "location_blackmere-tavern",
+      "name": "The Lantern & Ladle",
+      "kind": "building",
+      "parentId": "location_blackmere",
+      "sceneKey": "blackmere-tavern",
+      "tags": [
+        "public",
+        "tavern"
+      ],
+      "description": "Blackmere's tavern: low beams, a long hearth, longer stories."
+    },
+    {
+      "id": "location_blackmere-east-road",
+      "name": "The East Road",
+      "kind": "road",
+      "parentId": "location_happy-fall",
+      "sceneKey": "blackmere-outskirts",
+      "tags": [
+        "road"
+      ],
+      "description": "The road out of Blackmere, lined with leaning poplars."
+    },
+    {
+      "id": "location_brindle-farm",
+      "name": "Brindle Farm Edge",
+      "kind": "district",
+      "parentId": "location_happy-fall",
+      "sceneKey": "blackmere-outskirts",
+      "tags": [
+        "farm"
+      ],
+      "description": "Stubble fields and a heavy-laden orchard."
+    },
+    {
+      "id": "location_hollowmere-wood",
+      "name": "Hollowmere Woodland Edge",
+      "kind": "wilderness",
+      "parentId": "location_happy-fall",
+      "sceneKey": "blackmere-outskirts",
+      "tags": [
+        "woodland"
+      ],
+      "description": "Where the trees begin and the paths stop agreeing with each other."
+    }
+  ],
+  "routes": [
+    {
+      "id": "route_square-market",
+      "from": "location_blackmere-square",
+      "to": "location_blackmere-market",
+      "kind": "path",
+      "travelTimeMs": 60000
+    },
+    {
+      "id": "route_square-hearth-row",
+      "from": "location_blackmere-square",
+      "to": "location_blackmere-hearth-row",
+      "kind": "path",
+      "travelTimeMs": 60000
+    },
+    {
+      "id": "route_square-tavern",
+      "from": "location_blackmere-square",
+      "to": "location_blackmere-tavern",
+      "kind": "path",
+      "travelTimeMs": 30000
+    },
+    {
+      "id": "route_square-keep",
+      "from": "location_blackmere-square",
+      "to": "location_blackmere-keep",
+      "kind": "road",
+      "travelTimeMs": 90000
+    },
+    {
+      "id": "route_market-east-road",
+      "from": "location_blackmere-market",
+      "to": "location_blackmere-east-road",
+      "kind": "road",
+      "travelTimeMs": 120000
+    },
+    {
+      "id": "route_east-road-farm",
+      "from": "location_blackmere-east-road",
+      "to": "location_brindle-farm",
+      "kind": "path",
+      "travelTimeMs": 120000
+    },
+    {
+      "id": "route_east-road-wood",
+      "from": "location_blackmere-east-road",
+      "to": "location_hollowmere-wood",
+      "kind": "path",
+      "travelTimeMs": 120000
+    },
+    {
+      "id": "route_farm-wood",
+      "from": "location_brindle-farm",
+      "to": "location_hollowmere-wood",
+      "kind": "path",
+      "travelTimeMs": 150000
+    }
+  ],
+  "actors": [
+    {
+      "id": "actor_maren-holloway",
+      "name": "Maren Holloway",
+      "locationId": "location_blackmere-tavern",
+      "tags": [
+        "innkeeper"
+      ],
+      "purse": 120,
+      "inventory": {
+        "item_hearth-loaf": 20,
+        "item_pressed-cider": 20
+      },
+      "profile": {
+        "title": "Innkeeper of the Lantern & Ladle",
+        "greeting": "Come in out of the wind. Hearth's warm, cider's cold \u2014 or the other way round, depending on the hour.",
+        "lines": [
+          "Everyone in Blackmere passes through here sooner or later. Usually later.",
+          "The Reeve drinks here on market days. Don't tell him I told you."
+        ]
+      }
+    },
+    {
+      "id": "actor_tobias-quill",
+      "name": "Tobias Quill",
+      "locationId": "location_blackmere-market",
+      "tags": [
+        "merchant"
+      ],
+      "purse": 200,
+      "inventory": {
+        "item_lantern-oil": 10,
+        "item_ember-wool": 4,
+        "item_hound-biscuits": 30,
+        "item_seed-cake": 20,
+        "item_grooming-brush": 5,
+        "item_russet-apples": 6
+      },
+      "profile": {
+        "title": "Proprietor, Quill's Sundries",
+        "greeting": "Quill's Sundries! If I haven't got it, you didn't need it.",
+        "lines": [
+          "Prices move with the road. Good harvest, good prices. Bad road, well\u2026",
+          "I buy too, you know. Bring me apples from Brindle's and we'll talk."
+        ]
+      }
+    },
+    {
+      "id": "actor_hester-brindle",
+      "name": "Hester Brindle",
+      "locationId": "location_brindle-farm",
+      "tags": [
+        "farmer"
+      ],
+      "purse": 80,
+      "inventory": {
+        "item_wheat-sheaf": 30,
+        "item_russet-apples": 10
+      },
+      "profile": {
+        "title": "Farmer, Brindle Farm",
+        "greeting": "Mind the furrows. They took me a week.",
+        "lines": [
+          "The orchard's heavy this year. More apples than hands.",
+          "Wood's edge is lovely in the morning. Less lovely when you lose a sheep in it."
+        ]
+      }
+    },
+    {
+      "id": "actor_pip-ashdown",
+      "name": "Pip Ashdown",
+      "locationId": "location_blackmere-square",
+      "tags": [
+        "courier"
+      ],
+      "purse": 30,
+      "profile": {
+        "title": "Courier",
+        "greeting": "Can't stop long \u2014 letters don't carry themselves. Well. Mostly they don't.",
+        "lines": [
+          "I know every road out of Blackmere and three that aren't on any map.",
+          "If the East Road's quiet, that's when you worry."
+        ]
+      }
+    },
+    {
+      "id": "actor_aldous-crane",
+      "name": "Reeve Aldous Crane",
+      "locationId": "location_blackmere-keep",
+      "tags": [
+        "official",
+        "reeve"
+      ],
+      "purse": 300,
+      "profile": {
+        "title": "Reeve of Blackmere",
+        "greeting": "State your business. Politely, if you can manage it.",
+        "lines": [
+          "The inner Keep is closed by order of the Lord's steward. As it has been for eleven years.",
+          "Property in Blackmere is recorded here. Every deed, every sale."
+        ]
+      }
+    },
+    {
+      "id": "actor_sela-vantry",
+      "name": "Sela Vantry",
+      "locationId": "location_blackmere-tavern",
+      "tags": [
+        "traveler"
+      ],
+      "purse": 60,
+      "profile": {
+        "title": "Traveler",
+        "greeting": "Another stranger! Sit \u2014 strangers should stick together.",
+        "lines": [
+          "I've walked from the coast. Every town tells the same story differently.",
+          "They say something was hidden in the Hollowmere wood long ago. Everyone says that about every wood, mind."
+        ]
+      }
+    }
+  ],
+  "markets": [
+    {
+      "id": "market_quills-sundries",
+      "name": "Quill's Sundries",
+      "locationId": "location_blackmere-market",
+      "vendor": {
+        "kind": "actor",
+        "id": "actor_tobias-quill"
+      },
+      "listings": {
+        "item_lantern-oil": {
+          "basePrice": 6
+        },
+        "item_ember-wool": {
+          "basePrice": 14
+        },
+        "item_hound-biscuits": {
+          "basePrice": 2
+        },
+        "item_seed-cake": {
+          "basePrice": 2
+        },
+        "item_grooming-brush": {
+          "basePrice": 8
+        },
+        "item_russet-apples": {
+          "basePrice": 6,
+          "sellable": true,
+          "sellSpread": 0.35
+        },
+        "item_split-timber": {
+          "basePrice": 4,
+          "buyable": false,
+          "sellable": true,
+          "sellSpread": 0.3
+        }
+      },
+      "drift": {
+        "riskProfileId": "risk_market-drift",
+        "everyMs": 120000
+      }
+    },
+    {
+      "id": "market_lantern-ladle",
+      "name": "The Lantern & Ladle",
+      "locationId": "location_blackmere-tavern",
+      "vendor": {
+        "kind": "actor",
+        "id": "actor_maren-holloway"
+      },
+      "listings": {
+        "item_hearth-loaf": {
+          "basePrice": 3
+        },
+        "item_pressed-cider": {
+          "basePrice": 4
+        }
+      }
+    }
+  ],
+  "resources": [
+    {
+      "id": "resource_orchard-apples",
+      "name": "Orchard apples",
+      "yieldsItemId": "item_russet-apples"
+    },
+    {
+      "id": "resource_deadwood",
+      "name": "Deadwood",
+      "yieldsItemId": "item_split-timber"
+    }
+  ],
+  "resourceNodes": [
+    {
+      "id": "rnode_brindle-orchard",
+      "resourceId": "resource_orchard-apples",
+      "locationId": "location_brindle-farm",
+      "amount": 6,
+      "capacity": 6,
+      "regenPerHour": 1
+    },
+    {
+      "id": "rnode_hollowmere-deadwood",
+      "resourceId": "resource_deadwood",
+      "locationId": "location_hollowmere-wood",
+      "amount": 8,
+      "capacity": 8,
+      "regenPerHour": 2
+    }
+  ]
+}

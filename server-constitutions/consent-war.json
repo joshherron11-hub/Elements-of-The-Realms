@@ -1,0 +1,24 @@
+{
+  "$provisional": "First-pass variable values for this preset; tune freely. Only PEACEFUL values are specified by the project owner.",
+  "preset": "CONSENT_WAR",
+  "name": "Consent War",
+  "description": "Conflict only between parties who have all agreed to it. Not available in the first release.",
+  "variables": {
+    "war": "CONSENT",
+    "pvp": "CONSENT",
+    "propertyRisk": "CONTESTABLE",
+    "economicRisk": "NORMAL",
+    "crime": "PLAYER",
+    "familiarDanger": "LOW",
+    "technology": "FIXED",
+    "history": "PROGRESSIVE",
+    "politics": "ACTIVE",
+    "persistence": "LONG_TERM",
+    "access": "PUBLIC",
+    "canonicalStrictness": "STANDARD",
+    "aiDensity": "MINIMAL"
+  },
+  "ownerOverridable": [
+    "aiDensity"
+  ]
+}

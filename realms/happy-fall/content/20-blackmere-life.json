@@ -1,0 +1,356 @@
+{
+  "$provisional": "PROVISIONAL PLACEHOLDERS: NPC names, the Mark currency, prices, rewards, stakes, rates and all other numbers in this file are provisional and not Canon. Change them here freely; no code changes are needed. Approved names: Happy Fall, Blackmere. See docs/PROVISIONAL.md.",
+  "id": "blackmere-life",
+  "realmId": "realm_happy-fall",
+  "items": [
+    {
+      "id": "item_courier-satchel",
+      "name": "Pip's Courier Satchel",
+      "category": "document",
+      "baseValue": 5,
+      "techTier": "medieval",
+      "stackable": false,
+      "description": "Scuffed leather, a brass buckle, and a dozen undelivered letters."
+    }
+  ],
+  "organizations": [
+    {
+      "id": "org_blackmere-council",
+      "kind": "government",
+      "name": "Blackmere Town Council",
+      "members": [
+        {
+          "actorId": "actor_aldous-crane",
+          "roleIds": [
+            "role_reeve"
+          ]
+        }
+      ],
+      "purse": 400,
+      "tags": [
+        "civic"
+      ]
+    },
+    {
+      "id": "org_merchants-circle",
+      "kind": "guild",
+      "name": "Blackmere Merchants' Circle",
+      "members": [
+        {
+          "actorId": "actor_tobias-quill",
+          "roleIds": [
+            "role_circle-member"
+          ]
+        },
+        {
+          "actorId": "actor_maren-holloway",
+          "roleIds": [
+            "role_circle-member"
+          ]
+        }
+      ],
+      "tags": [
+        "trade"
+      ]
+    },
+    {
+      "id": "org_wayfarers-post",
+      "kind": "guild",
+      "name": "The Wayfarers' Post",
+      "members": [
+        {
+          "actorId": "actor_pip-ashdown",
+          "roleIds": []
+        }
+      ],
+      "tags": [
+        "couriers"
+      ]
+    },
+    {
+      "id": "org_clan-brindle",
+      "kind": "clan",
+      "name": "Clan Brindle",
+      "members": [
+        {
+          "actorId": "actor_hester-brindle",
+          "roleIds": []
+        }
+      ],
+      "tags": [
+        "farming",
+        "placeholder"
+      ]
+    },
+    {
+      "id": "org_blackmere-commons",
+      "kind": "faction",
+      "name": "The Blackmere Commons",
+      "members": [],
+      "tags": [
+        "placeholder",
+        "politics"
+      ]
+    }
+  ],
+  "roles": [
+    {
+      "id": "role_reeve",
+      "organizationId": "org_blackmere-council",
+      "name": "Reeve",
+      "permissions": [
+        "org.*",
+        "property.record"
+      ]
+    },
+    {
+      "id": "role_circle-member",
+      "organizationId": "org_merchants-circle",
+      "name": "Member",
+      "permissions": [
+        "org.attend"
+      ]
+    }
+  ],
+  "properties": [
+    {
+      "id": "property_stall-4",
+      "name": "Market Stall No. 4",
+      "kind": "stall",
+      "locationId": "location_blackmere-market",
+      "value": 30,
+      "forSale": true,
+      "owner": {
+        "kind": "organization",
+        "id": "org_blackmere-council"
+      },
+      "tags": [
+        "starter"
+      ]
+    },
+    {
+      "id": "property_wicket-cottage",
+      "name": "Wicket Cottage",
+      "kind": "house",
+      "locationId": "location_blackmere-hearth-row",
+      "value": 160,
+      "forSale": true,
+      "owner": {
+        "kind": "organization",
+        "id": "org_blackmere-council"
+      },
+      "tags": [
+        "home"
+      ]
+    }
+  ],
+  "contracts": [
+    {
+      "id": "contract_quill-apples",
+      "kind": "merchant",
+      "title": "Apples for Quill's",
+      "description": "Tobias needs three baskets of russet apples \u2014 Brindle's orchard has plenty.",
+      "issuer": {
+        "kind": "actor",
+        "id": "actor_tobias-quill"
+      },
+      "locationId": "location_blackmere-market",
+      "tasks": [
+        {
+          "title": "Deliver 3 baskets of russet apples to Tobias",
+          "requirement": {
+            "kind": "deliver",
+            "itemId": "item_russet-apples",
+            "quantity": 3,
+            "to": "actor_tobias-quill"
+          }
+        }
+      ],
+      "terms": {
+        "rewards": [
+          {
+            "kind": "currency",
+            "currencyId": "currency_mark",
+            "amount": 20
+          },
+          {
+            "kind": "reputation",
+            "scope": {
+              "kind": "location",
+              "id": "location_blackmere"
+            },
+            "amount": 4
+          },
+          {
+            "kind": "reputation",
+            "scope": {
+              "kind": "organization",
+              "id": "org_merchants-circle"
+            },
+            "amount": 6
+          },
+          {
+            "kind": "relationship",
+            "with": "actor_tobias-quill",
+            "regard": 8,
+            "trust": 6
+          }
+        ],
+        "penalties": []
+      },
+      "tags": [
+        "merchant",
+        "starter"
+      ]
+    },
+    {
+      "id": "contract_pip-satchel",
+      "kind": "search",
+      "title": "The Lost Satchel",
+      "description": "Pip dropped a courier's satchel somewhere along the Hollowmere woodland edge. Find it and bring it back.",
+      "issuer": {
+        "kind": "actor",
+        "id": "actor_pip-ashdown"
+      },
+      "locationId": "location_blackmere-square",
+      "tasks": [
+        {
+          "title": "Find Pip's satchel at the Hollowmere woodland edge",
+          "requirement": {
+            "kind": "acquire",
+            "itemId": "item_courier-satchel",
+            "quantity": 1
+          }
+        },
+        {
+          "title": "Return the satchel to Pip",
+          "requirement": {
+            "kind": "deliver",
+            "itemId": "item_courier-satchel",
+            "quantity": 1,
+            "to": "actor_pip-ashdown"
+          }
+        }
+      ],
+      "terms": {
+        "rewards": [
+          {
+            "kind": "currency",
+            "currencyId": "currency_mark",
+            "amount": 15
+          },
+          {
+            "kind": "reputation",
+            "scope": {
+              "kind": "location",
+              "id": "location_blackmere"
+            },
+            "amount": 5
+          },
+          {
+            "kind": "relationship",
+            "with": "actor_pip-ashdown",
+            "regard": 10,
+            "trust": 10
+          }
+        ],
+        "penalties": []
+      },
+      "tags": [
+        "search",
+        "starter"
+      ]
+    },
+    {
+      "id": "contract_cider-press",
+      "kind": "investment",
+      "title": "A Share in the Cider Press",
+      "description": "Hester is pressing this year's cider. Put in 20 marks; when the barrels are sold you take your share \u2014 if they sell.",
+      "issuer": {
+        "kind": "actor",
+        "id": "actor_hester-brindle"
+      },
+      "locationId": "location_brindle-farm",
+      "tasks": [
+        {
+          "title": "Wait for the pressing to sell (about a minute)",
+          "requirement": {
+            "kind": "wait",
+            "durationMs": 60000
+          }
+        }
+      ],
+      "terms": {
+        "rewards": [
+          {
+            "kind": "relationship",
+            "with": "actor_hester-brindle",
+            "trust": 5
+          }
+        ],
+        "penalties": [],
+        "stake": {
+          "currencyId": "currency_mark",
+          "amount": 20
+        },
+        "riskProfileId": "risk_small-venture"
+      },
+      "tags": [
+        "investment",
+        "starter"
+      ]
+    }
+  ],
+  "searchSpots": [
+    {
+      "id": "spot_pip-satchel",
+      "locationId": "location_hollowmere-wood",
+      "itemId": "item_courier-satchel",
+      "quantity": 1,
+      "description": "Half-buried in leaf litter under a leaning birch: Pip's satchel, buckle still shut.",
+      "requiresFlag": "contract:contract_pip-satchel"
+    },
+    {
+      "id": "spot_brass-locket",
+      "locationId": "location_hollowmere-wood",
+      "itemId": "item_brass-locket",
+      "quantity": 1,
+      "description": "Something glints between two roots \u2014 an old brass locket, warm to the touch."
+    }
+  ],
+  "happenings": [
+    {
+      "id": "happening_sela-toast",
+      "kind": "social",
+      "title": "A toast with a stranger",
+      "summary": "Sela Vantry raised a cup to new arrivals, and Maren poured one on the house.",
+      "trigger": {
+        "kind": "talk",
+        "actorId": "actor_sela-vantry"
+      },
+      "effects": {
+        "relationships": [
+          {
+            "with": "actor_sela-vantry",
+            "regard": 8,
+            "trust": 4
+          },
+          {
+            "with": "actor_maren-holloway",
+            "regard": 4
+          }
+        ],
+        "reputation": [
+          {
+            "scope": {
+              "kind": "location",
+              "id": "location_blackmere"
+            },
+            "amount": 2
+          }
+        ],
+        "flag": "toasted"
+      }
+    }
+  ]
+}

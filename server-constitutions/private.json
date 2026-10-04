@@ -1,0 +1,28 @@
+{
+  "$provisional": "First-pass variable values for this preset; tune freely. Only PEACEFUL values are specified by the project owner.",
+  "preset": "PRIVATE",
+  "name": "Private",
+  "description": "A world for one person or a closed group, run by its owner. Peaceful rules; the owner tunes the pace.",
+  "variables": {
+    "war": "OFF",
+    "pvp": "OFF",
+    "propertyRisk": "SAFE",
+    "economicRisk": "LOW",
+    "crime": "NPC_ONLY",
+    "familiarDanger": "LOW",
+    "technology": "FIXED",
+    "history": "PROGRESSIVE",
+    "politics": "NONE",
+    "persistence": "LONG_TERM",
+    "access": "PRIVATE",
+    "canonicalStrictness": "STANDARD",
+    "aiDensity": "MINIMAL"
+  },
+  "ownerOverridable": [
+    "economicRisk",
+    "politics",
+    "familiarDanger",
+    "aiDensity",
+    "persistence"
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "$comment": "Ordered technology and magic scales used for ceilings and import checks. Default data; extend by appending.",
+  "technology": ["primitive", "ancient", "medieval", "renaissance", "industrial", "modern", "information", "spacefaring"],
+  "magic": ["none", "early-fantasy", "high-fantasy", "mythic"]
+}

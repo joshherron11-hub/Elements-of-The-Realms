@@ -1,0 +1,157 @@
+{
+  "$comment": "Happy Fall Realm Constitution and presentation metadata. Data only.",
+  "id": "realm_happy-fall",
+  "name": "Happy Fall",
+  "type": "ANCHORED",
+  "description": "An autumn civilization of market towns, farms and old keeps. History moves forward; the world stays medieval and early-fantasy.",
+  "constitution": {
+    "technologyCeiling": {
+      "technology": "medieval",
+      "magic": "early-fantasy"
+    },
+    "progression": {
+      "history": true,
+      "technology": false
+    },
+    "imports": {
+      "categories": [
+        "food",
+        "trade-good",
+        "tool",
+        "clothing",
+        "document",
+        "familiar-care",
+        "keepsake"
+      ],
+      "maxTechnology": "medieval",
+      "maxMagic": "early-fantasy",
+      "requireProvenance": true
+    },
+    "exports": {
+      "categories": [
+        "food",
+        "trade-good",
+        "tool",
+        "clothing",
+        "document",
+        "familiar-care",
+        "keepsake"
+      ],
+      "maxTechnology": "medieval",
+      "maxMagic": "early-fantasy",
+      "requireProvenance": true
+    },
+    "economy": {
+      "primaryCurrency": "currency_mark",
+      "marketVolatility": "LOW",
+      "startingPurse": 40,
+      "$provisional": "Currency id/name (Mark) and the starting purse are provisional placeholders. See docs/PROVISIONAL.md."
+    },
+    "crossRealm": {
+      "person": "carried",
+      "identity": "carried",
+      "history": "carried",
+      "reputation": "local",
+      "currency": "none",
+      "items": "within-ceiling",
+      "familiars": "form-shift"
+    },
+    "legalInteractions": [
+      "social",
+      "trade",
+      "gift",
+      "contract",
+      "property",
+      "crafting",
+      "farming",
+      "exploration",
+      "care",
+      "investment",
+      "politics",
+      "learning",
+      "creation"
+    ],
+    "servers": {
+      "launchPreset": "PEACEFUL",
+      "allowedPresets": [
+        "PEACEFUL",
+        "PRIVATE",
+        "FAMILY_FRIENDS",
+        "CURATED_ROLEPLAY",
+        "EXPERIMENTAL",
+        "FROZEN_ERA"
+      ],
+      "futureCompatiblePresets": [
+        "CONSENT_WAR",
+        "PROTECTED_CIVILIAN"
+      ],
+      "defaultPreset": "PEACEFUL",
+      "$note": "FULL_CONFLICT and large-scale war are not exposed at launch. PROGRESSIVE_ERA is not allowed: Happy Fall's technology ceiling stays medieval / early-fantasy. War may be added historically later, with explicit player consent."
+    },
+    "pvp": {
+      "max": "CONSENT"
+    },
+    "property": {
+      "ownershipAllowed": true,
+      "maxRisk": "SAFE"
+    },
+    "ai": {
+      "defaultDensity": "MINIMAL",
+      "maxDensity": "CINEMATIC"
+    },
+    "canonicalStrictness": "STANDARD",
+    "persistence": "PERMANENT"
+  },
+  "presentation": {
+    "artDirection": {
+      "name": "CHROMATIC MYTHIC 2.5D",
+      "season": "autumn",
+      "setting": "autumn medieval civilization",
+      "characteristics": [
+        "high-contrast stylized presentation",
+        "strong silhouettes",
+        "painterly layered environments",
+        "cel-shaded / stylized rendering",
+        "selective expensive detail",
+        "2.5D visual composition where useful",
+        "3D world logic underneath",
+        "render-efficient design"
+      ],
+      "palette": {
+        "sky": "#2b1b2e",
+        "skyHorizon": "#7a3b2e",
+        "fog": "#4a2a2a",
+        "ground": "#6b4a2b",
+        "path": "#9a7a52",
+        "ember": "#d9642b",
+        "gold": "#e8b04a",
+        "crimson": "#a3302a",
+        "moss": "#5d6b3a",
+        "stone": "#55505a",
+        "timber": "#5a3a24",
+        "roof": "#7d2e22",
+        "ink": "#120c0c",
+        "light": "#ffd9a8"
+      },
+      "rendering": {
+        "shading": "toon",
+        "toonBands": 3,
+        "outlines": true,
+        "composition": "layered parallax backdrops over a navigable 3D ground plane",
+        "camera": "elevated three-quarter follow camera",
+        "detailPolicy": "spend detail on focal props and characters; keep backgrounds flat and painterly",
+        "budget": {
+          "targetFps": 60,
+          "maxPixelRatio": 2,
+          "shadows": false
+        }
+      },
+      "ip": "All characters, names and assets are original placeholders. No copyrighted characters or franchise assets."
+    },
+    "tone": "warm, hopeful, lived-in; every town has a history worth learning"
+  },
+  "$approvedNames": [
+    "Happy Fall",
+    "Blackmere"
+  ]
+}

@@ -1,0 +1,595 @@
+{
+ "id": "blackmere-town",
+ "name": "Blackmere",
+ "size": [
+  84,
+  84
+ ],
+ "ground": "ground",
+ "backdrops": [
+  {
+   "kind": "hills",
+   "distance": 46,
+   "height": 14,
+   "color": "crimson"
+  },
+  {
+   "kind": "treeline",
+   "distance": 40,
+   "height": 8,
+   "color": "ember"
+  }
+ ],
+ "zones": [
+  {
+   "locationId": "location_blackmere-square",
+   "rect": [
+    -10,
+    -11,
+    10,
+    8
+   ]
+  },
+  {
+   "locationId": "location_blackmere-market",
+   "rect": [
+    10,
+    -10,
+    32,
+    10
+   ]
+  },
+  {
+   "locationId": "location_blackmere-hearth-row",
+   "rect": [
+    -36,
+    -9,
+    -10,
+    14
+   ]
+  },
+  {
+   "locationId": "location_blackmere-keep",
+   "rect": [
+    -7,
+    -36,
+    7,
+    -11
+   ]
+  }
+ ],
+ "spawns": {
+  "location_blackmere-square": [
+   0,
+   3
+  ],
+  "location_blackmere-market": [
+   19,
+   0
+  ],
+  "location_blackmere-hearth-row": [
+   -20,
+   2
+  ],
+  "location_blackmere-keep": [
+   0,
+   -20
+  ]
+ },
+ "playerStart": [
+  0,
+  4
+ ],
+ "exits": [
+  {
+   "id": "tavern-door",
+   "at": [
+    -10,
+    -9.6
+   ],
+   "radius": 1.4,
+   "label": "Enter the Lantern & Ladle",
+   "to": {
+    "scene": "blackmere-tavern",
+    "locationId": "location_blackmere-tavern",
+    "at": [
+     0,
+     5
+    ]
+   }
+  },
+  {
+   "id": "east-gate",
+   "at": [
+    31,
+    0
+   ],
+   "radius": 2.2,
+   "label": "Take the East Road",
+   "to": {
+    "scene": "blackmere-outskirts",
+    "locationId": "location_blackmere-east-road",
+    "at": [
+     -28,
+     0
+    ]
+   }
+  }
+ ],
+ "npcs": {
+  "actor_pip-ashdown": [
+   3.5,
+   2
+  ],
+  "actor_aldous-crane": [
+   2.5,
+   -24
+  ],
+  "actor_tobias-quill": [
+   17,
+   -1
+  ],
+  "familiar_old-corvin": [
+   -3.5,
+   -27.4
+  ]
+ },
+ "nodes": {},
+ "paths": [
+  {
+   "rect": [
+    -10,
+    -11,
+    10,
+    8
+   ],
+   "color": "path"
+  },
+  {
+   "rect": [
+    10,
+    -2,
+    34,
+    2
+   ],
+   "color": "path"
+  },
+  {
+   "rect": [
+    -36,
+    0,
+    -10,
+    3
+   ],
+   "color": "path"
+  },
+  {
+   "rect": [
+    -3,
+    -34,
+    3,
+    -11
+   ],
+   "color": "path"
+  }
+ ],
+ "props": [
+  {
+   "type": "well",
+   "at": [
+    0,
+    0
+   ]
+  },
+  {
+   "type": "board",
+   "at": [
+    5,
+    -6
+   ]
+  },
+  {
+   "type": "lamp",
+   "at": [
+    -8,
+    6
+   ]
+  },
+  {
+   "type": "lamp",
+   "at": [
+    8,
+    6
+   ]
+  },
+  {
+   "type": "lamp",
+   "at": [
+    8,
+    -9
+   ]
+  },
+  {
+   "type": "building",
+   "at": [
+    -13,
+    -14
+   ],
+   "size": [
+    10,
+    8,
+    6
+   ],
+   "color": "timber",
+   "roof": "roof",
+   "label": "The Lantern & Ladle"
+  },
+  {
+   "type": "building",
+   "at": [
+    13,
+    -15
+   ],
+   "size": [
+    8,
+    6,
+    5
+   ],
+   "color": "stone",
+   "roof": "roof"
+  },
+  {
+   "type": "building",
+   "at": [
+    -6,
+    21
+   ],
+   "size": [
+    7,
+    5,
+    4.5
+   ],
+   "color": "timber",
+   "roof": "crimson"
+  },
+  {
+   "type": "building",
+   "at": [
+    7,
+    21
+   ],
+   "size": [
+    7,
+    5,
+    4.5
+   ],
+   "color": "stone",
+   "roof": "roof"
+  },
+  {
+   "type": "stall",
+   "at": [
+    14,
+    -5
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "stall",
+   "at": [
+    21,
+    -5
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "stall",
+   "at": [
+    14,
+    5
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "stall",
+   "at": [
+    21,
+    5
+   ],
+   "color": "crimson"
+  },
+  {
+   "type": "crate",
+   "at": [
+    25,
+    -6
+   ]
+  },
+  {
+   "type": "barrel",
+   "at": [
+    25,
+    6
+   ]
+  },
+  {
+   "type": "barrel",
+   "at": [
+    26,
+    5
+   ]
+  },
+  {
+   "type": "building",
+   "at": [
+    -15,
+    -5
+   ],
+   "size": [
+    6,
+    4,
+    4
+   ],
+   "color": "timber",
+   "roof": "roof"
+  },
+  {
+   "type": "building",
+   "at": [
+    -23,
+    -5
+   ],
+   "size": [
+    6,
+    4,
+    4
+   ],
+   "color": "stone",
+   "roof": "crimson"
+  },
+  {
+   "type": "building",
+   "at": [
+    -31,
+    -5
+   ],
+   "size": [
+    6,
+    4,
+    4
+   ],
+   "color": "timber",
+   "roof": "roof"
+  },
+  {
+   "type": "building",
+   "at": [
+    -15,
+    9
+   ],
+   "size": [
+    6,
+    4,
+    4
+   ],
+   "color": "stone",
+   "roof": "roof"
+  },
+  {
+   "type": "building",
+   "at": [
+    -23,
+    9
+   ],
+   "size": [
+    6,
+    4,
+    4
+   ],
+   "color": "timber",
+   "roof": "crimson"
+  },
+  {
+   "type": "building",
+   "at": [
+    -31,
+    9
+   ],
+   "size": [
+    6,
+    4,
+    4
+   ],
+   "color": "stone",
+   "roof": "roof"
+  },
+  {
+   "type": "wall",
+   "at": [
+    -10,
+    -31
+   ],
+   "size": [
+    10,
+    1.2,
+    4
+   ]
+  },
+  {
+   "type": "wall",
+   "at": [
+    10,
+    -31
+   ],
+   "size": [
+    10,
+    1.2,
+    4
+   ]
+  },
+  {
+   "type": "gatehouse",
+   "at": [
+    0,
+    -31
+   ],
+   "size": [
+    10,
+    4,
+    7
+   ]
+  },
+  {
+   "type": "keep",
+   "at": [
+    0,
+    -40
+   ],
+   "size": [
+    16,
+    10,
+    16
+   ]
+  },
+  {
+   "type": "fence",
+   "at": [
+    -36,
+    14
+   ],
+   "size": [
+    26,
+    0.3,
+    1
+   ]
+  },
+  {
+   "type": "tree",
+   "at": [
+    -38,
+    -20
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    -34,
+    -28
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "tree",
+   "at": [
+    -26,
+    -30
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    -20,
+    -34
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "tree",
+   "at": [
+    18,
+    -30
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    26,
+    -28
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "tree",
+   "at": [
+    34,
+    -22
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    38,
+    -14
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "tree",
+   "at": [
+    -40,
+    22
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    -30,
+    26
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "tree",
+   "at": [
+    -16,
+    30
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    16,
+    30
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "tree",
+   "at": [
+    30,
+    24
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    38,
+    18
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "tree",
+   "at": [
+    38,
+    -30
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    -38,
+    -36
+   ],
+   "color": "ember"
+  }
+ ]
+}

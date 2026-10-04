@@ -1,0 +1,24 @@
+{
+  "$provisional": "First-pass variable values for this preset; tune freely. Only PEACEFUL values are specified by the project owner.",
+  "preset": "FROZEN_ERA",
+  "name": "Frozen Era",
+  "description": "A preserved moment of history: the world can be lived in but its history does not advance.",
+  "variables": {
+    "war": "OFF",
+    "pvp": "OFF",
+    "propertyRisk": "SAFE",
+    "economicRisk": "NORMAL",
+    "crime": "NPC_ONLY",
+    "familiarDanger": "LOW",
+    "technology": "FIXED",
+    "history": "FROZEN",
+    "politics": "NONE",
+    "persistence": "PERMANENT",
+    "access": "PUBLIC",
+    "canonicalStrictness": "STANDARD",
+    "aiDensity": "MINIMAL"
+  },
+  "ownerOverridable": [
+    "aiDensity"
+  ]
+}
