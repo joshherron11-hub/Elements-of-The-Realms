@@ -55,8 +55,9 @@ Phones get a joystick and action buttons. See [`LIVING.md`](LIVING.md) for routi
 the stall, Wicket Cottage, ambient life and feedback.
 
 ## Rendering
-Toon materials with three bands, inverted-hull outlines, painted canvas backdrops on
-far planes for 2.5D layering, an elevated three-quarter follow camera and HTML name
-labels. The colours come from the Realm's art direction metadata. There are no
-shadows and no external assets. Light follows the in-game hour (`src/render/lighting.ts`);
-ambient life and weather-free atmosphere come from `src/render/ambient.ts`.
+Cel-shaded materials with rim light, inverted-hull outlines, painted procedural
+textures, painted backdrops and an instanced tree ring for 2.5D depth, a full-viewport
+three-quarter follow camera, and HTML name plates. Colours come from the Realm's art
+direction metadata. Real-time shadows and bloom are on the HIGH preset only; there
+are no image assets. Light follows the in-game hour (`src/render/lighting.ts`);
+ambient life comes from `src/render/ambient.ts`. Full detail in [`VISUALS.md`](VISUALS.md).

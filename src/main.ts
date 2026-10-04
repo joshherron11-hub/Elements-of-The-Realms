@@ -1,3 +1,8 @@
+// Bundled typefaces (SIL Open Font License), served with the game: no third-party requests.
+import '@fontsource/alegreya/latin-400.css';
+import '@fontsource/alegreya/latin-400-italic.css';
+import '@fontsource/alegreya/latin-700.css';
+import '@fontsource/cinzel/latin-600.css';
 import { AiService, OfflineProvider, narrate } from './ai';
 import { BUILD } from './config/build';
 import { content } from './config/content';

@@ -193,7 +193,7 @@ try {
 
   await walkTo(12, 0);
   await walkTo(19, 3);
-  await walkTo(21, 4.6);
+  await walkTo(21, 7.1);
   await press('e');
   check(await page.locator('#hud-panel h2', { hasText: 'Market Stall No. 4' }).isVisible(), 'STALL: tending your own stall');
   await choose('— fair');
@@ -212,7 +212,7 @@ try {
   check(Math.hypot(after2[0] - before2[0], after2[1] - before2[1]) > 1, 'MOUSE: click to walk');
 
   await walkTo(-12, 2);
-  await walkTo(-21.5, 9);
+  await walkTo(-21, 12.3);
   await walkTo(-23, 11.4);
   await page.waitForTimeout(200);
   check((await state()).scene === 'blackmere-town' && (await page.locator('.toast', { hasText: 'Wicket Cottage is locked' }).count()) > 0, 'PROPERTY: Wicket Cottage is locked to non-owners');

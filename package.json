@@ -2,7 +2,7 @@
   "name": "elements-of-the-realms",
   "version": "0.1.0",
   "private": true,
-  "description": "Elements of the Realms \u2014 a persistent, browser-first civilization platform. Universal kernel + Realm configurations.",
+  "description": "Elements of the Realms — a persistent, browser-first civilization platform. Universal kernel + Realm configurations.",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,6 +17,8 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@fontsource/alegreya": "^5.3.0",
+    "@fontsource/cinzel": "^5.3.0",
     "three": "^0.186.1"
   },
   "devDependencies": {

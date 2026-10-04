@@ -19,6 +19,7 @@ export const PROP_TYPES = [
   'building', 'stall', 'well', 'board', 'lamp', 'crate', 'barrel', 'wall', 'gatehouse', 'keep', 'fence',
   'tree', 'orchard', 'deadwood', 'field', 'rock', 'signpost', 'counter', 'hearth', 'table',
   'scarecrow', 'haystack', 'cart', 'bed', 'chest', 'bench', 'shrine', 'memorial', 'boat', 'flowers', 'banner', 'rug', 'shelf', 'pen',
+  'sack', 'bunting', 'woodpile', 'pumpkins', 'bush', 'lantern', 'planter',
 ] as const;
 export type PropType = (typeof PROP_TYPES)[number];
 
@@ -84,7 +85,8 @@ export interface SceneLayout {
   exits: ExitSpec[];
   npcs: Record<string, Vec2>;
   nodes: Record<string, Vec2>;
-  paths: { rect: Rect; color: string }[];
+  /** Walkways. `surface` picks the painted texture (cobbles in town, packed earth on roads). */
+  paths: { rect: Rect; color: string; surface?: 'cobble' | 'dirt' | 'plain' }[];
   props: PropSpec[];
   /** LocationId → named activity spots NPC routines can use. */
   spots: Record<string, Record<string, Vec2>>;
@@ -145,7 +147,9 @@ export function parseSceneLayout(raw: unknown, source = 'scene'): Result<SceneLa
     nodes: vecMap(o.nodes, 'nodes'),
     paths: v.arr(o.paths ?? [], 'paths', (x, p) => {
       const pa = v.obj(x, p);
-      return { rect: rect(pa.rect, `${p}.rect`), color: v.str(pa.color, `${p}.color`) };
+      const path: SceneLayout['paths'][number] = { rect: rect(pa.rect, `${p}.rect`), color: v.str(pa.color, `${p}.color`) };
+      if (pa.surface !== undefined) path.surface = v.oneOf(pa.surface, ['cobble', 'dirt', 'plain'] as const, `${p}.surface`);
+      return path;
     }),
     props: v.arr(o.props ?? [], 'props', (x, p) => {
       const pr = v.obj(x, p);

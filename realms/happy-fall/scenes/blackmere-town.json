@@ -5,7 +5,7 @@
   84,
   84
  ],
- "ground": "ground",
+ "ground": "meadow",
  "backdrops": [
   {
    "kind": "hills",
@@ -160,7 +160,8 @@
     10,
     8
    ],
-   "color": "path"
+   "color": "cobble",
+   "surface": "cobble"
   },
   {
    "rect": [
@@ -169,7 +170,8 @@
     34,
     2
    ],
-   "color": "path"
+   "color": "cobble",
+   "surface": "cobble"
   },
   {
    "rect": [
@@ -178,7 +180,8 @@
     -10,
     3
    ],
-   "color": "path"
+   "color": "cobble",
+   "surface": "cobble"
   },
   {
    "rect": [
@@ -187,7 +190,18 @@
     3,
     -11
    ],
-   "color": "path"
+   "color": "cobble",
+   "surface": "cobble"
+  },
+  {
+   "rect": [
+    -2,
+    8,
+    2,
+    18
+   ],
+   "color": "cobble",
+   "surface": "cobble"
   }
  ],
  "props": [
@@ -688,6 +702,418 @@
     12.9
    ],
    "label": "Wicket Cottage"
+  },
+  {
+   "type": "bunting",
+   "at": [
+    0,
+    -10.4
+   ],
+   "size": [
+    18,
+    0.3,
+    4.8
+   ]
+  },
+  {
+   "type": "bunting",
+   "at": [
+    0,
+    7.6
+   ],
+   "size": [
+    18,
+    0.3,
+    4.4
+   ]
+  },
+  {
+   "type": "planter",
+   "at": [
+    -9.1,
+    -6.4
+   ]
+  },
+  {
+   "type": "planter",
+   "at": [
+    9.1,
+    -6.6
+   ]
+  },
+  {
+   "type": "sack",
+   "at": [
+    -3.6,
+    -9.9
+   ]
+  },
+  {
+   "type": "sack",
+   "at": [
+    -4.5,
+    -10.2
+   ]
+  },
+  {
+   "type": "barrel",
+   "at": [
+    -5.6,
+    -9.9
+   ]
+  },
+  {
+   "type": "pumpkins",
+   "at": [
+    -3.8,
+    6.9
+   ]
+  },
+  {
+   "type": "flowers",
+   "at": [
+    3.6,
+    6.9
+   ]
+  },
+  {
+   "type": "crate",
+   "at": [
+    8.8,
+    -4.5
+   ]
+  },
+  {
+   "type": "stall",
+   "at": [
+    28,
+    -6.5
+   ],
+   "color": "moss"
+  },
+  {
+   "type": "stall",
+   "at": [
+    28.6,
+    7
+   ],
+   "color": "crimson"
+  },
+  {
+   "type": "sack",
+   "at": [
+    17.5,
+    -7.6
+   ]
+  },
+  {
+   "type": "sack",
+   "at": [
+    18.3,
+    -7.9
+   ]
+  },
+  {
+   "type": "barrel",
+   "at": [
+    17.6,
+    7.9
+   ]
+  },
+  {
+   "type": "crate",
+   "at": [
+    18.6,
+    8.4
+   ]
+  },
+  {
+   "type": "pumpkins",
+   "at": [
+    24.2,
+    -8.6
+   ]
+  },
+  {
+   "type": "bunting",
+   "at": [
+    21,
+    -9.2
+   ],
+   "size": [
+    16,
+    0.3,
+    4.6
+   ]
+  },
+  {
+   "type": "lamp",
+   "at": [
+    23.6,
+    2.7
+   ]
+  },
+  {
+   "type": "lamp",
+   "at": [
+    13.2,
+    -2.7
+   ]
+  },
+  {
+   "type": "woodpile",
+   "at": [
+    -19,
+    -5.6
+   ]
+  },
+  {
+   "type": "woodpile",
+   "at": [
+    -27,
+    -5.6
+   ]
+  },
+  {
+   "type": "planter",
+   "at": [
+    -13.4,
+    -2.5
+   ]
+  },
+  {
+   "type": "planter",
+   "at": [
+    -29.4,
+    -2.5
+   ]
+  },
+  {
+   "type": "planter",
+   "at": [
+    -16.6,
+    11.5
+   ]
+  },
+  {
+   "type": "barrel",
+   "at": [
+    -28.4,
+    11.8
+   ]
+  },
+  {
+   "type": "barrel",
+   "at": [
+    -27.6,
+    12.3
+   ]
+  },
+  {
+   "type": "sack",
+   "at": [
+    -33.6,
+    12
+   ]
+  },
+  {
+   "type": "lamp",
+   "at": [
+    -12.4,
+    -0.6
+   ]
+  },
+  {
+   "type": "lamp",
+   "at": [
+    -27,
+    3.6
+   ]
+  },
+  {
+   "type": "bush",
+   "at": [
+    -35,
+    -8
+   ]
+  },
+  {
+   "type": "bush",
+   "at": [
+    -11.6,
+    12.6
+   ]
+  },
+  {
+   "type": "lamp",
+   "at": [
+    -4,
+    -18
+   ]
+  },
+  {
+   "type": "lamp",
+   "at": [
+    4,
+    -22
+   ]
+  },
+  {
+   "type": "crate",
+   "at": [
+    -5,
+    -26.2
+   ]
+  },
+  {
+   "type": "crate",
+   "at": [
+    -5.6,
+    -27.2
+   ]
+  },
+  {
+   "type": "sack",
+   "at": [
+    5,
+    -25.6
+   ]
+  },
+  {
+   "type": "bush",
+   "at": [
+    -9,
+    -16
+   ]
+  },
+  {
+   "type": "bush",
+   "at": [
+    9,
+    -16
+   ]
+  },
+  {
+   "type": "bush",
+   "at": [
+    -9,
+    -22
+   ]
+  },
+  {
+   "type": "bush",
+   "at": [
+    9,
+    -24
+   ]
+  },
+  {
+   "type": "flowers",
+   "at": [
+    -3.8,
+    -12.6
+   ]
+  },
+  {
+   "type": "tree",
+   "at": [
+    -12,
+    13
+   ],
+   "color": "crimson"
+  },
+  {
+   "type": "tree",
+   "at": [
+    12.5,
+    13.5
+   ],
+   "color": "gold"
+  },
+  {
+   "type": "tree",
+   "at": [
+    -16,
+    19
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "bush",
+   "at": [
+    -6.5,
+    11.5
+   ]
+  },
+  {
+   "type": "bush",
+   "at": [
+    6.5,
+    11.8
+   ]
+  },
+  {
+   "type": "pumpkins",
+   "at": [
+    -4.5,
+    14.5
+   ]
+  },
+  {
+   "type": "flowers",
+   "at": [
+    4.5,
+    15
+   ]
+  },
+  {
+   "type": "bench",
+   "at": [
+    5.6,
+    11.2
+   ]
+  },
+  {
+   "type": "planter",
+   "at": [
+    -5.6,
+    17.4
+   ]
+  },
+  {
+   "type": "planter",
+   "at": [
+    5.6,
+    17.4
+   ]
+  },
+  {
+   "type": "lamp",
+   "at": [
+    -2.9,
+    12.5
+   ]
+  },
+  {
+   "type": "cart",
+   "at": [
+    21,
+    13
+   ]
+  },
+  {
+   "type": "woodpile",
+   "at": [
+    27,
+    13
+   ]
+  },
+  {
+   "type": "haystack",
+   "at": [
+    15,
+    14
+   ]
   }
  ],
  "spots": {
@@ -783,7 +1209,7 @@
  "stalls": {
   "property_stall-4": [
    21,
-   6.6
+   7.0
   ]
  },
  "extras": [
@@ -884,6 +1310,71 @@
     -1,
     -42
    ]
+  },
+  {
+   "kind": "villager",
+   "at": [
+    16.2,
+    -1.4
+   ],
+   "color": "gold",
+   "hours": [
+    8,
+    18
+   ]
+  },
+  {
+   "kind": "villager",
+   "at": [
+    25.5,
+    3.4
+   ],
+   "color": "moss",
+   "hours": [
+    9,
+    17
+   ]
+  },
+  {
+   "kind": "villager",
+   "path": [
+    [
+     -1,
+     10
+    ],
+    [
+     -1,
+     16
+    ],
+    [
+     1,
+     16
+    ],
+    [
+     1,
+     10
+    ]
+   ],
+   "color": "ember",
+   "hours": [
+    9,
+    19
+   ]
+  },
+  {
+   "kind": "chicken",
+   "at": [
+    -30,
+    13.2
+   ]
+  },
+  {
+   "kind": "cat",
+   "at": [
+    6.2,
+    10.6
+   ],
+   "color": "ink"
   }
  ],
  "ambient": {
@@ -913,6 +1404,16 @@
     13,
     -15,
     6.6
+   ],
+   [
+    -6,
+    21,
+    5.2
+   ],
+   [
+    7,
+    21,
+    5.2
    ]
   ],
   "fireflies": false

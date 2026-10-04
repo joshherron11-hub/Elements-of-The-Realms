@@ -114,7 +114,8 @@
     38,
     1.6
    ],
-   "color": "path"
+   "color": "path",
+   "surface": "dirt"
   }
  ],
  "props": [
@@ -532,6 +533,81 @@
     5
    ],
    "label": "Brindle Farm \u2014 mind the hens"
+  },
+  {
+   "type": "pumpkins",
+   "at": [
+    27,
+    9.5
+   ]
+  },
+  {
+   "type": "woodpile",
+   "at": [
+    33,
+    10
+   ]
+  },
+  {
+   "type": "sack",
+   "at": [
+    25.2,
+    10.2
+   ]
+  },
+  {
+   "type": "sack",
+   "at": [
+    25.9,
+    10.6
+   ]
+  },
+  {
+   "type": "bush",
+   "at": [
+    -30,
+    -4
+   ]
+  },
+  {
+   "type": "bush",
+   "at": [
+    -24,
+    4.5
+   ]
+  },
+  {
+   "type": "bush",
+   "at": [
+    -12,
+    -4.2
+   ]
+  },
+  {
+   "type": "bush",
+   "at": [
+    -14,
+    5
+   ]
+  },
+  {
+   "type": "lamp",
+   "at": [
+    -6.5,
+    2.6
+   ]
+  },
+  {
+   "type": "fence",
+   "at": [
+    -20,
+    -3.4
+   ],
+   "size": [
+    12,
+    0.3,
+    1
+   ]
   }
  ],
  "spots": {

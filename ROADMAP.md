@@ -71,7 +71,13 @@ player market stall, Wicket Cottage interior with locked door and home rest, Fam
 personality and following, ambient life, readables, relationship/coin/objective feedback,
 sound hooks, minimap, mouse/touch controls and phone layout (`docs/LIVING.md`).
 
-## Phase 14 — Next development phase ⬜
+## Phase 14 — Blackmere visual rescue ✅
+Full-viewport responsive stage, closer three-quarter camera with zoom, cel + rim
+materials, warm/cool lighting, sky dome, LOW/HIGH presets (shadows, selective bloom),
+rigged animated characters and Familiars, painted textures, instanced scatter and
+tree ring, denser scenes, interior cutaways, HUD redesign (`docs/VISUALS.md`).
+
+## Phase 15 — Next development phase ⬜
 1. Server-authoritative persistence and accounts (multi-device saves, shared servers).
 2. Farming on owned plots, Forge crafting, cooking at your own hearth.
 3. NPC-to-NPC moments and small town events on the calendar (market day, harvest).

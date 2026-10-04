@@ -1,4 +1,7 @@
-import type { PropSpec, Rect, SceneLayout, Vec2 } from '../render/layout';
+import type { Rect, SceneLayout, Vec2 } from '../render/layout';
+import { footprint } from '../render/footprint';
+
+export { footprint };
 
 /**
  * Pure presentation-side geometry: which zone the player stands in, what they
@@ -14,33 +17,6 @@ export const dist = (a: Vec2, b: Vec2): number => Math.hypot(a[0] - b[0], a[1] -
 /** The simulation location whose zone contains this point, if any. First match wins. */
 export function zoneAt(layout: SceneLayout, p: Vec2): string | undefined {
   return layout.zones.find((z) => inRect(p, z.rect))?.locationId;
-}
-
-/** Default footprint (w, d) of solid props. Decorative ones return undefined. */
-export function footprint(prop: PropSpec): [number, number] | undefined {
-  if (prop.size) {
-    if (prop.type === 'field' || prop.type === 'fence') return prop.type === 'fence' ? [prop.size[0], 0.4] : undefined;
-    return [prop.size[0], prop.size[1]];
-  }
-  switch (prop.type) {
-    case 'well': return [2.4, 2.4];
-    case 'stall': return [3.6, 2.4];
-    case 'tree': case 'orchard': return [1.2, 1.2];
-    case 'rock': return [1.6, 1.4];
-    case 'crate': case 'barrel': return [1, 1];
-    case 'table': return [2, 1.4];
-    case 'hearth': return [1.4, 2.6];
-    case 'board': case 'signpost': case 'lamp': return [0.4, 0.4];
-    case 'scarecrow': case 'shrine': case 'memorial': return [0.8, 0.8];
-    case 'haystack': return [2, 2];
-    case 'cart': return [3, 1.6];
-    case 'bed': return [2, 3];
-    case 'chest': return [1.2, 0.8];
-    case 'bench': return [2, 0.6];
-    case 'shelf': return [2.2, 0.6];
-    case 'boat': return [3.2, 1.4];
-    default: return undefined;
-  }
 }
 
 function blocked(layout: SceneLayout, p: Vec2): boolean {

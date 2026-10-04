@@ -2,10 +2,11 @@ import * as THREE from 'three';
 import type { ActorId, CurrencyId, OwnerRef } from '../core/refs';
 import type { Intent, IntentOutcome, ModeKey } from '../modes/types';
 import { buildSection, type BuiltSection } from '../render/builder';
-import { createFamiliarFigure, createFigure, styleFor } from '../render/figures';
+import { animateFigure, createFamiliarFigure, createFigure, styleFor } from '../render/figures';
 import type { ReadableSpec, SceneLayout, Vec2 } from '../render/layout';
 import { Materials } from '../render/materials';
 import { createStage, type Palette, type Stage } from '../render/stage';
+import { detectQuality, type GraphicsQuality } from '../render/quality';
 import { Ambient } from '../render/ambient';
 import { lightingAt, type Lighting } from '../render/lighting';
 import type { Simulation } from '../simulation';
@@ -46,6 +47,10 @@ interface FamiliarView {
   keeper?: ActorId;
   offset: Vec2;
   seed: number;
+  /** performance.now() until which it shows delight (after care). */
+  joyUntil: number;
+  walk: number;
+  sniff: boolean;
 }
 
 interface NpcView {
@@ -131,7 +136,7 @@ export class Game {
     container: HTMLElement,
     palette: Palette,
   ) {
-    this.stage = createStage(container, palette);
+    this.stage = createStage(container, palette, Game.initialQuality());
     this.materials = new Materials(palette);
     this.hud = new Hud(document.body);
     this.self = { kind: 'actor', id: playerId };
@@ -142,7 +147,7 @@ export class Game {
     this.tapRing.rotation.x = -Math.PI / 2;
     this.tapRing.position.y = 0.05;
     this.pointer = new PointerControls(this.stage.renderer.domElement, () => this.stage.camera, (t) => this.onTap(t.ground));
-    this.hud.map.appendChild(this.minimap.canvas);
+    this.hud.setMap(this.minimap.canvas);
     this.buildTouchControls();
     try {
       this.sound.setMuted(window.localStorage.getItem('eotr.sound') !== 'on');
@@ -151,6 +156,9 @@ export class Game {
     }
     this.hud.setMuted(this.sound.muted);
     this.hud.soundButton.onclick = () => this.toggleSound();
+    this.hud.setQuality(this.stage.settings.quality);
+    this.hud.qualityButton.onclick = () => this.toggleQuality();
+    this.attachZoom();
   }
 
   /** Optional hooks the app wires up (saving lives outside the game loop). */
@@ -167,6 +175,64 @@ export class Game {
 
   toast(text: string, bad = false): void {
     this.hud.toast(text, bad);
+  }
+
+  /** The viewer's saved graphics preset, else a guess from the device. Per-viewer convenience only. */
+  private static initialQuality(): GraphicsQuality {
+    try {
+      const saved = window.localStorage.getItem('eotr.gfx');
+      if (saved === 'low' || saved === 'high') return saved;
+    } catch {
+      /* storage blocked: fall through */
+    }
+    const nav = navigator as Navigator & { deviceMemory?: number };
+    return detectQuality({ touch: isTouchDevice(), cores: nav.hardwareConcurrency, memoryGb: nav.deviceMemory, width: window.innerWidth });
+  }
+
+  private toggleQuality(): void {
+    const next: GraphicsQuality = this.stage.settings.quality === 'high' ? 'low' : 'high';
+    this.stage.setQuality(next);
+    try {
+      window.localStorage.setItem('eotr.gfx', next);
+    } catch {
+      /* per-viewer convenience only */
+    }
+    this.hud.setQuality(next);
+    this.hud.toast(`Graphics: ${next === 'high' ? 'High (shadows, glow)' : 'Low (fast)'}`);
+    this.enterScene(this.layout.id, this.pos); // rebuild with the new decoration density
+  }
+
+  private zoomBy(k: number): void {
+    this.stage.zoom(this.stage.zoomLevel * k);
+  }
+
+  /** Mouse wheel and two-finger pinch zoom the camera (presentation only). */
+  private attachZoom(): void {
+    const canvas = this.stage.renderer.domElement;
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      this.zoomBy(e.deltaY > 0 ? 1.08 : 1 / 1.08);
+    }, { passive: false });
+    const touches = new Map<number, [number, number]>();
+    let lastSpread = 0;
+    canvas.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'touch') touches.set(e.pointerId, [e.clientX, e.clientY]);
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!touches.has(e.pointerId)) return;
+      touches.set(e.pointerId, [e.clientX, e.clientY]);
+      if (touches.size !== 2) return;
+      const [a, b] = [...touches.values()] as [[number, number], [number, number]];
+      const spread = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      if (lastSpread) this.zoomBy(lastSpread / spread);
+      lastSpread = spread;
+    });
+    const end = (e: PointerEvent) => {
+      touches.delete(e.pointerId);
+      if (touches.size < 2) lastSpread = 0;
+    };
+    canvas.addEventListener('pointerup', end);
+    canvas.addEventListener('pointercancel', end);
   }
 
   /** Where an NPC is drawn right now (debug / e2e). */
@@ -243,6 +309,7 @@ export class Game {
 
   private sayPet(familiarId: string, text: string): void {
     const p = this.pets.find((x) => x.id === familiarId);
+    if (p) p.joyUntil = performance.now() + 1600; // a happy hop, spin or wag
     if (p) this.worldText(text, () => new THREE.Vector3(p.at[0], p.floats ? 2.8 : 1.9, p.at[1]), 'bubble', 4200);
   }
 
@@ -324,16 +391,16 @@ export class Game {
     const layout = this.layouts.get(sceneId);
     if (!layout) throw new Error(`No layout for scene ${sceneId}`);
     this.layout = layout;
-    this.section = buildSection(layout, this.materials);
+    this.section = buildSection(layout, this.materials, this.stage.settings.density);
     this.section.group.add(this.player);
     this.tapRing.visible = false;
     this.section.group.add(this.tapRing);
-    this.ambient = new Ambient(layout, this.materials, this.section);
+    this.ambient = new Ambient(layout, this.materials, this.section, this.stage.settings.density);
     this.pos = [...at];
     this.trail = [[...at]];
     this.walkTarget = null;
-    this.stage.setContent(this.section.group, { interior: layout.interior });
-    this.stage.camera.position.set(at[0], 30, at[1] + 30);
+    this.stage.setContent(this.section.group, { interior: layout.interior, bounds: [layout.size[0] / 2, layout.size[1] / 2] });
+    this.player.position.set(at[0], 0, at[1]);
     this.hud.labels.innerHTML = '';
     this.texts = [];
     this.placeLabels = this.section.labels.map((l) => ({ el: this.label(l.text, l.kind), at: l.position }));
@@ -353,6 +420,15 @@ export class Game {
   private applyLighting(): void {
     this.light = lightingAt(this.hourNow(), this.palette);
     this.stage.applyLighting(this.light);
+    // Rim light: warm sunlight by day, cool moonlight by night, hearth-gold indoors.
+    const rim = this.materials.rim;
+    if (this.layout.interior) {
+      rim.color.value.setHex(0xffb878);
+      rim.strength.value = 0.5;
+    } else {
+      rim.color.value.setHex(0xffe0b0).lerp(new THREE.Color(0x9fb4ff), this.light.lamps);
+      rim.strength.value = 0.45 + this.light.lamps * 0.2;
+    }
   }
 
   private label(text: string, kind: string): HTMLElement {
@@ -458,13 +534,8 @@ export class Game {
       }
       n.figure.position.x = n.at[0];
       n.figure.position.z = n.at[1];
-      if (asleep && !n.walking) {
-        n.figure.rotation.z = Math.PI / 2;
-        n.figure.position.y = 0.35;
-      } else {
-        n.figure.rotation.z = 0;
-        n.figure.position.y = n.walking ? Math.abs(Math.sin(t / 140 + n.seed)) * 0.1 : Math.sin(t / 500 + n.seed) * 0.04;
-      }
+      const talking = this.dialogueWith === n.id && this.hud.openPanel === 'dialogue';
+      animateFigure(n.figure, { t: t / 1000, walk: n.walking ? (n.leaving || d > 0.9 ? 1 : 0.4) : 0, sleeping: asleep && !n.walking, talking: talking || (near && !asleep && !n.walking && Math.sin(t / 900 + n.seed) > 0.6) });
       keep.push(n);
     }
     this.npcs = keep;
@@ -501,10 +572,13 @@ export class Game {
         at: [...at],
         follows: mine && !!sp?.followsOwner,
         floats: sp?.figure === 'moth',
-        label: this.label(f.name, 'npc'),
+        label: this.label(f.name, 'pet'),
         keeper: fixed ? undefined : keeper,
         offset: [1.3, 0.6],
         seed: hash(f.name.length + at[0]) * 50,
+        joyUntil: 0,
+        walk: 0,
+        sniff: false,
       });
     }
   }
@@ -565,9 +639,9 @@ export class Game {
       }
       p.figure.position.x = p.at[0];
       p.figure.position.z = p.at[1];
-      if (p.floats) p.figure.position.y = 1.5 + Math.sin(t / 300 + p.seed) * 0.25;
-      else p.figure.position.y = moving ? Math.abs(Math.sin(t / 90 + p.seed)) * 0.12 : 0;
-      p.figure.rotation.x = sniffing && !p.floats ? 0.25 + Math.sin(t / 120) * 0.12 : 0;
+      p.walk = moving ? Math.min(1.6, (p.walk + 0.2) * 0.9 + 0.1) : 0;
+      p.sniff = sniffing;
+      animateFigure(p.figure, { t: t / 1000 + p.seed, walk: p.walk, sniff: sniffing, joy: Math.max(0, (p.joyUntil - t) / 1600) });
     }
   }
 
@@ -642,7 +716,8 @@ export class Game {
       }
       this.stillMs = 0;
     } else this.stillMs += dt;
-    this.player.position.set(this.pos[0], Math.abs(Math.sin(performance.now() / 120)) * (movingNow ? 0.12 : 0), this.pos[1]);
+    this.player.position.set(this.pos[0], 0, this.pos[1]);
+    animateFigure(this.player, { t: performance.now() / 1000, walk: movingNow ? (running ? 1.4 : 1) : 0, talking: this.hud.openPanel === 'dialogue' });
     this.tapRing.visible = !!this.walkTarget && this.walkGoal.kind === 'point';
     if (this.tapRing.visible) this.tapRing.scale.setScalar(1 + Math.sin(performance.now() / 150) * 0.15);
 
@@ -683,6 +758,7 @@ export class Game {
         readables: [...this.layout.readables.map((r) => r.at), ...Object.values(this.layout.stalls)],
         currentZone: this.sim.state.actors[this.playerId]?.locationId,
       });
+      this.hud.mapTitle(this.sim.state.locations[this.sim.state.actors[this.playerId]?.locationId ?? '']?.name ?? this.layout.name);
     }
   }
 
@@ -844,6 +920,9 @@ export class Game {
     if (key === 'Escape') return this.hud.close();
     if (key === 'e') return this.interact();
     if (key === 'm') return this.toggleSound();
+    if (key === 'g') return this.toggleQuality();
+    if (key === '=' || key === '+') return this.zoomBy(1 / 1.1);
+    if (key === '-') return this.zoomBy(1.1);
     if (key === 'f') {
       this.act({ kind: 'search' });
       return;

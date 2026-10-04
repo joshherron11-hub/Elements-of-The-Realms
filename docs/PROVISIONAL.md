@@ -22,6 +22,7 @@ it can change. Values that live in data change by editing JSON, with no code cha
 | Time-away catch-up cap (2 h), autosave interval (30 s), walk/run speeds | `src/ui/session.ts`, `src/main.ts`, `src/ui/game.ts` | |
 | Day length (24 real minutes), start hour (09:00), NPC routines, market hours and restock targets, stall odds (35 %/h, ceiling ×2.5, 07–19, 48 h catch-up), NPC lines and Familiar reactions | `realms/happy-fall/living/blackmere.json` | rules, not saves: changes apply to old worlds too |
 | Home rest bonus (+80 energy), NPC walk speed, idle radius, tap and read ranges | `src/familiars/familiars.ts`, `src/ui/game.ts` | |
+| Visual tuning: camera pitch/distance/zoom range, rim strength, preset thresholds (cores, memory, width), scatter and particle counts, palette keys `meadow` and `cobble` | `src/render/stage.ts`, `materials.ts`, `quality.ts`, `builder.ts`, `ambient.ts`, `realm.json` | presentation only |
 | Recognition ladder numbers | `src/identity/canonical/ladder.ts` | **TEST_ONLY** fixtures, see `docs/CANONICAL.md` |
 
 Each content file carries a `$provisional` note. The game ignores keys that start with `$`.

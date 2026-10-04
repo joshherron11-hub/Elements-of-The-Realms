@@ -1,68 +1,25 @@
 import * as THREE from 'three';
 import { inHours } from '../world/living';
 import type { BuiltSection } from './builder';
-import { createFigure } from './figures';
+import { animateFigure, createAnimal, createFigure } from './figures';
 import type { ExtraSpec, SceneLayout, Vec2 } from './layout';
 import type { Lighting } from './lighting';
 import type { Materials } from './materials';
+import { softDisc } from './textures';
 
 /**
- * Ambient life: presentation only. Leaves drift, smoke rises, fireflies come
- * out at night, banners sway, hearths flicker, villagers walk their rounds,
- * hens peck and crows hop. Nothing here touches the simulation; the time of
- * day is read from it to decide what is lit and who is about.
+ * Ambient life: presentation only. Leaves drift, dust motes hang in the light,
+ * smoke rises, embers lift off hearths, fireflies come out at night, banners
+ * and bunting sway, hearths flicker, windows light up, villagers walk their
+ * rounds, patrons sip, hens peck and crows hop. Nothing here touches the
+ * simulation; the time of day is read from it to decide what is lit and who
+ * is about.
  */
 interface ExtraView {
   spec: ExtraSpec;
   obj: THREE.Object3D;
   seed: number;
-}
-
-function animal(m: Materials, kind: ExtraSpec['kind'], color?: string): THREE.Group {
-  const P = m.palette;
-  const g = new THREE.Group();
-  switch (kind) {
-    case 'chicken': {
-      const body = m.mesh(new THREE.SphereGeometry(0.28, 8, 6), 0xf3ead8);
-      body.position.y = 0.32;
-      const comb = m.mesh(new THREE.BoxGeometry(0.06, 0.12, 0.14), P.crimson, false);
-      comb.position.set(0, 0.6, 0.18);
-      g.add(body, comb);
-      break;
-    }
-    case 'sheep': {
-      const body = m.mesh(new THREE.SphereGeometry(0.55, 10, 8), 0xefe9df);
-      body.scale.set(1, 0.8, 1.3);
-      body.position.y = 0.6;
-      const head = m.mesh(new THREE.SphereGeometry(0.22, 8, 6), P.ink);
-      head.position.set(0, 0.75, 0.7);
-      g.add(body, head);
-      break;
-    }
-    case 'crow': {
-      const body = m.mesh(new THREE.ConeGeometry(0.16, 0.5, 5), P.ink, false);
-      body.rotation.x = Math.PI / 2.3;
-      body.position.y = 0.25;
-      g.add(body);
-      break;
-    }
-    case 'cat': {
-      const body = m.mesh(new THREE.BoxGeometry(0.3, 0.3, 0.6), m.color(color, 'ember'));
-      body.position.y = 0.2;
-      const head = m.mesh(new THREE.SphereGeometry(0.17, 8, 6), m.color(color, 'ember'));
-      head.position.set(0, 0.42, 0.32);
-      for (const x of [-0.08, 0.08]) {
-        const ear = m.mesh(new THREE.ConeGeometry(0.05, 0.12, 4), P.ink, false);
-        ear.position.set(x, 0.58, 0.32);
-        g.add(ear);
-      }
-      g.add(body, head);
-      break;
-    }
-    default:
-      break;
-  }
-  return g;
+  walking: boolean;
 }
 
 /** Deterministic pseudo-random in [0,1) from a seed (presentation only). */
@@ -71,75 +28,127 @@ const hash = (n: number) => {
   return x - Math.floor(x);
 };
 
+function points(n: number, place: (i: number) => [number, number, number], mat: THREE.PointsMaterial, colors?: (i: number) => THREE.Color): THREE.Points {
+  const pos = new Float32Array(n * 3);
+  const col = colors ? new Float32Array(n * 3) : undefined;
+  for (let i = 0; i < n; i++) {
+    pos.set(place(i), i * 3);
+    if (col && colors) {
+      const c = colors(i);
+      col.set([c.r, c.g, c.b], i * 3);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  if (col) geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const p = new THREE.Points(geo, mat);
+  p.frustumCulled = false;
+  return p;
+}
+
 export class Ambient {
   private readonly extras: ExtraView[] = [];
   private leaves?: THREE.Points;
   private leafVel: Float32Array = new Float32Array();
-  private readonly smoke: { sprite: THREE.Mesh; base: THREE.Vector3; t: number }[] = [];
+  private dust?: THREE.Points;
+  private embers?: THREE.Points;
+  private emberBase: THREE.Vector3[] = [];
+  private readonly smoke: { sprite: THREE.Sprite; base: THREE.Vector3; t: number }[] = [];
   private fireflies?: THREE.Points;
-  private readonly banners: THREE.Object3D[] = [];
+  private readonly swaying: THREE.Object3D[] = [];
+  private readonly glowMats = new Set<THREE.MeshBasicMaterial>();
+  private readonly flames: THREE.Object3D[] = [];
+  private readonly halos: THREE.Sprite[] = [];
+  private readonly exitGlows: THREE.Mesh[] = [];
 
   constructor(
     private readonly layout: SceneLayout,
     private readonly m: Materials,
     private readonly built: BuiltSection,
+    density = 1,
   ) {
     const group = built.group;
+    const P = m.palette;
     layout.extras.forEach((spec, i) => {
       const obj =
         spec.kind === 'villager' || spec.kind === 'patron'
-          ? createFigure(m, { body: m.color(spec.color, 'stone'), accent: m.palette.timber, height: spec.kind === 'patron' ? 1.6 : 2 })
-          : animal(m, spec.kind, spec.color);
+          ? createFigure(m, { body: m.color(spec.color, 'stone'), accent: i % 2 ? P.gold : P.timber, role: spec.kind, height: spec.kind === 'patron' ? 2.2 : 2.35 })
+          : createAnimal(m, spec.kind, spec.color ? m.color(spec.color) : undefined);
       const start = spec.at ?? spec.path![0]!;
       obj.position.set(start[0], 0, start[1]);
-      if (spec.kind === 'patron') obj.position.y = -0.25; // seated
       group.add(obj);
-      this.extras.push({ spec, obj, seed: i * 13.7 + start[0] });
+      this.extras.push({ spec, obj, seed: i * 13.7 + start[0], walking: false });
     });
 
     const [W, D] = layout.size;
-    if (layout.ambient.leaves > 0) {
-      const n = layout.ambient.leaves;
-      const pos = new Float32Array(n * 3);
+    const n = Math.round(layout.ambient.leaves * density);
+    if (n > 0) {
+      const palette = [P.ember, P.gold, P.crimson].map((c) => new THREE.Color(c));
       this.leafVel = new Float32Array(n * 3);
-      const colors = new Float32Array(n * 3);
-      const palette = [m.palette.ember, m.palette.gold, m.palette.crimson].map((c) => new THREE.Color(c));
-      for (let i = 0; i < n; i++) {
-        pos.set([(hash(i) - 0.5) * W, hash(i + 99) * 12, (hash(i + 7) - 0.5) * D], i * 3);
-        this.leafVel.set([0.4 + hash(i + 3) * 0.6, -(0.4 + hash(i + 5) * 0.5), 0.2 * (hash(i + 11) - 0.5)], i * 3);
-        const c = palette[i % 3]!;
-        colors.set([c.r, c.g, c.b], i * 3);
-      }
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-      this.leaves = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.28, vertexColors: true, transparent: true, opacity: 0.9 }));
+      for (let i = 0; i < n; i++) this.leafVel.set([0.4 + hash(i + 3) * 0.6, -(0.4 + hash(i + 5) * 0.5), 0.2 * (hash(i + 11) - 0.5)], i * 3);
+      this.leaves = points(
+        n,
+        (i) => [(hash(i) - 0.5) * W, hash(i + 99) * 12, (hash(i + 7) - 0.5) * D],
+        new THREE.PointsMaterial({ size: 0.34, vertexColors: true, transparent: true, opacity: 0.95 }),
+        (i) => palette[i % 3]!,
+      );
       group.add(this.leaves);
     }
 
+    // Dust motes catching the light (a few dozen, very cheap).
+    const motes = Math.round((layout.interior ? 70 : 90) * density);
+    this.dust = points(
+      motes,
+      (i) => [(hash(i + 31) - 0.5) * W * 0.9, 0.4 + hash(i + 37) * (layout.interior ? 3.5 : 5), (hash(i + 41) - 0.5) * D * 0.9],
+      new THREE.PointsMaterial({ size: 0.12, map: softDisc(), color: P.light, transparent: true, opacity: 0.55, depthWrite: false }),
+    );
+    group.add(this.dust);
+
+    const puff = new THREE.SpriteMaterial({ map: softDisc(), color: 0xd8cdc0, transparent: true, opacity: 0.4, depthWrite: false });
     for (const [x, z, h] of layout.ambient.smoke) {
-      for (let k = 0; k < 4; k++) {
-        const sprite = new THREE.Mesh(new THREE.CircleGeometry(0.45, 10), new THREE.MeshBasicMaterial({ color: 0xcfc4b8, transparent: true, opacity: 0.35, depthWrite: false }));
+      for (let k = 0; k < 5; k++) {
+        const sprite = new THREE.Sprite(puff.clone());
         const base = new THREE.Vector3(x + 0.8, h, z);
         sprite.position.copy(base);
         group.add(sprite);
-        this.smoke.push({ sprite, base, t: k / 4 });
+        this.smoke.push({ sprite, base, t: k / 5 });
       }
     }
 
     if (layout.ambient.fireflies) {
-      const n = 40;
-      const pos = new Float32Array(n * 3);
-      for (let i = 0; i < n; i++) pos.set([(hash(i + 1) - 0.5) * W * 0.8, 0.6 + hash(i + 2) * 2.2, (hash(i + 3) - 0.5) * D * 0.8], i * 3);
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-      this.fireflies = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.22, color: m.palette.gold, transparent: true, opacity: 0 }));
+      this.fireflies = points(
+        Math.round(46 * density),
+        (i) => [(hash(i + 1) - 0.5) * W * 0.8, 0.6 + hash(i + 2) * 2.2, (hash(i + 3) - 0.5) * D * 0.8],
+        new THREE.PointsMaterial({ size: 0.32, map: softDisc(), color: new THREE.Color(P.gold).multiplyScalar(2), transparent: true, opacity: 0, depthWrite: false, toneMapped: false }),
+      );
       group.add(this.fireflies);
     }
 
     group.traverse((o) => {
-      if (o.name === 'banner-cloth') this.banners.push(o);
+      if (o.name === 'banner-cloth' || o.name === 'bunting') this.swaying.push(o);
+      if (o.name === 'flame') this.flames.push(o);
+      if (o.name === 'lamp-halo') this.halos.push(o as THREE.Sprite);
+      if (o.name === 'exit-glow') this.exitGlows.push(o as THREE.Mesh);
     });
+    for (const l of built.nightLights) {
+      const mat = (l as THREE.Mesh).material as THREE.MeshBasicMaterial | undefined;
+      if (mat?.userData.baseColor !== undefined) this.glowMats.add(mat);
+    }
+
+    // Embers rising from each hearth.
+    for (const f of built.fires) this.emberBase.push(f.getWorldPosition(new THREE.Vector3()).setY(0.6));
+    if (this.emberBase.length) {
+      const count = Math.round(24 * density) * this.emberBase.length;
+      this.embers = points(
+        count,
+        (i) => {
+          const b = this.emberBase[i % this.emberBase.length]!;
+          return [b.x, b.y + hash(i) * 2, b.z];
+        },
+        new THREE.PointsMaterial({ size: 0.14, map: softDisc(), color: new THREE.Color(P.ember).multiplyScalar(2.6), transparent: true, depthWrite: false, toneMapped: false }),
+      );
+      group.add(this.embers);
+    }
   }
 
   update(dtMs: number, tMs: number, hour: number, light: Lighting, camera: THREE.Camera): void {
@@ -151,6 +160,7 @@ export class Ambient {
       const present = !e.spec.hours || inHours(Math.floor(hour), e.spec.hours[0], e.spec.hours[1]);
       e.obj.visible = present;
       if (!present) continue;
+      let walk = 0;
       if (e.spec.path && e.spec.path.length > 1) {
         const pts = e.spec.path;
         const seg = pts.map((p, i) => Math.hypot(pts[(i + 1) % pts.length]![0] - p[0], pts[(i + 1) % pts.length]![1] - p[1]));
@@ -164,7 +174,7 @@ export class Ambient {
         e.obj.position.x = a[0] + (b[0] - a[0]) * k;
         e.obj.position.z = a[1] + (b[1] - a[1]) * k;
         e.obj.rotation.y = Math.atan2(b[0] - a[0], b[1] - a[1]);
-        e.obj.position.y = Math.abs(Math.sin(t * 6 + e.seed)) * 0.06;
+        walk = 0.6;
       } else if (e.spec.at) {
         const home: Vec2 = e.spec.at;
         const slot = Math.floor((t + e.seed) / 3);
@@ -177,11 +187,18 @@ export class Ambient {
           e.obj.position.x += dx * Math.min(1, dt * 1.5);
           e.obj.position.z += dz * Math.min(1, dt * 1.5);
           e.obj.rotation.y = Math.atan2(dx, dz);
+          walk = Math.min(1, Math.hypot(dx, dz) * 1.5);
         }
-        if (e.spec.kind === 'chicken') e.obj.rotation.x = Math.max(0, Math.sin(t * 5 + e.seed)) * 0.5; // pecking
-        if (e.spec.kind === 'crow') e.obj.position.y = Math.max(0, Math.sin(t * 3 + e.seed)) * 0.4; // hopping
-        if (e.spec.kind === 'patron') e.obj.rotation.y = Math.sin(t * 0.7 + e.seed) * 0.6;
+        if (e.spec.kind === 'patron') e.obj.rotation.y = Math.sin(t * 0.3 + e.seed) * 0.5;
       }
+      animateFigure(e.obj, {
+        t,
+        walk,
+        seated: e.spec.kind === 'patron',
+        talking: e.spec.kind === 'patron' && Math.sin(t * 0.4 + e.seed) > 0.3,
+        sniff: e.spec.kind === 'chicken' && Math.sin(t * 2.5 + e.seed) > 0.2, // pecking
+        joy: e.spec.kind === 'crow' ? Math.max(0, Math.sin(t * 1.5 + e.seed)) * 0.4 : 0,
+      });
     }
 
     if (this.leaves) {
@@ -201,12 +218,29 @@ export class Ambient {
       pos.needsUpdate = true;
     }
 
+    if (this.dust) {
+      this.dust.position.set(Math.sin(t * 0.13) * 0.6, Math.sin(t * 0.21) * 0.25, Math.cos(t * 0.11) * 0.6);
+      (this.dust.material as THREE.PointsMaterial).opacity = this.layout.interior ? 0.5 : 0.15 + (1 - light.lamps) * 0.3;
+    }
+
+    if (this.embers) {
+      const pos = this.embers.geometry.getAttribute('position') as THREE.BufferAttribute;
+      const arr = pos.array as Float32Array;
+      for (let i = 0, j = 0; i < arr.length; i += 3, j++) {
+        const b = this.emberBase[j % this.emberBase.length]!;
+        const life = ((t * 0.45 + hash(j)) % 1 + 1) % 1;
+        arr[i] = b.x + Math.sin(t * 2 + j) * 0.25 * life + (hash(j + 9) - 0.5) * 0.5;
+        arr[i + 1] = b.y + life * 2.6;
+        arr[i + 2] = b.z + (hash(j + 3) - 0.5) * 0.6;
+      }
+      pos.needsUpdate = true;
+    }
+
     for (const s of this.smoke) {
-      s.t = (s.t + dt * 0.18) % 1;
-      s.sprite.position.set(s.base.x + Math.sin(s.t * 4) * 0.4 + s.t * 1.2, s.base.y + s.t * 4, s.base.z);
-      s.sprite.scale.setScalar(0.6 + s.t * 1.6);
-      (s.sprite.material as THREE.MeshBasicMaterial).opacity = 0.4 * (1 - s.t);
-      s.sprite.quaternion.copy(camera.quaternion);
+      s.t = (s.t + dt * 0.16) % 1;
+      s.sprite.position.set(s.base.x + Math.sin(s.t * 4) * 0.4 + s.t * 1.4, s.base.y + s.t * 4.5, s.base.z);
+      s.sprite.scale.setScalar(0.8 + s.t * 2.4);
+      s.sprite.material.opacity = 0.45 * (1 - s.t) * Math.min(1, s.t * 6);
     }
 
     if (this.fireflies) {
@@ -214,12 +248,18 @@ export class Ambient {
       this.fireflies.position.y = Math.sin(t * 0.8) * 0.3;
     }
 
-    for (const b of this.banners) b.rotation.y = Math.sin(t * 1.6 + b.position.x) * 0.35;
-    for (const f of this.built.fires) f.intensity = 5 + Math.sin(t * 11) * 0.8 + Math.sin(t * 23) * 0.5;
-    for (const l of this.built.nightLights) {
-      const mat = (l as THREE.Mesh).material as THREE.MeshBasicMaterial;
-      mat.color.setHex(light.lamps > 0.5 ? this.m.palette.gold : this.m.palette.stone);
+    for (const b of this.swaying) b.rotation.y = Math.sin(t * 1.6 + b.position.x) * (b.name === 'bunting' ? 0.12 : 0.35);
+    for (const f of this.built.fires) f.intensity = (this.layout.interior ? 7 : 5) + Math.sin(t * 11) * 0.8 + Math.sin(t * 23) * 0.5;
+    for (const f of this.flames) f.scale.set(1 + Math.sin(t * 13 + f.position.x) * 0.08, 1 + Math.sin(t * 17) * 0.15, 1);
+    // Windows and lamps: dim and warm by day, over-bright gold (and blooming) by night.
+    const lit = this.layout.interior ? 1 : light.lamps;
+    for (const mat of this.glowMats) {
+      const base = new THREE.Color(mat.userData.baseColor as number);
+      const power = mat.userData.power as number;
+      mat.color.copy(base).multiplyScalar(0.45 + lit * (power - 0.45));
     }
+    for (const h of this.halos) h.material.opacity = lit * (0.42 + Math.sin(t * 2.3 + h.position.x) * 0.06);
+    for (const g of this.exitGlows) (g.material as THREE.MeshBasicMaterial).opacity = 0.25 + Math.sin(t * 2.4) * 0.12;
     for (const w of this.built.group.children) {
       if (w.name === 'water-shine') w.position.x += Math.sin(t * 0.6) * 0.004;
       if (w.name === 'backdrop') w.position.x = camera.position.x * (w.userData.parallax as number);

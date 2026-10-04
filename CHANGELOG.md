@@ -5,6 +5,27 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed — Blackmere visual rescue (presentation only)
+- Full-viewport, safe-area-aware canvas with ResizeObserver; closer, aspect-aware
+  three-quarter camera clamped to the section; wheel/pinch/key zoom.
+- Cel materials with a deep shadow band and rim light; warm key / cool fill; gradient
+  sky dome; matched fog; selective bloom and soft shadows on the HIGH preset.
+- Graphics presets LOW/HIGH (`src/render/quality.ts`), auto-detected, G to toggle.
+- Larger rigged characters with role silhouettes, walk/run/idle/talk/sleep/seated
+  animation, blob shadows; animated Familiars (trot, wag, sniff, flap, hop, joy after
+  care) and animals.
+- Painted procedural ground, cobble, road and plank textures; path kerbs; instanced
+  ground scatter; instanced tree ring and foreground hedges; richer houses, stalls,
+  board, well, hearth, lanterns; new props (sack, bunting, woodpile, pumpkins, bush,
+  lantern, planter); denser town square, market, Hearth Row, keep approach, south
+  green, tavern and cottage; interior cutaway walls; dust motes and hearth embers.
+- HUD redesign: bundled Cinzel/Alegreya fonts, layered panels, status chips, segmented
+  mode bar, key-badge prompts, name plates, bubble tails, vignette, readable minimap
+  with buildings and caption, improved phone layout.
+- Fixed: a tavern spot and the stall-tending spot sat inside furniture; new
+  `tests/presentation.test.ts` keeps set dressing off spots, readables and routes.
+- `docs/VISUALS.md`.
+
 ### Added — Blackmere world depth pass
 - **Living world rules** (`realms/happy-fall/living/blackmere.json`, `src/world/living.ts`):
   calendar (24-min day, start 09:00), NPC daily routines (`RoutineService`), market hours
