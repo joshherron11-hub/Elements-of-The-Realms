@@ -3,6 +3,7 @@ import type { PersonId } from '../../core/refs';
 import type { VerificationSource } from '../types';
 import { ECONOMIC_SOURCE_SYSTEMS } from './guards';
 import type { DerivedRecord } from './pipeline';
+import { DEFAULT_CANON_CONFIG, checkInterpretationConfig, verifierAllowed, type CanonConfig } from './ladder';
 
 /**
  * RECOGNITION — RESERVED
@@ -31,13 +32,18 @@ export interface Recognition {
 export function validateRecognition(
   r: Recognition,
   signature: DerivedRecord | undefined,
+  canon: CanonConfig = DEFAULT_CANON_CONFIG,
 ): Result<true> {
+  const usable = checkInterpretationConfig(canon.interpretation, canon.environment);
+  if (!usable.ok) return usable;
   if (r.layer !== 'recognized') return err('WRONG_LAYER', 'recognition must have layer "recognized"');
   if (!signature || signature.id !== r.signatureRecordId) return err('NO_SIGNATURE', 'recognition must rest on a Signature record');
   if (signature.stage !== 'SIGNATURE') return err('NOT_SIGNATURE', `basis is ${signature.stage}, not SIGNATURE`);
   if (signature.status !== 'provisional') return err('RETRACTED_BASIS', 'signature basis was retracted');
   if (signature.subject !== r.subject) return err('SUBJECT_MISMATCH', 'signature belongs to someone else');
   if (r.verifiedBy.kind !== 'authorized-verifier') return err('NOT_AUTHORIZED', 'only an authorized verifier can confirm Recognition');
+  const role = verifierAllowed(canon.verifiers, canon.environment, r.verifiedBy.role);
+  if (!role.ok) return role;
   if (r.verifiedBy.id === r.subject) return err('SELF_RECOGNITION', 'nobody can recognize themself');
   if (ECONOMIC_SOURCE_SYSTEMS.has(r.verifiedBy.id)) return err('ECONOMIC_SOURCE', 'Recognition cannot be bought');
   return ok(true);

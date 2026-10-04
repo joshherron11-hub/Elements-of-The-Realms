@@ -43,9 +43,15 @@ any reason, they get the authored/deterministic text, so play never depends on A
 - `OfflineProvider`: deterministic, free, no network. Used for development and the
   browser build.
 - `ScriptedProvider`: for tests.
-- Real HTTP providers implement the same `AiProvider` interface. **None is
-  connected**: that needs an account and credentials, and keys must live behind a
-  server endpoint, never in the browser.
+- Real HTTP providers implement the same `AiProvider` interface.
+  **Anthropic (Claude) is the first real provider to support** (`PROVIDER_PLAN`), but the
+  abstraction stays and any provider can be added beside it.
+- **None is connected yet.** No API key is requested until a real model-backed feature
+  needs one.
+- Keys are never placed in browser/client code: a real provider runs behind a server
+  endpoint. `tests/architecture.test.ts` fails if a key or a direct provider API call
+  appears in client code.
+- Default server AI density is **MINIMAL**.
 
 ### In the game today
 The journal's **"Your tale so far"** is narrated via `narrate()`. On the MINIMAL

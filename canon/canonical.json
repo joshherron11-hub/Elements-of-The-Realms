@@ -11,13 +11,48 @@
     "RECOGNITION"
   ],
   "concepts": [
-    { "key": "GRANDMETA", "name": "Grandmeta", "status": "working-definition", "definition": "Collective accumulated historical memory." },
-    { "key": "METASTRATE", "name": "Metastrate", "status": "working-definition", "definition": "Individual accumulated experiential state." },
-    { "key": "INFOSTRATE", "name": "Infostrate", "status": "reserved", "definition": null },
-    { "key": "METATHYMOS", "name": "Metathymos", "status": "reserved", "definition": null },
-    { "key": "METAMETRICS", "name": "Metametrics", "status": "reserved", "definition": null },
-    { "key": "METASTRATEGY", "name": "Metastrategy", "status": "reserved", "definition": null },
-    { "key": "METAMETHODOLOGY_QUOTIENT", "name": "Metamethodology Quotient", "status": "reserved", "definition": null }
+    {
+      "key": "GRANDMETA",
+      "name": "Grandmeta",
+      "status": "working-definition",
+      "definition": "Collective accumulated historical memory."
+    },
+    {
+      "key": "METASTRATE",
+      "name": "Metastrate",
+      "status": "working-definition",
+      "definition": "Individual accumulated experiential state."
+    },
+    {
+      "key": "INFOSTRATE",
+      "name": "Infostrate",
+      "status": "reserved",
+      "definition": null
+    },
+    {
+      "key": "METATHYMOS",
+      "name": "Metathymos",
+      "status": "reserved",
+      "definition": null
+    },
+    {
+      "key": "METAMETRICS",
+      "name": "Metametrics",
+      "status": "reserved",
+      "definition": null
+    },
+    {
+      "key": "METASTRATEGY",
+      "name": "Metastrategy",
+      "status": "reserved",
+      "definition": null
+    },
+    {
+      "key": "METAMETHODOLOGY_QUOTIENT",
+      "name": "Metamethodology Quotient",
+      "status": "reserved",
+      "definition": null
+    }
   ],
   "rawEvidenceFields": [
     "actor",
@@ -30,14 +65,62 @@
     "provenance",
     "verification"
   ],
-  "identityContexts": ["UNIVERSAL", "REALM", "WORK", "LEARNING", "CREATOR", "PRIVATE", "SHARED"],
+  "identityContexts": [
+    "UNIVERSAL",
+    "REALM",
+    "WORK",
+    "LEARNING",
+    "CREATOR",
+    "PRIVATE",
+    "SHARED"
+  ],
   "rules": {
-    "orientationMinDistinctInteractionsFloor": 2,
     "universalHumanRank": false,
     "universalHumanScore": false,
     "inferJobSuitabilityFromOrientation": false,
     "inferHumanWorthFromOrientation": false,
     "moneyCanBuyCanonicalTruth": false,
-    "ownershipDefinesRecognition": false
-  }
+    "ownershipDefinesRecognition": false,
+    "neverAssignOrientationFromSingleInteraction": true,
+    "autoAssignOrientation": false,
+    "declaredObservedVerifiedSeparate": true
+  },
+  "recognitionLadder": [
+    "FIRST_READ",
+    "OBSERVED",
+    "REPEATED",
+    "CROSS_CONTEXT",
+    "STABLE",
+    "RECOGNITION"
+  ],
+  "thresholds": {
+    "status": "UNFINALIZED",
+    "note": "Canonical Recognition thresholds are not finalized. Thresholds are configurable per ladder stage and may depend on context diversity, repetition, verification quality, cross-context evidence and time. Any numbers in code are TEST_ONLY or PROVISIONAL fixtures, never Canon.",
+    "productionInterpretationEnabled": false,
+    "requiresExplicitMethodologyApproval": true
+  },
+  "verifierRoles": {
+    "status": "UNFINALIZED",
+    "roles": [],
+    "note": "Who may act as an authorized verifier is configurable and not yet decided."
+  },
+  "bannedUniversalConcepts": [
+    "universal human score",
+    "overall human rank",
+    "overall player superiority",
+    "Orientation quality",
+    "Element superiority",
+    "employability score",
+    "education-worth score",
+    "social-credit score"
+  ],
+  "permittedScopedMeasures": [
+    "Tournament Rank",
+    "Duel Rank",
+    "Creator Rank",
+    "War Rank",
+    "Scholar achievement",
+    "Economic performance",
+    "Specific skill performance"
+  ]
 }

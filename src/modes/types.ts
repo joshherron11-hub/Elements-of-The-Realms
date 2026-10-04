@@ -90,4 +90,8 @@ export interface ModeDefinition {
   requires?: { pvp?: boolean; war?: boolean };
   /** If set, contract intents only see these contract kinds. */
   contractKinds?: string[];
+  /** How the mode is expressed in particular Realms (keyed by RealmId or a note key). */
+  realmExpressions?: Record<string, string>;
+  /** Canon boundary for this mode, where one matters (e.g. Veil). */
+  canonNote?: string;
 }

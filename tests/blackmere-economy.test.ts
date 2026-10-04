@@ -188,3 +188,17 @@ describe('money buys opportunity, not Canonical truth', () => {
     expect(ev[0]!.verification).toBe('system-observed');
   });
 });
+
+describe('Peaceful property is never seized or destroyed', () => {
+  it('involuntary property transfers are refused on the SAFE Blackmere server; voluntary ones work', () => {
+    const w = world();
+    w.go('blackmere-keep');
+    w.act({ kind: 'purchase-property', propertyId: asId('property_stall-4') });
+    const council = { kind: 'organization' as const, id: asId<'org'>('org_blackmere-council') };
+    const seize = w.sim.ownership.transfer({ kind: 'property', id: 'property_stall-4' }, w.self, council, 'seizure', { involuntary: true });
+    expect(!seize.ok && seize.error.code).toBe('PROPERTY_PROTECTED');
+    expect(w.sim.property.ownerOf(asId('property_stall-4'))).toEqual(w.self);
+    expect(w.sim.state.properties['property_stall-4']).toBeDefined(); // nothing can destroy it
+    expect(w.sim.ownership.transfer({ kind: 'property', id: 'property_stall-4' }, w.self, council, 'gift').ok).toBe(true);
+  });
+});

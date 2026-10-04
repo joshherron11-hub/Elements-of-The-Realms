@@ -83,8 +83,22 @@ Gameplay asks `allowsInteraction(rules, category)` and `pvpAllowed(rules, …)`.
 resolved rules travel in `SimContext.rules`.
 
 ## Happy Fall
-`ANCHORED` · medieval / early-fantasy · history progresses, technology fixed. Currency
-`currency_mark`. Items within the ceiling cross; currency stays home; Familiars
-form-shift. Allowed servers: PEACEFUL (default), PRIVATE, FAMILY_FRIENDS,
-CURATED_ROLEPLAY, EXPERIMENTAL, FROZEN_ERA. PvP is capped at CONSENT and property risk at SAFE.
+`ANCHORED` · medieval / early-fantasy (the defining, fixed ceiling, never Progressive by
+default) · history progresses.
+
+| Server presets | Status in Happy Fall |
+|---|---|
+| **PEACEFUL** | **launch preset** and default |
+| PRIVATE, FAMILY_FRIENDS, CURATED_ROLEPLAY, EXPERIMENTAL, FROZEN_ERA | allowed |
+| CONSENT_WAR, PROTECTED_CIVILIAN | **future-compatible**: defined but not enabled. War may be added historically later, with explicit consent. |
+| FULL_CONFLICT | defined as data, **not exposed** |
+| PROGRESSIVE_ERA | not allowed (fixed technology ceiling) |
+
+**Peaceful property is never involuntarily destroyed or seized.** On a server with
+`propertyRisk: SAFE`, `OwnershipService.transfer(..., { involuntary: true })` refuses
+property (`PROPERTY_PROTECTED`), and no destroy operation exists. Other constitutions may
+allow loss only with explicit player consent.
+ Currency
+`currency_mark` (provisional). Items within the ceiling cross; currency stays home;
+Familiars form-shift. PvP is capped at CONSENT and property risk at SAFE.
 Default server: `server_happy-fall-blackmere` (PEACEFUL).

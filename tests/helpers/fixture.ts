@@ -2,6 +2,7 @@ import { ManualClock, SequentialIdFactory, asId, provenance, type ActorId, type 
 import { Simulation } from '../../src/simulation';
 import { createWorldState } from '../../src/world';
 import { parseModes } from '../../src/modes';
+import type { CanonConfig } from '../../src/identity';
 import modesJson from '../../modes/modes.json';
 
 const parsedModes = parseModes(modesJson);
@@ -34,7 +35,7 @@ export const player = { kind: 'actor', id: ID.player } as const satisfies OwnerR
 export const baker = { kind: 'actor', id: ID.baker } as const satisfies OwnerRef;
 export const farmer = { kind: 'actor', id: ID.farmer } as const satisfies OwnerRef;
 
-export function makeSim(seed = 7) {
+export function makeSim(seed = 7, canon?: CanonConfig) {
   const clock = new ManualClock(1_000_000);
   const state = createWorldState({
     realm: { id: ID.realm, name: 'Testland', type: 'ANCHORED' },
@@ -42,7 +43,7 @@ export function makeSim(seed = 7) {
     seed,
     now: clock.now(),
   });
-  const sim = new Simulation({ state, clock, ids: new SequentialIdFactory(), modes: MODES }).start();
+  const sim = new Simulation({ state, clock, ids: new SequentialIdFactory(), modes: MODES, canon }).start();
   const p = provenance('authored', 'fixture', clock.now());
 
   state.currencies[ID.coin] = { id: ID.coin, name: 'Coin', symbol: 'c', minorPerMajor: 1, realmId: ID.realm };

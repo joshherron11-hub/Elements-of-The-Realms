@@ -114,6 +114,8 @@ export type VerificationSourceKind = 'system' | 'witness' | 'authorized-verifier
 export interface VerificationSource {
   readonly kind: VerificationSourceKind;
   readonly id: string;
+  /** For authorized verifiers: the role they act in. Roles are configurable and not finalized. */
+  readonly role?: string;
 }
 
 export interface VerificationChange {

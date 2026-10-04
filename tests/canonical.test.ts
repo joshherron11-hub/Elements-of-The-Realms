@@ -4,9 +4,15 @@ import { asId, provenance, type InteractionId, type PersonId } from '../src/core
 import {
   CANONICAL_CONCEPT_KEYS,
   CANONICAL_STAGES,
+  DEFAULT_CANON_CONFIG,
   IDENTITY_CONTEXTS,
-  ORIENTATION_MIN_INTERACTIONS_FLOOR,
+  RECOGNITION_LADDER,
+  TEST_ONLY_CANON_CONFIG,
+  TEST_ONLY_INTERPRETATION,
+  TEST_ONLY_RECOGNITION_THRESHOLDS,
+  assessLadder,
   buildGrandmeta,
+  type LadderEvidence,
   buildMetastrate,
   findForbiddenKeys,
   validateDerivedRecord,
@@ -42,7 +48,12 @@ describe('canon data matches code', () => {
     expect([...CANONICAL_STAGES]).toEqual(canon.pipeline);
     expect([...CANONICAL_CONCEPT_KEYS]).toEqual(canon.concepts.map((c) => c.key));
     expect([...IDENTITY_CONTEXTS]).toEqual(canon.identityContexts);
-    expect(ORIENTATION_MIN_INTERACTIONS_FLOOR).toBe(canon.rules.orientationMinDistinctInteractionsFloor);
+    expect([...RECOGNITION_LADDER]).toEqual(canon.recognitionLadder);
+    expect(canon.thresholds.status).toBe('UNFINALIZED');
+    expect(canon.thresholds.productionInterpretationEnabled).toBe(false);
+    expect(canon.verifierRoles).toMatchObject({ status: 'UNFINALIZED', roles: [] });
+    expect(canon.rules.autoAssignOrientation).toBe(false);
+    expect(canon.rules).not.toHaveProperty('orientationMinDistinctInteractionsFloor');
     expect(canon.concepts.filter((c) => c.status === 'reserved').every((c) => c.definition === null)).toBe(true);
     expect(canon.rules.universalHumanRank).toBe(false);
   });
@@ -69,14 +80,30 @@ describe('raw evidence', () => {
     expect(kinds).toEqual(expect.arrayContaining(['market.purchase', 'location.discovered']));
   });
 
-  it('verification follows strict transitions; no self-verification; no economic source', () => {
+  it('by default nothing can be marked verified: authorized verifier roles are unfinalized', () => {
     const { sim } = makeSim();
+    const { evidence } = sim.interactions.record({ actor: ID.player, actionType: 'help', verification: 'unverified' });
+    const r = sim.interactions.verify(evidence.id, 'verified', { kind: 'authorized-verifier', id: 'registrar', role: 'registrar' });
+    expect(!r.ok && r.error.code).toBe('VERIFIER_ROLES_UNFINALIZED');
+    expect(sim.interactions.verify(evidence.id, 'witnessed', { kind: 'witness', id: ID.baker }).ok).toBe(true);
+  });
+
+  it('TEST_ONLY verifier roles never work outside tests', () => {
+    const { sim } = makeSim(7, { ...TEST_ONLY_CANON_CONFIG, environment: 'production' });
+    const { evidence } = sim.interactions.record({ actor: ID.player, actionType: 'help', verification: 'unverified' });
+    const r = sim.interactions.verify(evidence.id, 'verified', { kind: 'authorized-verifier', id: 'x', role: 'test-verifier' });
+    expect(!r.ok && r.error.code).toBe('TEST_ONLY_POLICY');
+  });
+
+  it('verification follows strict transitions; no self-verification; no economic source', () => {
+    const { sim } = makeSim(7, TEST_ONLY_CANON_CONFIG);
     const { evidence } = sim.interactions.record({ actor: ID.player, actionType: 'help', verification: 'unverified' });
     expect(sim.interactions.verify(evidence.id, 'witnessed', { kind: 'witness', id: ID.player }).ok).toBe(false); // self
     expect(sim.interactions.verify(evidence.id, 'verified', { kind: 'witness', id: ID.baker }).ok).toBe(false); // witness can't verify
     expect(sim.interactions.verify(evidence.id, 'verified', { kind: 'payment', id: 'market' } as never).ok).toBe(false);
     expect(sim.interactions.verify(evidence.id, 'witnessed', { kind: 'witness', id: ID.baker }).ok).toBe(true);
-    expect(sim.interactions.verify(evidence.id, 'verified', { kind: 'authorized-verifier', id: 'registrar' }).ok).toBe(true);
+    expect(sim.interactions.verify(evidence.id, 'verified', { kind: 'authorized-verifier', id: 'registrar', role: 'not-a-role' }).ok).toBe(false);
+    expect(sim.interactions.verify(evidence.id, 'verified', { kind: 'authorized-verifier', id: 'registrar', role: 'test-registrar' }).ok).toBe(true);
     expect(sim.interactions.verify(evidence.id, 'witnessed', { kind: 'witness', id: ID.baker }).ok).toBe(false); // no downgrade
     expect(sim.state.evidence[evidence.id]!.verificationHistory.map((h) => h.to)).toEqual(['witnessed', 'verified']);
   });
@@ -129,8 +156,18 @@ describe('Canonical pipeline guards', () => {
   const stages: Record<string, CanonicalStage> = { interaction_1: 'INTERACTION', interaction_2: 'INTERACTION', m1: 'MODALITIES', sig: 'SIGNATURE' };
   const lookup = (id: string) => stages[id];
 
-  it('accepts a well-formed, approved, properly sourced record', () => {
-    expect(validateDerivedRecord(derived(), lookup).ok).toBe(true);
+  it('refuses everything while Canonical interpretation is disabled (the production default)', () => {
+    const r = validateDerivedRecord(derived(), lookup);
+    expect(!r.ok && r.error.code).toBe('INTERPRETATION_DISABLED');
+    const prod = validateDerivedRecord(derived(), lookup, TEST_ONLY_INTERPRETATION, 'production');
+    expect(!prod.ok && prod.error.code).toBe('TEST_ONLY_POLICY');
+    const provisional = { enabled: true, policy: { ...TEST_ONLY_RECOGNITION_THRESHOLDS, status: 'PROVISIONAL' as const } };
+    expect(validateDerivedRecord(derived(), lookup, provisional, 'production').ok).toBe(false);
+    expect(validateDerivedRecord(derived(), lookup, provisional, 'development').ok).toBe(true);
+  });
+
+  it('accepts a well-formed, approved, properly sourced record (TEST_ONLY config)', () => {
+    expect(validateDerivedRecord(derived(), lookup, TEST_ONLY_INTERPRETATION, 'test').ok).toBe(true);
   });
 
   it.each([
@@ -144,27 +181,64 @@ describe('Canonical pipeline guards', () => {
     ['rank in payload', { payload: { Rank: 'A' } }, 'FORBIDDEN_FIELD'],
     ['job suitability', { payload: { job_suitability: 'high' } }, 'FORBIDDEN_FIELD'],
   ])('rejects %s', (_label, over, code) => {
-    const r = validateDerivedRecord(derived(over as Partial<DerivedRecord>), lookup);
+    const r = validateDerivedRecord(derived(over as Partial<DerivedRecord>), lookup, TEST_ONLY_INTERPRETATION, 'test');
     expect(!r.ok && r.error.code).toBe(code);
   });
 
-  it('never assigns an Orientation from one interaction, whatever the policy says', () => {
-    const one = { subject, orientation: 'reserved', basis: ['i1' as InteractionId], derivedFrom: ['s'], method: approved, assignedAt: 0 };
-    expect(validateOrientation(one, { minDistinctInteractions: 0 }).ok).toBe(false);
-    expect(validateOrientation({ ...one, basis: ['i1', 'i1'] as InteractionId[] }, { minDistinctInteractions: 1 }).ok).toBe(false);
-    expect(validateOrientation({ ...one, basis: ['i1', 'i2'] as InteractionId[] }, { minDistinctInteractions: 1 }).ok).toBe(true);
-    expect(validateOrientation({ ...one, basis: ['i1', 'i2'] as InteractionId[] }, { minDistinctInteractions: 5 }).ok).toBe(false);
+  const ev = (id: string, actionType: string, ctx: string, identity: string, at: number, verification: LadderEvidence['verification'] = 'witnessed'): LadderEvidence =>
+    ({ interactionId: id, actionType, contextKey: ctx, identityContext: identity, verification, at });
+  const strong: LadderEvidence[] = [
+    ev('i1', 'help', 'hf|PLAY', 'realm', 0),
+    ev('i2', 'help', 'hf|PLAY', 'realm', 500),
+    ev('i3', 'help', 'hf|WORK', 'work', 1000),
+    ev('i4', 'teach', 'hf|LEARN', 'learning', 1500),
+  ];
+  const proposal = (basis: string[], assignedBy: { kind: 'review'; reviewer: string } | { kind: 'automatic' } = { kind: 'review', reviewer: 'test-reviewer' }) => ({
+    subject, orientation: 'reserved', basis: basis as InteractionId[], derivedFrom: ['s'], method: approved, assignedBy, assignedAt: 0,
+  });
+
+  it('the Recognition ladder is configurable and grants nothing on its own', () => {
+    expect(assessLadder(strong, DEFAULT_CANON_CONFIG.interpretation, 'production').ok).toBe(false);
+    const a = assessLadder(strong, TEST_ONLY_INTERPRETATION, 'test');
+    expect(a.ok && a.value).toMatchObject({ level: 'STABLE', eligibleForRecognitionReview: false, policy: { status: 'TEST_ONLY' } });
+    const one = assessLadder([ev('i1', 'help', 'hf|PLAY', 'realm', 0)], TEST_ONLY_INTERPRETATION, 'test');
+    expect(one.ok && one.value.level).toBe('OBSERVED');
+    const sameContext = assessLadder([ev('a', 'help', 'c', 'realm', 0), ev('b', 'help', 'c', 'realm', 1), ev('c', 'help', 'c', 'realm', 2)], TEST_ONLY_INTERPRETATION, 'test');
+    expect(sameContext.ok && sameContext.value.level).toBe('REPEATED'); // no cross-context evidence → stops
+    const weak = assessLadder(strong.map((e) => ({ ...e, verification: 'unverified' as const })), TEST_ONLY_INTERPRETATION, 'test');
+    expect(weak.ok && weak.value.level).toBe('FIRST_READ'); // verification quality matters
+    // Thresholds are data, per stage: a stricter policy changes the outcome without code changes.
+    const strict = { enabled: true, policy: { ...TEST_ONLY_RECOGNITION_THRESHOLDS, stages: { ...TEST_ONLY_RECOGNITION_THRESHOLDS.stages, REPEATED: { ...TEST_ONLY_RECOGNITION_THRESHOLDS.stages.REPEATED, minRepetitions: 10 } } } };
+    const s2 = assessLadder(strong, strict, 'test');
+    expect(s2.ok && s2.value.level).toBe('OBSERVED');
+  });
+
+  it('Orientation: never automatic, never from one interaction, never without enough evidence, never when disabled', () => {
+    const cfg = TEST_ONLY_INTERPRETATION;
+    expect(validateOrientation(proposal(['i1', 'i2', 'i3', 'i4']), strong).ok).toBe(false); // disabled by default
+    expect(validateOrientation(proposal(['i1', 'i2', 'i3', 'i4']), strong, cfg, 'production').ok).toBe(false); // TEST_ONLY outside tests
+    const auto = validateOrientation(proposal(['i1', 'i2', 'i3', 'i4'], { kind: 'automatic' }), strong, cfg, 'test');
+    expect(!auto.ok && auto.error.code).toBe('AUTOMATIC_ORIENTATION');
+    const single = validateOrientation(proposal(['i1']), strong, cfg, 'test');
+    expect(!single.ok && single.error.code).toBe('SINGLE_INTERACTION');
+    const thin = validateOrientation(proposal(['i1', 'i2']), strong, cfg, 'test');
+    expect(!thin.ok && thin.error.code).toBe('INSUFFICIENT_BASIS'); // two interactions is NOT a threshold
+    expect(validateOrientation(proposal(['i1', 'i2', 'i3', 'i4']), strong, cfg, 'test').ok).toBe(true);
   });
 
   it('Recognition needs a Signature and an authorized, non-economic, non-self verifier', () => {
     const sig = derived({ id: 'sig', stage: 'SIGNATURE', derivedFrom: ['a'] });
-    const r: Recognition = { id: 'r1', layer: 'recognized', subject, signatureRecordId: 'sig', verifiedBy: { kind: 'authorized-verifier', id: 'registrar' }, verifiedAt: 0, status: 'active', visibleIn: [] };
-    expect(validateRecognition(r, sig).ok).toBe(true);
-    expect(validateRecognition(r, undefined).ok).toBe(false);
-    expect(validateRecognition(r, derived()).ok).toBe(false);
-    expect(validateRecognition({ ...r, verifiedBy: { kind: 'witness', id: 'x' } }, sig).ok).toBe(false);
-    expect(validateRecognition({ ...r, verifiedBy: { kind: 'authorized-verifier', id: subject } }, sig).ok).toBe(false);
-    expect(validateRecognition({ ...r, verifiedBy: { kind: 'authorized-verifier', id: 'economy' } }, sig).ok).toBe(false);
+    const r: Recognition = { id: 'r1', layer: 'recognized', subject, signatureRecordId: 'sig', verifiedBy: { kind: 'authorized-verifier', id: 'registrar', role: 'test-registrar' }, verifiedAt: 0, status: 'active', visibleIn: [] };
+    const T = TEST_ONLY_CANON_CONFIG;
+    const off = validateRecognition(r, sig);
+    expect(!off.ok && off.error.code).toBe('INTERPRETATION_DISABLED');
+    expect(validateRecognition(r, sig, T).ok).toBe(true);
+    expect(validateRecognition(r, undefined, T).ok).toBe(false);
+    expect(validateRecognition(r, derived(), T).ok).toBe(false);
+    expect(validateRecognition({ ...r, verifiedBy: { kind: 'witness', id: 'x' } }, sig, T).ok).toBe(false);
+    expect(validateRecognition({ ...r, verifiedBy: { kind: 'authorized-verifier', id: 'x', role: 'mayor' } }, sig, T).ok).toBe(false);
+    expect(validateRecognition({ ...r, verifiedBy: { kind: 'authorized-verifier', id: subject, role: 'test-registrar' } }, sig, T).ok).toBe(false);
+    expect(validateRecognition({ ...r, verifiedBy: { kind: 'authorized-verifier', id: 'economy', role: 'test-registrar' } }, sig, T).ok).toBe(false);
   });
 });
 
@@ -200,5 +274,30 @@ describe('economic loop cannot touch Canonical state', () => {
     sim.economy.transfer(player, baker, ID.coin, 10, { reason: 'tip' });
     sim.property.ownerOf('property_x' as never);
     expect(sim.state.canonical).toEqual({ derived: {}, recognitions: {} });
+  });
+});
+
+describe('no universal human value; scoped measures allowed', () => {
+  it('bans universal-value concepts everywhere and bare score/rank fields on Canonical records', async () => {
+    const { findForbiddenKeys: f, isUniversalValueName } = await import('../src/identity');
+    for (const k of ['humanScore', 'overall_rank', 'playerSuperiority', 'orientationQuality', 'elementSuperiority', 'employabilityScore', 'educationWorth', 'socialCreditScore']) {
+      expect(isUniversalValueName(k), k).toBe(true);
+      expect(f({ [k]: 1 }, 'universal'), k).toEqual([k]);
+    }
+    expect(f({ rank: 3 })).toEqual(['rank']); // canonical records: no bare rank
+    expect(f({ rank: 3 }, 'universal')).toEqual([]); // a scoped measure may call itself a rank
+  });
+
+  it('contextual measures must be scoped and can never become universal', async () => {
+    const { validateMeasure } = await import('../src/entities');
+    const { isUniversalValueName } = await import('../src/identity');
+    const base = { id: 'm1', subject: { kind: 'actor' as const, id: ID.player }, metric: 'tournament-rank', value: 3, at: 0 };
+    expect(validateMeasure({ ...base, context: { kind: 'tournament', id: 'harvest-cup-1' } }, isUniversalValueName).ok).toBe(true);
+    expect(validateMeasure({ ...base, context: { kind: 'skill', id: 'cider-pressing' }, metric: 'barrels-pressed' }, isUniversalValueName).ok).toBe(true);
+    expect(validateMeasure({ ...base, context: { kind: 'tournament', id: '' } }, isUniversalValueName).ok).toBe(false);
+    expect(validateMeasure({ ...base, context: { kind: 'global' as never, id: 'x' } }, isUniversalValueName).ok).toBe(false);
+    expect(validateMeasure({ ...base, context: { kind: 'skill', id: 'overall' } }, isUniversalValueName).ok).toBe(false);
+    expect(validateMeasure({ ...base, context: { kind: 'economic', id: 'blackmere-market' }, metric: 'humanScore' }, isUniversalValueName).ok).toBe(false);
+    expect(validateMeasure({ ...base, context: { kind: 'duel', id: 'season-1' }, metric: 'overall-human-rank' }, isUniversalValueName).ok).toBe(false);
   });
 });

@@ -27,6 +27,8 @@ supply *data* for these types; none of them add kernel code.
 | Reputation | `Reputation` (always scoped) | `ReputationService` | `src/entities/social.ts` |
 | Provenance | `Provenance` | `provenance()` | `src/core/provenance.ts` |
 | Interaction / Evidence | `Interaction`, `Evidence` (raw only) | `InteractionService` | `src/identity/evidence.ts` |
+| Recognition ladder / thresholds (unfinalized) | `RecognitionThresholdPolicy`, `CanonConfig`, `VerifierPolicy` | `assessLadder`, `checkInterpretationConfig` | `src/identity/canonical/ladder.ts` |
+| Scoped measures | `ContextualMeasure` | `validateMeasure` | `src/entities/measures.ts` |
 | Canonical (reserved) | `DerivedRecord`, `Recognition`, `OrientationAssignment`, `Metastrate`, `Grandmeta` | validators only | `src/identity/canonical/` (see `docs/CANONICAL.md`) |
 | Event | `KernelEvent`, `DomainEvent`, `EventMeta` | `EventBus`, `emit()` | `src/core/events.ts`, `src/world/context.ts` |
 | Chronicle | `ChronicleEntry`, `ChronicleScope`, `ChronicleQuery`, `PersonalChronicle` | `ChronicleService` | `src/chronicle/` (see `docs/CHRONICLE_AND_SAVES.md`) |

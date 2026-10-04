@@ -6,6 +6,7 @@ import type { Rng } from '../core/rng';
 import type { ChronicleVisibility } from '../chronicle/types';
 import type { WorldState } from './world-state';
 import type { ResolvedRules } from './constitution';
+import type { CanonConfig } from '../identity/canonical/ladder';
 
 /**
  * Metadata every domain event carries. If `chronicle` is true, the Chronicle
@@ -37,6 +38,8 @@ export interface SimContext {
   readonly ids: IdFactory;
   readonly events: EventBus;
   readonly rng: Rng;
+  /** Canon configuration: interpretation off and verifier roles unfinalized by default. */
+  readonly canon: CanonConfig;
   /** Effective Realm + server rules, when running under a constitution. */
   readonly rules?: ResolvedRules;
   /** Current mode name, set by the mode layer. */

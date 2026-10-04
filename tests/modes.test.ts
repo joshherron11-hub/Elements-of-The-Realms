@@ -15,6 +15,16 @@ describe('mode definitions', () => {
     expect(MODES.filter((m) => m.status === 'implemented').map((m) => m.key).sort()).toEqual(IMPLEMENTED);
   });
 
+  it('carries the approved Drive, Veil and Hunt definitions', () => {
+    const def = (k: string) => MODES.find((m) => m.key === k)!;
+    expect(def('DRIVE').summary).toMatch(/Vehicle, mount, transport/);
+    expect(def('DRIVE').realmExpressions!['realm_happy-fall']).toMatch(/horses, carriages, wagons, boats/);
+    expect(def('VEIL').summary).toMatch(/does not make supernatural claims Canonically true/);
+    expect(def('VEIL').canonNote).toMatch(/never creates Canonical facts/);
+    expect(def('HUNT').summary).toMatch(/does not inherently require killing/);
+    for (const k of ['DRIVE', 'VEIL', 'HUNT']) expect(def(k).status).toBe('planned');
+  });
+
   it('rejects malformed mode data', () => {
     const bad = JSON.parse(JSON.stringify(modesJson));
     bad.modes[0].intents = ['teleport'];

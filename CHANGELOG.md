@@ -5,6 +5,28 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed — Owner decisions (pre-PR)
+- **Canon thresholds:** removed the "2 interactions" Orientation floor as a threshold.
+  Added the Recognition ladder (FIRST READ → OBSERVED → REPEATED → CROSS-CONTEXT →
+  STABLE → RECOGNITION) with configurable per-stage `RecognitionThresholdPolicy`
+  (TEST_ONLY / PROVISIONAL / APPROVED). Canonical interpretation is disabled by default
+  and production accepts only APPROVED policies. Orientation requires a named human
+  review and is never automatic. Authorized verifier roles are configurable and
+  UNFINALIZED (nothing can be `verified` by default).
+- **Banned concepts:** universal-value concepts banned everywhere; bare score/rank
+  fields banned on Person/Identity/Canonical records; scoped `ContextualMeasure` with a
+  validator.
+- **Modes:** approved definitions of Drive, Veil and Hunt (`realmExpressions`,
+  `canonNote`).
+- **AI:** Anthropic recorded as the first planned real provider (`PROVIDER_PLAN`);
+  architecture test keeps keys and direct provider calls out of client code.
+- **Happy Fall:** `launchPreset: PEACEFUL`; Consent War and Protected Civilian are
+  future-compatible (not enabled); Full Conflict not exposed. Involuntary property
+  seizure is refused on SAFE servers.
+- **Placeholders:** `$provisional` markers in data and `docs/PROVISIONAL.md`.
+- **Technical debt:** `docs/BACKLOG.md`.
+
+
 ### Added — Phase 11: First complete playable loop
 - `tests/loop.test.ts`: the exact loop through intents, including save + reload.
 - `scripts/smoke-loop.mjs` / `npm run smoke`: plays the loop in headless Chromium

@@ -38,8 +38,21 @@ required category is allowed and any `requires.pvp`/`requires.war` is satisfied.
 | **Search** | implemented | travel, talk, search, search contracts |
 | Duel, War, Hunt, Heist, Empire, Drive, Veil, Forge, Tournament, Spectate, Scholar | planned | — |
 
-Summaries for Hunt, Drive and Veil are provisional; their definitions belong to the
-project owner.
+### Approved definitions (planned modes)
+- **Drive**: vehicle, mount, transport and movement-centred play: racing, travel,
+  delivery, convoys, navigation, vehicle and mount ownership, route mastery and transport
+  businesses. Its expression depends on the Realm. In Happy Fall that means horses,
+  carriages, wagons, boats and mounts. Later Realms may have automobiles, aircraft or
+  spacecraft (`realmExpressions` in the data).
+- **Veil**: mystery, uncertainty, hidden information, psychological tension, folklore,
+  supernatural-seeming events, investigation and horror-compatible experiences: rumors,
+  omens, hidden history, uncertain threats, strange Familiars, curses as cultural claims.
+  **Veil never makes supernatural claims Canonically true.** Cultural interpretation stays
+  separate from verified Canonical evidence (`canonNote` in the data).
+- **Hunt**: track, locate, pursue, observe, capture, recover or defeat a target, as the
+  Realm and server rules allow. Targets can be Familiars, animals, lost objects,
+  fugitives, rare resources, historical artifacts or NPC threats. **Hunting does not
+  inherently require killing.**
 
 The active mode is stored per actor (`state.activeModes`) and stamped on Chronicle
 entries and raw evidence as `context.mode`.

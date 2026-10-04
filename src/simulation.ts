@@ -27,6 +27,7 @@ import { ModeService } from './modes/modes';
 import type { ModeDefinition } from './modes/types';
 import type { WorldState } from './world/world-state';
 import type { ResolvedRules } from './world/constitution';
+import { DEFAULT_CANON_CONFIG, type CanonConfig } from './identity/canonical/ladder';
 
 export interface SimulationOptions {
   state: WorldState;
@@ -35,6 +36,8 @@ export interface SimulationOptions {
   events?: EventBus;
   /** Effective Realm + server rules. Optional so kernel tests can run rule-free. */
   rules?: ResolvedRules;
+  /** Canon configuration. Defaults to interpretation disabled, verifier roles unfinalized. */
+  canon?: CanonConfig;
   /** Mode definitions (normally from modes/modes.json). */
   modes?: readonly ModeDefinition[];
 }
@@ -85,6 +88,7 @@ export class Simulation {
       events: this.kernel.events,
       rng: new Rng(opts.state.rng),
       rules: opts.rules,
+      canon: opts.canon ?? DEFAULT_CANON_CONFIG,
     };
     const ctx = this.ctx;
 

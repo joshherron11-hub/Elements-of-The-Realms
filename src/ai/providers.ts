@@ -55,9 +55,36 @@ export class ScriptedProvider implements AiProvider {
   }
 }
 
-/*
- * Real model providers (HTTP APIs) implement AiProvider the same way. None is
- * wired in: connecting one needs an account and credentials, which is the
- * project owner's decision. Keys must never be shipped to the browser — a
- * real provider belongs behind a server endpoint that this interface calls.
+/**
+ * REAL PROVIDERS — PLAN
+ *
+ * Anthropic (Claude) is the first real provider to support when production
+ * AI is connected. The AiProvider abstraction stays: any other provider can
+ * be added beside it without touching callers.
+ *
+ * Rules:
+ *  - No API key is requested until a real model-backed feature needs one.
+ *  - Keys never reach browser/client code. A real provider runs behind a
+ *    server endpoint; the client-side AiProvider only calls that endpoint.
+ *  - Default server AI density stays MINIMAL.
  */
+export interface ProviderPlan {
+  id: string;
+  name: string;
+  status: 'planned' | 'connected';
+  /** Order in which providers will be supported. */
+  order: number;
+  serverSideOnly: true;
+  note: string;
+}
+
+export const PROVIDER_PLAN: readonly ProviderPlan[] = [
+  {
+    id: 'anthropic',
+    name: 'Anthropic (Claude)',
+    status: 'planned',
+    order: 1,
+    serverSideOnly: true,
+    note: 'First supported real provider. Connect behind a server endpoint when a model-backed feature needs it.',
+  },
+];

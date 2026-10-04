@@ -3,6 +3,7 @@ import type { ActorId, EvidenceId, LocationId, PlatformDomain } from '../core/re
 import { provenance } from '../core/provenance';
 import { emit, type DomainEvent, type SimContext } from '../world/context';
 import type { Evidence, Interaction, VerificationSource, VerificationStatus } from './types';
+import { verifierAllowed } from './canonical/ladder';
 
 export interface InteractionSpec {
   actor: ActorId;
@@ -104,6 +105,10 @@ export class InteractionService {
     const allowed = TRANSITIONS[ev.verification][to];
     if (!allowed) return err('BAD_TRANSITION', `cannot go from ${ev.verification} to ${to}`);
     if (!allowed.includes(by.kind)) return err('NOT_AUTHORIZED', `${by.kind} cannot mark evidence ${to}`);
+    if (by.kind === 'authorized-verifier') {
+      const role = verifierAllowed(this.ctx.canon.verifiers, this.ctx.canon.environment, by.role);
+      if (!role.ok) return role;
+    }
     const change = { at: this.ctx.clock.now(), from: ev.verification, to, by, note };
     ev.verificationHistory.push(change);
     ev.verification = to;

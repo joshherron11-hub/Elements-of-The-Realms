@@ -157,17 +157,38 @@ describe('Resolving server rules against Realm + release', () => {
   });
 
   it('war presets are refused in the PEACETIME release and by Happy Fall', () => {
-    for (const p of ['CONSENT_WAR', 'FULL_CONFLICT'] as const) {
-      const r = resolveServerRules(happyFall(), content.preset(p), server({ preset: p }), RELEASE);
-      expect(!r.ok && r.error.message).toMatch(/not available in this release/);
-      expect(!r.ok && r.error.message).toMatch(/does not allow/);
+    const consent = resolveServerRules(happyFall(), content.preset('CONSENT_WAR'), server({ preset: 'CONSENT_WAR' }), RELEASE);
+    expect(!consent.ok && consent.error.message).toMatch(/not available in this release/);
+    expect(!consent.ok && consent.error.message).toMatch(/future-compatible in Happy Fall but not enabled yet/);
+    const full = resolveServerRules(happyFall(), content.preset('FULL_CONFLICT'), server({ preset: 'FULL_CONFLICT' }), RELEASE);
+    expect(!full.ok && full.error.message).toMatch(/does not allow FULL_CONFLICT/);
+  });
+
+  it('Happy Fall launches PEACEFUL; consent war and protected civilians stay future-compatible; Full Conflict is not exposed', () => {
+    const s = happyFall().constitution.servers;
+    expect(s.launchPreset).toBe('PEACEFUL');
+    expect(s.futureCompatiblePresets.sort()).toEqual(['CONSENT_WAR', 'PROTECTED_CIVILIAN']);
+    expect(s.allowedPresets).not.toContain('FULL_CONFLICT');
+    expect(s.futureCompatiblePresets).not.toContain('FULL_CONFLICT');
+    expect(s.allowedPresets).not.toContain('PROGRESSIVE_ERA');
+    expect(happyFall().constitution.technologyCeiling).toEqual({ technology: 'medieval', magic: 'early-fantasy' });
+    // Every preset's definition is still kept as data.
+    for (const p of ['PRIVATE', 'FAMILY_FRIENDS', 'CONSENT_WAR', 'PROTECTED_CIVILIAN', 'FULL_CONFLICT', 'CURATED_ROLEPLAY', 'EXPERIMENTAL', 'FROZEN_ERA'] as const) {
+      expect(content.preset(p).preset).toBe(p);
     }
+  });
+
+  it('a preset cannot be both allowed now and future-only', () => {
+    const bad = clone(happyFallRaw) as Record<string, any>;
+    bad.constitution.servers.allowedPresets.push('CONSENT_WAR');
+    expect(parseRealmDefinition(bad).ok).toBe(false);
   });
 
   it('even a war-recognising Realm cannot run war while the release gate is closed', () => {
     const warRealm: RealmDefinition = clone(happyFall());
     warRealm.constitution.legalInteractions.push('war', 'crime', 'duel');
     warRealm.constitution.servers.allowedPresets.push('CONSENT_WAR');
+    warRealm.constitution.servers.futureCompatiblePresets = warRealm.constitution.servers.futureCompatiblePresets.filter((p) => p !== 'CONSENT_WAR');
     warRealm.constitution.pvp.max = 'OPEN';
     warRealm.constitution.property.maxRisk = 'RAIDABLE';
     const preset = content.preset('CONSENT_WAR');

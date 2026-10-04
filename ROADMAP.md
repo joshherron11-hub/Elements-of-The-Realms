@@ -59,7 +59,13 @@ companion → care for companion → complete search/delivery → receive curren
 reputation → make a small investment or ownership decision → Chronicle records it →
 save → reload → state remains. Verified by `tests/loop.test.ts` and `npm run smoke`.
 
-## Phase 12 — Hardening and next steps ⬜
+## Phase 12 — Owner decisions applied ✅
+Recognition thresholds made configurable and unfinalized (interpretation disabled in
+production); universal-value bans and scoped measures; Drive/Veil/Hunt definitions;
+Anthropic-first provider plan; Happy Fall launch/future presets and property protection;
+provisional-placeholder register; technical-debt backlog (`docs/BACKLOG.md`).
+
+## Phase 13 — Next development phase ⬜
 1. Touch / mouse controls and a phone-friendly HUD.
 2. Server-authoritative persistence and accounts (multi-device saves, shared servers).
 3. Deeper Blackmere life: day/night, NPC routines, farming on owned plots, Forge crafting.

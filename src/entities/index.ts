@@ -7,3 +7,4 @@ export * from './reputation';
 export * from './actors';
 export * from './social';
 export * from './organizations';
+export * from './measures';

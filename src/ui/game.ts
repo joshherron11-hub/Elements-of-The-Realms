@@ -13,7 +13,7 @@ import { Input } from './input';
 import { nextStep } from './guide';
 import { dist, moveWithCollision, nearest, zoneAt } from './navigation';
 
-const WALK = 5.5; // m/s
+const WALK = 5.5; // m/s — PROVISIONAL feel-tuning values below
 const RUN = 9;
 const TALK_RANGE = 3.2; // reaches across a counter
 const GATHER_RANGE = 2.4;

@@ -8,7 +8,7 @@ export function parseModes(raw: unknown, source = 'modes'): Result<ModeDefinitio
   const root = v.obj(raw, '');
   const modes = v.arr(root.modes, 'modes', (x, p) => {
     const o = v.obj(x, p);
-    v.noExtraKeys(o, ['key', 'name', 'summary', 'status', 'domain', 'categories', 'intents', 'requires', 'contractKinds'], p);
+    v.noExtraKeys(o, ['key', 'name', 'summary', 'status', 'domain', 'categories', 'intents', 'requires', 'contractKinds', 'realmExpressions', 'canonNote'], p);
     const def: ModeDefinition = {
       key: v.oneOf(o.key, MODE_KEYS, `${p}.key`),
       name: v.str(o.name, `${p}.name`),
@@ -25,6 +25,10 @@ export function parseModes(raw: unknown, source = 'modes'): Result<ModeDefinitio
         war: r.war === undefined ? undefined : v.bool(r.war, `${p}.requires.war`),
       };
     }
+    if (o.realmExpressions !== undefined) {
+      def.realmExpressions = Object.fromEntries(Object.entries(v.obj(o.realmExpressions, `${p}.realmExpressions`)).map(([k, x]) => [k, v.str(x, `${p}.realmExpressions.${k}`)]));
+    }
+    if (o.canonNote !== undefined) def.canonNote = v.str(o.canonNote, `${p}.canonNote`);
     if (o.contractKinds !== undefined) def.contractKinds = v.arr(o.contractKinds, `${p}.contractKinds`, (c, cp) => v.str(c, cp));
     if (def.status === 'implemented' && !def.intents.length) v.fail(`${p}.intents`, 'an implemented mode needs at least one intent');
     if (def.status === 'planned' && def.intents.length) v.fail(`${p}.intents`, 'a planned mode must not expose intents yet');

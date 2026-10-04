@@ -1,4 +1,5 @@
 {
+  "$provisional": "First-pass variable values for this preset; tune freely. Only PEACEFUL values are specified by the project owner.",
   "preset": "PRIVATE",
   "name": "Private",
   "description": "A world for one person or a closed group, run by its owner. Peaceful rules; the owner tunes the pace.",

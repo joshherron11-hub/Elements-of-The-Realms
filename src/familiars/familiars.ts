@@ -10,6 +10,7 @@ import { emit, type DomainEvent, type SimContext } from '../world/context';
 import type { Familiar, FamiliarSpecies } from './types';
 
 const HOUR = 3_600_000;
+/* PROVISIONAL PLACEHOLDERS — care and bond tuning values; not Canon. See docs/PROVISIONAL.md. */
 /** Bond gained from spending time together, at most once per cooldown. */
 export const BOND_GAIN = 6;
 export const BOND_COOLDOWN_MS = 5 * 60_000;

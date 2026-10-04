@@ -2,6 +2,16 @@ import { err, ok, type Result } from '../../core/result';
 import type { InteractionId, JsonValue, PersonId } from '../../core/refs';
 import type { Provenance } from '../../core/provenance';
 import { ECONOMIC_SOURCE_SYSTEMS, findForbiddenKeys } from './guards';
+import {
+  CANONICAL_INTERPRETATION_DISABLED,
+  NEVER_FROM_SINGLE_INTERACTION,
+  assessLadder,
+  checkInterpretationConfig,
+  ladderRank,
+  type CanonEnvironment,
+  type CanonicalInterpretationConfig,
+  type LadderEvidence,
+} from './ladder';
 
 /**
  * THE CANONICAL PIPELINE — STRUCTURE ONLY
@@ -77,7 +87,11 @@ export interface CanonicalDeriver<S extends DerivedStage> {
 export function validateDerivedRecord(
   record: DerivedRecord,
   lookupStage: (id: string) => CanonicalStage | undefined,
+  config: CanonicalInterpretationConfig = CANONICAL_INTERPRETATION_DISABLED,
+  env: CanonEnvironment = 'production',
 ): Result<true> {
+  const usable = checkInterpretationConfig(config, env);
+  if (!usable.ok) return usable;
   if (record.layer !== 'derived') return err('WRONG_LAYER', 'derived records must have layer "derived"');
   if (!CANONICAL_STAGES.includes(record.stage) || record.stage === ('INTERACTION' as CanonicalStage)) {
     return err('BAD_STAGE', `unknown derived stage ${String(record.stage)}`);
@@ -99,13 +113,14 @@ export function validateDerivedRecord(
   return ok(true);
 }
 
-/** Hard floor from Canon: never assign an Orientation from one interaction. */
-export const ORIENTATION_MIN_INTERACTIONS_FLOOR = 2;
-
 /**
  * Reserved. An Orientation is a Canonical characterisation whose vocabulary
- * and pipeline placement are not yet defined. Only the evidence-basis rule
- * is enforced today.
+ * and pipeline placement are not yet defined.
+ *
+ * Orientation is NEVER assigned automatically. A proposal can only be
+ * accepted when Canonical interpretation is enabled under an allowed policy,
+ * its evidence reaches the policy's review level on the Recognition ladder,
+ * and a named human review made the assignment.
  */
 export interface OrientationAssignment {
   readonly subject: PersonId;
@@ -115,29 +130,29 @@ export interface OrientationAssignment {
   readonly basis: readonly InteractionId[];
   readonly derivedFrom: readonly string[];
   readonly method: DerivationMethod;
+  /** Who made the call. There is no automatic path. */
+  readonly assignedBy: { readonly kind: 'review'; readonly reviewer: string } | { readonly kind: 'automatic' };
   readonly assignedAt: number;
 }
 
-export interface OrientationPolicy {
-  /** Never below ORIENTATION_MIN_INTERACTIONS_FLOOR, whatever is configured. */
-  minDistinctInteractions: number;
-}
-
-/**
- * Orientation policy per server Canonical strictness. Every level currently
- * uses the hard floor: thresholds above it are a Canon decision pending the
- * project owner's approval.
- */
-export function orientationPolicyFor(_strictness: 'RELAXED' | 'STANDARD' | 'STRICT'): OrientationPolicy {
-  return { minDistinctInteractions: ORIENTATION_MIN_INTERACTIONS_FLOOR };
-}
-
-export function validateOrientation(a: OrientationAssignment, policy: OrientationPolicy): Result<true> {
-  const required = Math.max(ORIENTATION_MIN_INTERACTIONS_FLOOR, policy.minDistinctInteractions);
-  const distinct = new Set(a.basis).size;
-  if (distinct < required) {
-    return err('INSUFFICIENT_BASIS', `an Orientation needs at least ${required} distinct interactions; got ${distinct}`);
-  }
+export function validateOrientation(
+  a: OrientationAssignment,
+  basisEvidence: readonly LadderEvidence[],
+  config: CanonicalInterpretationConfig = CANONICAL_INTERPRETATION_DISABLED,
+  env: CanonEnvironment = 'production',
+): Result<true> {
+  const usable = checkInterpretationConfig(config, env);
+  if (!usable.ok) return usable;
+  if (a.assignedBy.kind !== 'review') return err('AUTOMATIC_ORIENTATION', 'Orientation is never assigned automatically');
   if (!a.method.approved) return err('UNAPPROVED_METHOD', 'Orientation method is not approved by Canon');
+  const distinct = new Set(a.basis).size;
+  if (distinct < NEVER_FROM_SINGLE_INTERACTION) return err('SINGLE_INTERACTION', 'an Orientation can never rest on a single interaction');
+  const basis = basisEvidence.filter((e) => a.basis.includes(e.interactionId as InteractionId));
+  if (new Set(basis.map((e) => e.interactionId)).size !== distinct) return err('UNKNOWN_BASIS', 'every basis interaction must be supplied as evidence');
+  const ladder = assessLadder(basis, config, env);
+  if (!ladder.ok) return ladder;
+  if (ladderRank(ladder.value.level) < ladderRank(usable.value.orientationReviewLevel)) {
+    return err('INSUFFICIENT_BASIS', `evidence reaches ${ladder.value.level}; review needs ${usable.value.orientationReviewLevel} under policy ${usable.value.id} (${usable.value.status})`);
+  }
   return ok(true);
 }

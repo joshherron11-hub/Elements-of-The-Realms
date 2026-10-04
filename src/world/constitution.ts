@@ -156,7 +156,10 @@ export function parseRealmDefinition(raw: unknown, source = 'realm'): Result<Rea
     },
     legalInteractions: v.arr(c.legalInteractions, 'constitution.legalInteractions', (x, p) => v.oneOf(x, INTERACTION_CATEGORIES, p)),
     servers: {
+      launchPreset: v.oneOf(srv.launchPreset ?? srv.defaultPreset, SERVER_PRESETS, 'constitution.servers.launchPreset'),
       allowedPresets: v.arr(srv.allowedPresets, 'constitution.servers.allowedPresets', (x, p) => v.oneOf(x, SERVER_PRESETS, p)),
+      futureCompatiblePresets:
+        srv.futureCompatiblePresets === undefined ? [] : v.arr(srv.futureCompatiblePresets, 'constitution.servers.futureCompatiblePresets', (x, p) => v.oneOf(x, SERVER_PRESETS, p)),
       defaultPreset: v.oneOf(srv.defaultPreset, SERVER_PRESETS, 'constitution.servers.defaultPreset'),
     },
     pvp: { max: v.oneOf(pvp.max, PVP_LEVELS, 'constitution.pvp.max') },
@@ -180,6 +183,12 @@ export function parseRealmDefinition(raw: unknown, source = 'realm'): Result<Rea
   if (def.technology === 'progresses' && !constitution.progression.technology) v.fail('constitution.progression.technology', `${type} Realms progress technology`);
   if (!constitution.servers.allowedPresets.includes(constitution.servers.defaultPreset)) {
     v.fail('constitution.servers.defaultPreset', 'default preset must be one of allowedPresets');
+  }
+  if (!constitution.servers.allowedPresets.includes(constitution.servers.launchPreset)) {
+    v.fail('constitution.servers.launchPreset', 'launch preset must be one of allowedPresets');
+  }
+  for (const f of constitution.servers.futureCompatiblePresets) {
+    if (constitution.servers.allowedPresets.includes(f)) v.fail('constitution.servers.futureCompatiblePresets', `${f} cannot be both allowed now and future-only`);
   }
   if (rankOf(AI_DENSITIES, constitution.ai.defaultDensity) > rankOf(AI_DENSITIES, constitution.ai.maxDensity)) {
     v.fail('constitution.ai.defaultDensity', 'default AI density exceeds the maximum');
@@ -236,7 +245,11 @@ export function resolveServerRules(
   const c = realm.constitution;
   if (server.realmId !== realm.id) problems.push(`server ${server.id} belongs to ${server.realmId}, not ${realm.id}`);
   if (server.preset !== preset.preset) problems.push(`server uses preset ${server.preset} but ${preset.preset} was supplied`);
-  if (!c.servers.allowedPresets.includes(server.preset)) problems.push(`${realm.name} does not allow ${server.preset} servers`);
+  if (c.servers.futureCompatiblePresets.includes(server.preset)) {
+    problems.push(`${server.preset} is future-compatible in ${realm.name} but not enabled yet`);
+  } else if (!c.servers.allowedPresets.includes(server.preset)) {
+    problems.push(`${realm.name} does not allow ${server.preset} servers`);
+  }
   for (const k of Object.keys(server.overrides) as (keyof ServerVariables)[]) {
     if (!preset.ownerOverridable.includes(k)) problems.push(`${preset.preset} does not let owners override "${k}"`);
   }
@@ -279,6 +292,15 @@ export function allowsInteraction(rules: ResolvedRules, category: InteractionCat
     default:
       return true;
   }
+}
+
+/**
+ * May an owner lose property against their will (seizure, raid, destruction)?
+ * Never on a SAFE server: Peaceful property is not involuntarily destroyed or
+ * seized. Other constitutions may allow it only with explicit player consent.
+ */
+export function allowsInvoluntaryPropertyLoss(rules: ResolvedRules | undefined): boolean {
+  return !!rules && rules.variables.propertyRisk !== 'SAFE';
 }
 
 /** Is player-vs-player harm allowed between these actors? */

@@ -32,7 +32,7 @@
     {
       "key": "HUNT",
       "name": "Hunt",
-      "summary": "Tracking and pursuing creatures in the wild. Definition provisional.",
+      "summary": "Track, locate, pursue, observe, capture, recover or defeat a target, as the Realm and server rules allow. Targets may be Familiars, animals, lost objects, fugitives, rare resources, historical artifacts or NPC threats. Hunting does not inherently require killing.",
       "status": "planned",
       "domain": "PLAY",
       "categories": [
@@ -87,13 +87,18 @@
     {
       "key": "DRIVE",
       "name": "Drive",
-      "summary": "Travel and logistics as play. Definition pending from the project owner.",
+      "summary": "Vehicle, mount, transport and movement-centred play: racing, travel, delivery, convoys, navigation, vehicle and mount ownership, route mastery and transport businesses. Its expression depends on the Realm.",
       "status": "planned",
       "domain": "PLAY",
       "categories": [
-        "exploration"
+        "exploration",
+        "trade"
       ],
-      "intents": []
+      "intents": [],
+      "realmExpressions": {
+        "realm_happy-fall": "horses, carriages, wagons, boats and other mounts",
+        "later-realms": "may include automobiles, aircraft or spacecraft where the Realm's technology allows"
+      }
     },
     {
       "key": "LIVE",
@@ -123,13 +128,15 @@
     {
       "key": "VEIL",
       "name": "Veil",
-      "summary": "Definition pending from the project owner.",
+      "summary": "Mystery, uncertainty and hidden information: rumors, omens, hidden history, investigation, uncertain threats, strange Familiars, folklore, curses as cultural claims and psychological horror. Veil does not make supernatural claims Canonically true.",
       "status": "planned",
       "domain": "PLAY",
       "categories": [
+        "exploration",
         "social"
       ],
-      "intents": []
+      "intents": [],
+      "canonNote": "Cultural interpretation (rumor, omen, curse, folklore) is kept separate from verified Canonical evidence. A Veil story never creates Canonical facts."
     },
     {
       "key": "FORGE",

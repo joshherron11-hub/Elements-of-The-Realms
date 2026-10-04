@@ -44,7 +44,8 @@
     "economy": {
       "primaryCurrency": "currency_mark",
       "marketVolatility": "LOW",
-      "startingPurse": 40
+      "startingPurse": 40,
+      "$provisional": "Currency id/name (Mark) and the starting purse are provisional placeholders. See docs/PROVISIONAL.md."
     },
     "crossRealm": {
       "person": "carried",
@@ -71,6 +72,7 @@
       "creation"
     ],
     "servers": {
+      "launchPreset": "PEACEFUL",
       "allowedPresets": [
         "PEACEFUL",
         "PRIVATE",
@@ -79,7 +81,12 @@
         "EXPERIMENTAL",
         "FROZEN_ERA"
       ],
-      "defaultPreset": "PEACEFUL"
+      "futureCompatiblePresets": [
+        "CONSENT_WAR",
+        "PROTECTED_CIVILIAN"
+      ],
+      "defaultPreset": "PEACEFUL",
+      "$note": "FULL_CONFLICT and large-scale war are not exposed at launch. PROGRESSIVE_ERA is not allowed: Happy Fall's technology ceiling stays medieval / early-fantasy. War may be added historically later, with explicit player consent."
     },
     "pvp": {
       "max": "CONSENT"
@@ -142,5 +149,9 @@
       "ip": "All characters, names and assets are original placeholders. No copyrighted characters or franchise assets."
     },
     "tone": "warm, hopeful, lived-in; every town has a history worth learning"
-  }
+  },
+  "$approvedNames": [
+    "Happy Fall",
+    "Blackmere"
+  ]
 }

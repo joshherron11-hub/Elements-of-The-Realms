@@ -6,7 +6,7 @@ import type { SaveService } from '../persistence/saves';
 import { bootstrapWorld, joinRealm } from '../seed';
 import { Simulation } from '../simulation';
 
-/** At most this much time away is simulated when you return (Familiars get hungry, markets drift). */
+/** PROVISIONAL: at most this much time away is simulated when you return (Familiars get hungry, markets drift). */
 export const MAX_CATCH_UP_MS = 2 * 60 * 60 * 1000;
 export const SAVE_SLOT = 'main';
 

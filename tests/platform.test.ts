@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { asId, provenance, type OrganizationId } from '../src/core';
-import { findForbiddenKeys } from '../src/identity';
+import { TEST_ONLY_CANON_CONFIG, findForbiddenKeys } from '../src/identity';
 import { ID, baker, makeSim, player } from './helpers/fixture';
 
 /**
@@ -41,7 +41,8 @@ describe('WORK — a project on the shared kernel', () => {
 
 describe('LEARN — a course on the shared kernel', () => {
   it('school + course + practice + submitted coursework + teacher-verified evidence + Learning Chronicle', () => {
-    const { sim, state } = makeSim();
+    // Verifier roles are unfinalized: this scenario uses TEST_ONLY roles to exercise the pipeline.
+    const { sim, state } = makeSim(7, TEST_ONLY_CANON_CONFIG);
     const school = asId<'org'>('org_mere-school') as OrganizationId;
     state.organizations[school] = { id: school, kind: 'school', name: 'The Mere School', domain: 'LEARN', members: {}, tags: [], provenance: provenance('system', 't', 0) };
     sim.organizations.join(ID.player, school);
@@ -62,7 +63,7 @@ describe('LEARN — a course on the shared kernel', () => {
     // Assessment = raw evidence of the submission, verified by an authorized teacher — not a score.
     const ev = Object.values(sim.state.evidence).find((e) => e.actionType === 'artifact.status-changed' && e.actor === ID.player)!;
     expect(ev).toBeDefined();
-    expect(sim.interactions.verify(ev.id, 'verified', { kind: 'authorized-verifier', id: 'teacher_odo' }).ok).toBe(true);
+    expect(sim.interactions.verify(ev.id, 'verified', { kind: 'authorized-verifier', id: 'teacher_odo', role: 'test-teacher' }).ok).toBe(true);
     expect(sim.state.evidence[ev.id]!.verification).toBe('verified');
 
     const learning = sim.chronicle.domain(ID.player, 'LEARN').entries().map((e) => e.event);

@@ -1,4 +1,5 @@
 {
+  "$provisional": "First-pass variable values for this preset; tune freely. Only PEACEFUL values are specified by the project owner.",
   "preset": "PROGRESSIVE_ERA",
   "name": "Progressive Era",
   "description": "History and technology both advance. Requires a Realm whose technology may progress.",

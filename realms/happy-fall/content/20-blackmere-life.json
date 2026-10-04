@@ -1,4 +1,5 @@
 {
+  "$provisional": "PROVISIONAL PLACEHOLDERS: NPC names, the Mark currency, prices, rewards, stakes, rates and all other numbers in this file are provisional and not Canon. Change them here freely; no code changes are needed. Approved names: Happy Fall, Blackmere. See docs/PROVISIONAL.md.",
   "id": "blackmere-life",
   "realmId": "realm_happy-fall",
   "items": [

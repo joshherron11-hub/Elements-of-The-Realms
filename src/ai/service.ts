@@ -49,6 +49,7 @@ export class AiService {
     const rate = o.rate ?? { perUserPerMinute: 10, globalPerMinute: 120 };
     this.userRate = new RateLimiter(rate.perUserPerMinute, rate.perUserPerMinute / 60_000, o.now);
     this.globalRate = new RateLimiter(rate.globalPerMinute, rate.globalPerMinute / 60_000, o.now);
+    // PROVISIONAL default allowance and rate limits — placeholders until real pricing exists.
     this.allowances = new Allowances(o.allowance ?? { dailyTokens: 50_000, dailyCostMicros: 200_000 }, o.now, o.allowanceOverrides);
     this.cache = new ResponseCache(o.cacheEntries ?? 500, o.now);
     this.policy = o.policy ?? TASK_POLICY;

@@ -57,4 +57,12 @@ describe('architecture boundaries', () => {
       }
     }
   });
+
+  it('no API keys or direct model-provider calls in client code', () => {
+    const all = [...files(ROOT), join(ROOT, '..', 'index.html')];
+    for (const f of all) {
+      const src = readFileSync(f, 'utf8');
+      expect(src, relative(ROOT, f)).not.toMatch(/sk-ant-|ANTHROPIC_API_KEY|x-api-key|api\.anthropic\.com|anthropic-version/i);
+    }
+  });
 });

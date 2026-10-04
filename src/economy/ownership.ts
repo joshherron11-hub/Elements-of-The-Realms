@@ -2,6 +2,7 @@ import { err, ok, type Result } from '../core/result';
 import { refKey, sameRef, type AssetRef, type OwnerRef } from '../core/refs';
 import type { Provenance } from '../core/provenance';
 import { emit, type SimContext } from '../world/context';
+import { allowsInvoluntaryPropertyLoss } from '../world/constitution';
 import type { OwnershipRecord } from './types';
 
 /**
@@ -45,8 +46,15 @@ export class OwnershipService {
     return ok(record);
   }
 
-  /** Move an asset from its current owner to another. `from` must match the current owner. */
-  transfer(asset: AssetRef, from: OwnerRef, to: OwnerRef, reason: string): Result<OwnershipRecord> {
+  /**
+   * Move an asset from its current owner to another. `from` must match the
+   * current owner. Involuntary transfers (seizure, raids) of property are
+   * refused on SAFE servers — and on any world with no rules loaded.
+   */
+  transfer(asset: AssetRef, from: OwnerRef, to: OwnerRef, reason: string, opts: { involuntary?: boolean } = {}): Result<OwnershipRecord> {
+    if (opts.involuntary && asset.kind === 'property' && !allowsInvoluntaryPropertyLoss(this.ctx.rules)) {
+      return err('PROPERTY_PROTECTED', 'property cannot be seized or taken against its owner’s will on this server');
+    }
     const record = this.get(asset);
     if (!record) return err('NOT_OWNED', `${refKey(asset)} has no owner`);
     if (!sameRef(record.owner, from)) return err('NOT_OWNER', `${refKey(from)} does not own ${refKey(asset)}`);

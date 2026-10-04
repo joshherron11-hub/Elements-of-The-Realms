@@ -99,6 +99,7 @@ TypeScript (strict) · Vite · Vitest · Three.js · Playwright (smoke test only
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — kernel design and layering
 - [`CANON_GUARDRAILS.md`](CANON_GUARDRAILS.md) — rules the platform must never break
 - [`docs/KERNEL.md`](docs/KERNEL.md) · [`docs/CANONICAL.md`](docs/CANONICAL.md) · [`docs/REALMS.md`](docs/REALMS.md) · [`docs/MODES.md`](docs/MODES.md) · [`docs/BLACKMERE.md`](docs/BLACKMERE.md) · [`docs/ECONOMY.md`](docs/ECONOMY.md) · [`docs/FAMILIARS.md`](docs/FAMILIARS.md) · [`docs/CHRONICLE_AND_SAVES.md`](docs/CHRONICLE_AND_SAVES.md) · [`docs/AI_AND_PLATFORM.md`](docs/AI_AND_PLATFORM.md)
+- [`docs/LOOP.md`](docs/LOOP.md) · [`docs/PROVISIONAL.md`](docs/PROVISIONAL.md) · [`docs/BACKLOG.md`](docs/BACKLOG.md)
 - [`ROADMAP.md`](ROADMAP.md) — build phases
 - [`CHANGELOG.md`](CHANGELOG.md) — what changed
 - [`CLAUDE.md`](CLAUDE.md) — working agreement for AI contributors

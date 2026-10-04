@@ -115,7 +115,15 @@ export interface RealmConstitution {
   economy: RealmEconomicRules;
   crossRealm: CrossRealmTransferRules;
   legalInteractions: InteractionCategory[];
-  servers: { allowedPresets: string[]; defaultPreset: string };
+  servers: {
+    /** The preset the Realm launches with. */
+    launchPreset: string;
+    /** Presets a server of this Realm may run now. */
+    allowedPresets: string[];
+    /** Defined and architecturally compatible, but not enabled yet (e.g. consent-based war). */
+    futureCompatiblePresets: string[];
+    defaultPreset: string;
+  };
   pvp: { max: PvpLevel };
   property: { ownershipAllowed: boolean; maxRisk: PropertyRisk };
   ai: { defaultDensity: AiDensity; maxDensity: AiDensity };

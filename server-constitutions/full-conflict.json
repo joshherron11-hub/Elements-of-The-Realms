@@ -1,4 +1,5 @@
 {
+  "$provisional": "First-pass variable values for this preset; tune freely. Only PEACEFUL values are specified by the project owner.",
   "preset": "FULL_CONFLICT",
   "name": "Full Conflict",
   "description": "Open conflict with raidable property and high stakes. Not available in the first release.",

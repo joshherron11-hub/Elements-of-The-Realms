@@ -12,7 +12,7 @@ import { SAVE_SLOT, openSession, saveSession } from './ui/session';
  * Browser entry point: continue the saved world if there is one, otherwise
  * found a new one; then hand over to the game loop. Saves automatically.
  */
-const AUTOSAVE_MS = 30_000;
+const AUTOSAVE_MS = 30_000; // PROVISIONAL
 
 const app = document.getElementById('app');
 if (!app) throw new Error('index.html is missing #app');
