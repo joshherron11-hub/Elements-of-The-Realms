@@ -27,6 +27,8 @@ const CSS = `
 #hud-modes { position: absolute; right: 16px; top: 14px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; max-width: 60vw; }
 #hud-modes button { pointer-events: auto; }
 #hud-prompt { position: absolute; left: 50%; bottom: 90px; transform: translateX(-50%); padding: 8px 16px; font-size: 15px; display: none; white-space: nowrap; }
+#hud-guide { position: absolute; left: 16px; top: 132px; max-width: min(360px, calc(100vw - 32px)); padding: 8px 12px; font-size: 13px; display: none; }
+#hud-guide b { color: #e8b04a; }
 #hud-help { position: absolute; left: 16px; bottom: 14px; font-size: 12px; opacity: 0.75; text-shadow: 0 1px 2px #000; }
 #hud-toasts { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); display: flex; flex-direction: column; gap: 6px; align-items: center; width: min(520px, calc(100vw - 32px)); }
 #hud-toasts .toast { padding: 8px 14px; font-size: 14px; animation: toastIn 0.25s ease-out; }
@@ -59,6 +61,8 @@ export class Hud {
   private readonly promptEl: HTMLElement;
   private readonly toasts: HTMLElement;
   private readonly panel: HTMLElement;
+  private readonly guideEl: HTMLElement;
+  private guideText = '';
   private panelKind: string | null = null;
 
   constructor(parent: HTMLElement) {
@@ -72,9 +76,10 @@ export class Hud {
     this.promptEl = el('div', { id: 'hud-prompt', className: 'panel' });
     this.toasts = el('div', { id: 'hud-toasts' });
     this.panel = el('div', { id: 'hud-panel', className: 'panel' });
+    this.guideEl = el('div', { id: 'hud-guide', className: 'panel' });
     const help = el('div', { id: 'hud-help' });
     help.textContent = 'WASD / arrows move · Shift run · E interact · F search · I inventory · J journal · C companions · 1–6 modes · K save · L load · N new · Esc close';
-    this.root.append(this.labels, this.status, this.modes, this.promptEl, this.toasts, this.panel, help);
+    this.root.append(this.labels, this.status, this.guideEl, this.modes, this.promptEl, this.toasts, this.panel, help);
     parent.appendChild(this.root);
   }
 
@@ -95,6 +100,14 @@ export class Hud {
       b.onclick = m.onChoose;
       this.modes.appendChild(b);
     }
+  }
+
+  guide(text: string | null): void {
+    if ((text ?? '') === this.guideText) return;
+    this.guideText = text ?? '';
+    this.guideEl.style.display = text ? 'block' : 'none';
+    this.guideEl.innerHTML = '';
+    if (text) this.guideEl.append(el('b', { textContent: 'Next: ' }), document.createTextNode(text));
   }
 
   prompt(text: string | null): void {

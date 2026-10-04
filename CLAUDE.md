@@ -17,8 +17,10 @@ npm run dev        # browser preview at http://localhost:5173
 npm test           # vitest, all tests
 npm run typecheck  # tsc --noEmit
 npm run build      # typecheck + production bundle in dist/
+npm run smoke      # play the full loop in headless Chromium (needs a Playwright Chromium)
 ```
-Always run `npm run typecheck && npm test` before committing.
+Always run `npm run typecheck && npm test` before committing. Run `npm run smoke` after
+changing anything the playable loop touches.
 
 ## Layering rules (non-negotiable)
 1. **Simulation** (`src/core`, `src/world`, `src/entities`, `src/economy`, `src/familiars`,

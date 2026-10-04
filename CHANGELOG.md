@@ -5,6 +5,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — Phase 11: First complete playable loop
+- `tests/loop.test.ts`: the exact loop through intents, including save + reload.
+- `scripts/smoke-loop.mjs` / `npm run smoke`: plays the loop in headless Chromium
+  through the real UI and checks state after a page reload.
+- In-game **Next:** guide (`src/ui/guide.ts`, presentation-only).
+- `docs/LOOP.md` walkthrough.
+
+### Changed
+- Narrated tale skips bookkeeping entries and keeps names capitalised; contract
+  lines no longer repeat their status.
+
+
 ### Added — Phase 10: AI service + platform compatibility
 - `src/ai`: `AiService` with deterministic-task guard, server AI-density gate, tier
   routing/model selection, LRU cache with TTLs, per-user and global rate limits,

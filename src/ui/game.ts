@@ -10,6 +10,7 @@ import type { Simulation } from '../simulation';
 import type { ChronicleEntry } from '../chronicle/types';
 import { Hud, type Choice } from './hud';
 import { Input } from './input';
+import { nextStep } from './guide';
 import { dist, moveWithCollision, nearest, zoneAt } from './navigation';
 
 const WALK = 5.5; // m/s
@@ -54,6 +55,9 @@ export class Game {
   private dialogueWith: ActorId | null = null;
   private dialogueLine = 0;
   private lastStatus = '';
+  private guideTimer = 0;
+  /** Set by the app once the player has saved at least once. */
+  saved = false;
   private readonly self: OwnerRef;
   private readonly currency: CurrencyId;
 
@@ -247,6 +251,11 @@ export class Game {
     this.stage.follow(this.player.position, dt);
     this.updateLabels();
     this.updateStatus();
+    this.guideTimer -= dt;
+    if (this.guideTimer <= 0) {
+      this.guideTimer = 400;
+      this.hud.guide(nextStep(this.sim, this.playerId, { saved: this.saved })?.text ?? null);
+    }
   }
 
   private onMoved(before: Vec2): void {
@@ -516,7 +525,7 @@ export class Game {
     }
     const contracts = this.sim.contracts.heldBy(this.self).map((c) => {
       const tasks = this.sim.contracts.tasksOf(c.id).map((t) => `${t.status === 'done' ? '✓' : '○'} ${t.title}`).join('  ');
-      return `${c.title} — ${c.status}${c.outcome ? ` (${c.outcome})` : ''}${c.status === 'accepted' ? `: ${tasks}` : ''}`;
+      return `${c.title} — ${c.status}${c.outcome && c.outcome !== c.status ? ` (${c.outcome})` : ''}${c.status === 'accepted' ? `: ${tasks}` : ''}`;
     });
     const entries = this.sim.chronicle
       .personal(this.playerId)

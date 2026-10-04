@@ -53,11 +53,18 @@ resume with capped catch-up, save/load/new controls.
 AI gateway (guard, density, routing, cache, limits, allowance, cost log, fallback);
 artifacts, contributions, domain Chronicle views; narrated journal (deterministic at MINIMAL).
 
-## Phase 11 — First complete playable loop ⬜
+## Phase 11 — First complete playable loop ✅
 Enter Blackmere → move → speak to NPC → receive contract → visit market → acquire
 companion → care for companion → complete search/delivery → receive currency and
 reputation → make a small investment or ownership decision → Chronicle records it →
-save → reload → state remains.
+save → reload → state remains. Verified by `tests/loop.test.ts` and `npm run smoke`.
+
+## Phase 12 — Hardening and next steps ⬜
+1. Touch / mouse controls and a phone-friendly HUD.
+2. Server-authoritative persistence and accounts (multi-device saves, shared servers).
+3. Deeper Blackmere life: day/night, NPC routines, farming on owned plots, Forge crafting.
+4. A real AI provider behind a server endpoint for STANDARD-density servers.
+5. Realm Chronicle / Grandmeta views and Canon-approved derivation methods.
 
 ## Later (not first release)
 Consent-war servers, conflict systems, additional Realms, Interrealm spaces, Work,

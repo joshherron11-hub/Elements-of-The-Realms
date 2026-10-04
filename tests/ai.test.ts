@@ -158,7 +158,7 @@ describe('authored fallback and Chronicle prose', () => {
   it('deterministic prose retells entries without inventing anything', () => {
     const text = narrateDeterministic(entries, (id) => names[id]);
     expect(text).toBe(
-      "First, arrived in Happy Fall (Blackmere Town Square). Then bramble the russet hound came home with you (Brindle Farm Edge). Most recently, helped Tobias Quill: Apples for Quill's (Blackmere Market).",
+      "First, arrived in Happy Fall (Blackmere Town Square). Then Bramble the russet hound came home with you (Brindle Farm Edge). Most recently, helped Tobias Quill: Apples for Quill's (Blackmere Market).",
     );
     expect(narrateDeterministic(entries, (id) => names[id])).toBe(text);
   });

@@ -53,6 +53,7 @@ const save = (quiet = false): string | undefined => {
   if (leaving) return undefined;
   const r = saveSession(saves, session, game.snapshot());
   if (!r.ok) return `Could not save: ${r.error.message}`;
+  if (!quiet) game.saved = true;
   return quiet ? undefined : `Saved · ${r.value.chronicleEntries} Chronicle entries`;
 };
 game.onSave = () => save();
@@ -68,6 +69,7 @@ game.onNewGame = () => {
   window.location.reload();
 };
 
+game.saved = session.resumed;
 game.start(session.presentation);
 if (session.resumed) {
   const mins = Math.round((session.awayMs ?? 0) / 60000);

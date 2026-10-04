@@ -33,6 +33,16 @@ npm run build      # production bundle → dist/
 npm run preview    # serve the production bundle
 ```
 
+## The first playable loop
+Enter Blackmere → talk to Pip → take *The Lost Satchel* → buy biscuits at the market →
+adopt Bramble at Brindle Farm → feed and play with her → find the satchel in Hollowmere
+Wood → get paid → buy a market stall from the Reeve → read your journal → save → reload.
+Step-by-step in [`docs/LOOP.md`](docs/LOOP.md). The in-game **Next:** hint guides you too.
+
+```bash
+npm run smoke      # plays the whole loop in headless Chromium (first time: npx playwright install chromium)
+```
+
 ## Repository layout
 ```
 /canon                  Canon reference data and definitions (data, not code)
@@ -55,6 +65,7 @@ npm run preview    # serve the production bundle
   /modes                Modes and player intents
   /config               Build config + content loading/validation
 /tests                  Vitest test suites
+/scripts                Browser smoke test of the playable loop
 /docs                   Design notes and deeper documentation
 ```
 
@@ -82,7 +93,7 @@ dependencies minimal. React may be added later for richer panels (inventory,
 Chronicle, contracts) without affecting simulation code.
 
 ## Tooling
-TypeScript (strict) · Vite · Vitest · Three.js
+TypeScript (strict) · Vite · Vitest · Three.js · Playwright (smoke test only)
 
 ## Documentation
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — kernel design and layering
