@@ -8,6 +8,7 @@ import type { OwnershipService } from '../economy/ownership';
 import type { ActorService } from '../entities/actors';
 import { emit, type DomainEvent, type SimContext } from '../world/context';
 import type { Familiar, FamiliarSpecies } from './types';
+import { pickLine, type FamiliarReactionKind } from '../world/living';
 
 const HOUR = 3_600_000;
 /* PROVISIONAL PLACEHOLDERS — care and bond tuning values; not Canon. See docs/PROVISIONAL.md. */
@@ -16,6 +17,8 @@ export const BOND_GAIN = 6;
 export const BOND_COOLDOWN_MS = 5 * 60_000;
 export const FEED_SATIETY = 35;
 export const REST_ENERGY = 50;
+/** Resting at a home its owner owns restores more (PROVISIONAL). */
+export const HOME_REST_ENERGY = 80;
 /** Bond a Familiar starts with when it comes to a new owner. */
 export const NEW_OWNER_BOND = 5;
 const MILESTONES = [25, 50, 75, 100];
@@ -45,6 +48,8 @@ export interface FamiliarStatus {
   care: Familiar['care'];
   /** Plain-language reading of the care numbers, for presentation. */
   notes: string[];
+  /** What it is doing, in its own personality. */
+  mood: string;
 }
 
 /**
@@ -179,16 +184,27 @@ export class FamiliarService {
     return ok(f);
   }
 
-  rest(owner: OwnerRef, id: FamiliarId): Result<Familiar> {
+  rest(owner: OwnerRef, id: FamiliarId, opts: { atHome?: boolean } = {}): Result<Familiar> {
     const r = this.caredFor(owner, id);
     if (!r.ok) return r;
     const f = r.value;
     if (f.care.energy >= 95) return err('NOT_TIRED', `${f.name} is wide awake`);
-    f.care.energy = clamp(f.care.energy + REST_ENERGY, 0, 100);
-    f.care.mood = clamp(f.care.mood + 3, 0, 100);
+    f.care.energy = clamp(f.care.energy + (opts.atHome ? HOME_REST_ENERGY : REST_ENERGY), 0, 100);
+    f.care.mood = clamp(f.care.mood + (opts.atHome ? 10 : 3), 0, 100);
     f.care.lastRestedAt = this.ctx.clock.now();
-    this.cared(f, owner, 'rested', `${f.name} curled up and rested`);
+    this.cared(f, owner, 'rested', opts.atHome ? `${f.name} slept soundly at home` : `${f.name} curled up and rested`);
     return ok(f);
+  }
+
+  /**
+   * A personality line for a moment of care. Individual lines win over
+   * species lines; the choice is deterministic for a given moment.
+   */
+  reaction(f: Familiar, kind: FamiliarReactionKind): string | undefined {
+    const table = this.ctx.living.familiarReactions;
+    const lines = table[f.id]?.[kind] ?? table[f.species]?.[kind];
+    const at = kind === 'fed' ? f.care.lastFedAt : kind === 'bonded' ? f.care.lastBondedAt : kind === 'rested' || kind === 'home' ? f.care.lastRestedAt : this.ctx.clock.now();
+    return pickLine(lines, `${f.id}:${kind}:${at ?? 0}:${Math.round(f.bond)}`)?.replaceAll('{name}', f.name);
   }
 
   /** Spend time together. Bond grows, at most once per cooldown, and not when exhausted or starving. */
@@ -219,7 +235,9 @@ export class FamiliarService {
       c.energy < 25 ? 'exhausted' : c.energy < 60 ? 'a little tired' : 'lively',
       c.mood < 30 ? 'unhappy' : c.mood < 65 ? 'settled' : 'happy',
     ];
-    return ok({ id: f.id, name: f.name, species: this.species(f)?.name ?? f.species, form: this.formIn(f, this.ctx.state.realm.id), bond: f.bond, care: { ...c }, notes });
+    const moodKind = c.satiety < 30 ? 'hungry' : c.energy < 30 ? 'tired' : 'idle';
+    const mood = this.reaction(f, moodKind) ?? `${f.name} ${notes.join(', ')}.`;
+    return ok({ id: f.id, name: f.name, species: this.species(f)?.name ?? f.species, form: this.formIn(f, this.ctx.state.realm.id), bond: f.bond, care: { ...c }, notes, mood });
   }
 
   /** Offer an owned Familiar to a new home at a price (0 = free adoption). */

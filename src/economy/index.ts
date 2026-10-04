@@ -6,3 +6,4 @@ export * from './market';
 export * from './resources';
 export * from './risk';
 export * from './property';
+export * from './stall';

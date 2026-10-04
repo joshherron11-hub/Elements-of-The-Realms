@@ -65,10 +65,16 @@ production); universal-value bans and scoped measures; Drive/Veil/Hunt definitio
 Anthropic-first provider plan; Happy Fall launch/future presets and property protection;
 provisional-placeholder register; technical-debt backlog (`docs/BACKLOG.md`).
 
-## Phase 13 — Next development phase ⬜
-1. Touch / mouse controls and a phone-friendly HUD.
-2. Server-authoritative persistence and accounts (multi-device saves, shared servers).
-3. Deeper Blackmere life: day/night, NPC routines, farming on owned plots, Forge crafting.
+## Phase 13 — Blackmere world depth ✅
+Day/night calendar and lighting, NPC daily routines, market hours and morning restock,
+player market stall, Wicket Cottage interior with locked door and home rest, Familiar
+personality and following, ambient life, readables, relationship/coin/objective feedback,
+sound hooks, minimap, mouse/touch controls and phone layout (`docs/LIVING.md`).
+
+## Phase 14 — Next development phase ⬜
+1. Server-authoritative persistence and accounts (multi-device saves, shared servers).
+2. Farming on owned plots, Forge crafting, cooking at your own hearth.
+3. NPC-to-NPC moments and small town events on the calendar (market day, harvest).
 4. A real AI provider behind a server endpoint for STANDARD-density servers.
 5. Realm Chronicle / Grandmeta views and Canon-approved derivation methods.
 

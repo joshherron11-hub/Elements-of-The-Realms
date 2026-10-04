@@ -122,7 +122,8 @@
         "search",
         "familiar-status",
         "acquire-familiar",
-        "feed-familiar"
+        "feed-familiar",
+        "set-stall-listing"
       ]
     },
     {
@@ -221,7 +222,8 @@
         "talk",
         "accept-contract",
         "complete-task",
-        "purchase-property"
+        "purchase-property",
+        "set-stall-listing"
       ],
       "contractKinds": [
         "investment"

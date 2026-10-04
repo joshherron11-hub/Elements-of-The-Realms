@@ -15,6 +15,9 @@ import type { InteractionCategory } from '../world/realm';
 import type { SearchService } from '../world/search';
 import type { WorldService } from '../world/world';
 import type { FamiliarService } from '../familiars/familiars';
+import type { AuthorityService } from '../entities/organizations';
+import type { StallService } from '../economy/stall';
+import { pickLine } from '../world/living';
 import type { Intent, IntentKind, IntentOutcome, ModeDefinition, ModeKey } from './types';
 
 export interface ModeDeps {
@@ -30,6 +33,8 @@ export interface ModeDeps {
   contracts: ContractService;
   search: SearchService;
   familiars: FamiliarService;
+  authority: AuthorityService;
+  stall: StallService;
 }
 
 /** The mode an actor is in when they have not chosen one. */
@@ -51,6 +56,7 @@ const INTENT_CATEGORY: Record<IntentKind, InteractionCategory | null> = {
   'feed-familiar': 'care',
   'rest-familiar': 'care',
   'bond-familiar': 'care',
+  'set-stall-listing': 'trade',
 };
 
 /**
@@ -163,6 +169,42 @@ export class ModeService {
   }
 
   /**
+   * A private interior (a location linked to a property) is open only to
+   * those with `property.enter` on it — its owner, or anyone they authorise.
+   * Returns the reason it is locked, or undefined if the way is open.
+   */
+  lockedFor(actorId: ActorId, locationId: string): string | undefined {
+    const loc = this.ctx.state.locations[locationId];
+    if (!loc?.propertyId) return undefined;
+    if (this.deps.authority.can(actorId, 'property.enter', { kind: 'property', id: loc.propertyId })) return undefined;
+    const owner = this.deps.ownership.ownerOf({ kind: 'property', id: loc.propertyId });
+    const ownerName = owner?.kind === 'actor' ? this.ctx.state.actors[owner.id]?.name : owner ? this.ctx.state.organizations[owner.id]?.name : undefined;
+    return `${loc.name} is locked${ownerName ? ` — it belongs to ${ownerName}` : ''}.`;
+  }
+
+  /** Is the actor standing in a home they own (an interior of a property they hold)? */
+  atOwnHome(actorId: ActorId): boolean {
+    const loc = this.ctx.state.locations[this.ctx.state.actors[actorId]?.locationId ?? ''];
+    if (!loc?.propertyId) return false;
+    const owner = this.deps.ownership.ownerOf({ kind: 'property', id: loc.propertyId });
+    return owner?.kind === 'actor' && owner.id === actorId;
+  }
+
+  /**
+   * What an NPC says when you approach: a line for what they are doing right
+   * now, a warmer greeting once they think well of you, else their greeting.
+   */
+  greetingFor(npcId: ActorId, playerId: ActorId): string | undefined {
+    const npc = this.ctx.state.actors[npcId];
+    const lines = this.ctx.living.npcLines[npcId];
+    const activity = this.ctx.state.npcActivity[npcId]?.activity;
+    const rel = this.ctx.state.relationships[`${npcId}->${playerId}`];
+    if (activity && lines?.activities?.[activity]) return lines.activities[activity];
+    if (rel && rel.regard >= 15 && lines?.friendly) return lines.friendly;
+    return npc?.profile?.greeting;
+  }
+
+  /**
    * Property can be bought where it stands, or at a civic office (a location
    * tagged 'civic', where deeds are recorded) in the same settlement.
    */
@@ -186,6 +228,11 @@ export class ModeService {
     });
   }
 
+  private bark(vendor: OwnerRef | undefined, key: string): string | null {
+    if (vendor?.kind !== 'actor') return null;
+    return pickLine(this.ctx.living.npcLines[vendor.id]?.barks, key) ?? null;
+  }
+
   /** Attempt an intent. Checks mode and rules, then delegates to the owning service. */
   perform(actorId: ActorId, intent: Intent): Result<IntentOutcome> {
     const actor = this.ctx.state.actors[actorId];
@@ -199,6 +246,8 @@ export class ModeService {
 
     switch (intent.kind) {
       case 'travel': {
+        const locked = this.lockedFor(actorId, intent.to);
+        if (locked) return err('LOCKED', locked);
         const r = d.world.travel(actorId, intent.to);
         return r.ok ? done(`Travelled to ${this.ctx.state.locations[intent.to]?.name ?? intent.to}`, { path: r.value }) : r;
       }
@@ -210,20 +259,20 @@ export class ModeService {
         d.relationships.adjust(other.id, actorId, { familiarity: 2 }, 'conversation', { chronicle: false });
         emit(this.ctx, 'social.talked', { with: other.id }, { sourceSystem: 'social', actor: actorId, participants: [other.id], location: actor.locationId, evidence: true });
         const offers = this.offersHere(actorId, other.id).map((c) => ({ contractId: c.id, title: c.title, kind: c.kind }));
-        return done(`Spoke with ${other.name}`, { with: other.id, offers, greeting: other.profile?.greeting ?? null, lines: other.profile?.lines ?? [] });
+        return done(`Spoke with ${other.name}`, { with: other.id, offers, greeting: this.greetingFor(other.id, actorId) ?? null, lines: other.profile?.lines ?? [], activity: this.ctx.state.npcActivity[other.id]?.activity ?? null });
       }
       case 'buy': {
         const m = this.ctx.state.markets[intent.marketId];
         if (m?.locationId && actor.locationId !== m.locationId) return err('NOT_PRESENT', 'you are not at that market');
         const r = d.market.buy(self, intent.marketId, intent.itemId, intent.quantity);
         if (!r.ok) return r;
-        return done(`Bought ${intent.quantity} × ${this.ctx.state.items[intent.itemId]?.name ?? intent.itemId} for ${r.value.total}`, { trade: r.value });
+        return done(`Bought ${intent.quantity} × ${this.ctx.state.items[intent.itemId]?.name ?? intent.itemId} for ${r.value.total}`, { trade: r.value, bark: this.bark(m?.vendor, `${intent.itemId}:${this.ctx.clock.now()}`) });
       }
       case 'sell': {
         const m = this.ctx.state.markets[intent.marketId];
         if (m?.locationId && actor.locationId !== m.locationId) return err('NOT_PRESENT', 'you are not at that market');
         const r = d.market.sell(self, intent.marketId, intent.itemId, intent.quantity);
-        return r.ok ? done(`Sold ${intent.quantity} × ${this.ctx.state.items[intent.itemId]?.name ?? intent.itemId} for ${r.value.total}`, { trade: r.value }) : r;
+        return r.ok ? done(`Sold ${intent.quantity} × ${this.ctx.state.items[intent.itemId]?.name ?? intent.itemId} for ${r.value.total}`, { trade: r.value, bark: this.bark(m?.vendor, `sell:${intent.itemId}:${this.ctx.clock.now()}`) }) : r;
       }
       case 'gather': {
         const node = this.ctx.state.resourceNodes[intent.nodeId];
@@ -273,19 +322,30 @@ export class ModeService {
         const f = this.ctx.state.familiars[intent.familiarId];
         if (f && this.ctx.state.actors[f.actorId]?.locationId !== actor.locationId) return err('NOT_PRESENT', `${f.name} is not here`);
         const r = d.familiars.acquire(self, intent.familiarId);
-        return r.ok ? done(`${r.value.name} is yours now. Look after them.`, { familiarId: r.value.id }) : r;
+        return r.ok ? done(d.familiars.reaction(r.value, 'acquired') ?? `${r.value.name} is yours now. Look after them.`, { familiarId: r.value.id }) : r;
       }
       case 'feed-familiar': {
         const r = d.familiars.feed(self, intent.familiarId, intent.itemId);
-        return r.ok ? done(`${r.value.name} eats happily (fed ${Math.round(r.value.care.satiety)}/100).`, { familiarId: r.value.id }) : r;
+        return r.ok ? done(`${d.familiars.reaction(r.value, 'fed') ?? `${r.value.name} eats happily.`} (fed ${Math.round(r.value.care.satiety)}/100)`, { familiarId: r.value.id }) : r;
       }
       case 'rest-familiar': {
-        const r = d.familiars.rest(self, intent.familiarId);
-        return r.ok ? done(`${r.value.name} naps (energy ${Math.round(r.value.care.energy)}/100).`, { familiarId: r.value.id }) : r;
+        const home = this.atOwnHome(actorId);
+        const r = d.familiars.rest(self, intent.familiarId, { atHome: home });
+        if (!r.ok) return r;
+        const line = d.familiars.reaction(r.value, home ? 'home' : 'rested') ?? `${r.value.name} naps.`;
+        return done(`${line} (energy ${Math.round(r.value.care.energy)}/100)`, { familiarId: r.value.id, atHome: home });
       }
       case 'bond-familiar': {
         const r = d.familiars.bond(self, intent.familiarId);
-        return r.ok ? done(`You and ${r.value.name} spend a while together (bond ${Math.round(r.value.bond)}).`, { familiarId: r.value.id }) : r;
+        return r.ok ? done(`${d.familiars.reaction(r.value, 'bonded') ?? `You and ${r.value.name} spend a while together.`} (bond ${Math.round(r.value.bond)})`, { familiarId: r.value.id }) : r;
+      }
+      case 'set-stall-listing': {
+        const prop = this.ctx.state.properties[intent.propertyId];
+        if (prop && actor.locationId !== prop.locationId) return err('NOT_PRESENT', `you need to be at ${prop.name}`);
+        const r = d.stall.setListing(self, intent.propertyId, intent.itemId, intent.price);
+        if (!r.ok) return r;
+        const item = this.ctx.state.items[intent.itemId]?.name ?? intent.itemId;
+        return done(intent.price === null ? `Took ${item} off your stall.` : `${item} is on your stall at ${intent.price}.`, { propertyId: intent.propertyId });
       }
     }
   }

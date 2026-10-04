@@ -47,7 +47,7 @@ describe('Blackmere content', () => {
 
 describe('scene layouts', () => {
   it('parse, and reject malformed layouts with paths', () => {
-    expect(layouts.size).toBe(3);
+    expect(layouts.size).toBe(4);
     const r = parseSceneLayout({ id: 'x', name: 'x', size: [10, 10], ground: 'ground', zones: [{ locationId: 'l', rect: [5, 0, 1, 1] }], playerStart: [0, 0], props: [{ type: 'spaceship', at: [0, 0] }] }, 'bad');
     expect(!r.ok && r.error.message).toContain('bad.zones[0].rect');
     expect(!r.ok && r.error.message).toContain('bad.props[0].type');

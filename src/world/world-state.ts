@@ -31,6 +31,23 @@ import type { Happening } from './happenings';
 
 export const WORLD_SCHEMA_VERSION = 1;
 
+export interface NpcActivity {
+  activity: string;
+  spot?: string;
+  locationId: string;
+  since: number;
+}
+
+export interface StallState {
+  propertyId: string;
+  /** ItemId → asking price (minor units). Stock is whatever the owner holds. */
+  listings: Record<string, { price: number }>;
+  /** Last in-game hour index that customer traffic was simulated for. */
+  processedHour: number;
+  earnings: number;
+  sales: number;
+}
+
 /**
  * The complete simulation state of one running world. Plain data only — no
  * class instances, functions, Maps or Dates — so it serialises to JSON as-is.
@@ -62,6 +79,10 @@ export interface WorldState {
   happenings: Record<string, Happening>;
   /** ActorId → the mode they are currently in. */
   activeModes: Record<string, string>;
+  /** NPC ActorId → what their daily routine has them doing right now. */
+  npcActivity: Record<string, NpcActivity>;
+  /** PropertyId → a player's market stall (listings, earnings). */
+  stalls: Record<string, StallState>;
 
   items: Record<string, ItemDefinition>;
   itemInstances: Record<string, ItemInstance>;
@@ -140,6 +161,8 @@ export function createWorldState(opts: NewWorldOptions): WorldState {
     searchSpots: {},
     happenings: {},
     activeModes: {},
+    npcActivity: {},
+    stalls: {},
     items: {},
     itemInstances: {},
     inventories: {},

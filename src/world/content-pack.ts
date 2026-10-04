@@ -21,7 +21,7 @@ import { MAGIC_SCALE, TECHNOLOGY_SCALE, type RealmDefinition } from './realm';
 export interface PackCurrency { id: string; name: string; symbol: string; minorPerMajor: number }
 export interface PackItem { id: string; name: string; category: string; tags: string[]; baseValue: number; stackable: boolean; techTier?: string; magicTier?: string; description?: string }
 export interface PackResource { id: string; name: string; yieldsItemId: string }
-export interface PackLocation { id: string; name: string; kind: string; parentId?: string; tags: string[]; sceneKey?: string; description?: string }
+export interface PackLocation { id: string; name: string; kind: string; parentId?: string; tags: string[]; sceneKey?: string; description?: string; propertyId?: string }
 export interface PackRoute { id: string; from: string; to: string; kind: string; travelTimeMs: number; status: string; bidirectional: boolean; tags: string[] }
 export interface PackActor { id: string; kind: 'npc' | 'familiar' | 'system'; name: string; locationId?: string; tags: string[]; purse: number; inventory: Record<string, number>; profile?: { title?: string; description?: string; greeting?: string; lines?: string[] } }
 export interface PackOrganization { id: string; kind: string; name: string; domain: 'PLAY' | 'LEARN' | 'WORK' | 'CREATE'; members: { actorId: string; roleIds: string[] }[]; tags: string[]; purse: number }
@@ -164,6 +164,7 @@ export function parseContentPack(raw: unknown, source = 'pack'): Result<ContentP
       tags: x.tags === undefined ? [] : v.arr(x.tags, `${p}.tags`, (t, tp) => v.str(t, tp)),
       sceneKey: v.optStr(x.sceneKey, `${p}.sceneKey`),
       description: v.optStr(x.description, `${p}.description`),
+      propertyId: v.optStr(x.propertyId, `${p}.propertyId`),
     })),
     routes: list('routes', (x, p) => ({
       id: v.str(x.id, `${p}.id`),
@@ -396,7 +397,10 @@ export function validatePack(pack: ContentPack, realm: RealmDefinition): Result<
     need(!i.magicTier || rankOf(MAGIC_SCALE, i.magicTier) <= magicCap, `item ${i.id} exceeds the magic ceiling`);
   }
   for (const r of pack.resources) need(has('items', r.yieldsItemId), `resource ${r.id} yields unknown item ${r.yieldsItemId}`);
-  for (const l of pack.locations) need(has('locations', l.parentId), `location ${l.id} has unknown parent ${l.parentId}`);
+  for (const l of pack.locations) {
+    need(has('locations', l.parentId), `location ${l.id} has unknown parent ${l.parentId}`);
+    need(has('properties', l.propertyId), `location ${l.id} belongs to unknown property ${l.propertyId}`);
+  }
   for (const r of pack.routes) need(has('locations', r.from) && has('locations', r.to), `route ${r.id} connects unknown locations`);
   for (const a of pack.actors) {
     need(has('locations', a.locationId), `actor ${a.id} is at unknown location ${a.locationId}`);

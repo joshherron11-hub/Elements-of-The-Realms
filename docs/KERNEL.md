@@ -41,6 +41,8 @@ supply *data* for these types; none of them add kernel code.
 | Happening | `Happening` | `HappeningService` | `src/world/happenings.ts` (see `docs/ECONOMY.md`) |
 | Content pack | `ContentPack` | `parseContentPack`, `validatePack`, `applyContentPack`, `bootstrapWorld`, `joinRealm` | `src/world/content-pack.ts`, `src/seed.ts` |
 | Familiar | `FamiliarSpecies`, `Familiar`, `FamiliarCareState` | `FamiliarService` | `src/familiars/` (see `docs/FAMILIARS.md`) |
+| Living world (calendar, routines, hours, lines) | `LivingConfig`, `RoutineEntry`, `GameTime`, `NpcActivity` | `RoutineService`, `gameTime`, `parseLiving`, `validateLiving` | `src/world/living.ts`, `routines.ts` (see `docs/LIVING.md`) |
+| Player market stall | `StallState` | `StallService` | `src/economy/stall.ts` |
 
 ## How services compose
 

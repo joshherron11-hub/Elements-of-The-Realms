@@ -5,6 +5,7 @@ import { emit, type SimContext } from '../world/context';
 import type { EconomyService } from './economy';
 import type { InventoryService } from './inventory';
 import type { RiskService } from './risk';
+import { gameTime, inHours } from '../world/living';
 import type { Market } from './types';
 
 export type TradeSide = 'buy' | 'sell';
@@ -80,8 +81,36 @@ export class MarketService {
     return ok({ marketId, itemId, quantity, unitPrice, total: unitPrice * quantity, side });
   }
 
+  /** Is the market trading right now? Markets without authored hours are always open. */
+  isOpen(marketId: MarketId): boolean {
+    const rules = this.ctx.living.markets[marketId];
+    if (!rules) return true;
+    const t = gameTime(this.ctx.state, this.ctx.clock.now(), this.ctx.living.calendar);
+    return inHours(t.hour, rules.openHour, rules.closeHour);
+  }
+
+  /** Morning deliveries: once per in-game day, top vendor stock back up to its targets. */
+  restock(): void {
+    const day = gameTime(this.ctx.state, this.ctx.clock.now(), this.ctx.living.calendar).day;
+    for (const [marketId, rules] of Object.entries(this.ctx.living.markets)) {
+      const m = this.get(marketId as MarketId);
+      if (!m || m.lastRestockDay === day || !rules.restock.length) continue;
+      const added: Record<string, number> = {};
+      for (const r of rules.restock) {
+        const missing = r.target - this.inventory.count(m.vendor, r.itemId as ItemId);
+        if (missing > 0 && this.inventory.add(m.vendor, r.itemId as ItemId, missing, 'morning delivery').ok) added[r.itemId] = missing;
+      }
+      const first = m.lastRestockDay === undefined;
+      m.lastRestockDay = day;
+      if (!first && Object.keys(added).length) {
+        emit(this.ctx, 'market.restocked', { marketId, added }, { sourceSystem: 'market', location: m.locationId });
+      }
+    }
+  }
+
   /** Player buys from the vendor. Checks everything before changing anything. */
   buy(buyer: OwnerRef, marketId: MarketId, itemId: ItemId, quantity: number): Result<Trade> {
+    if (!this.isOpen(marketId)) return err('MARKET_CLOSED', `${this.get(marketId)?.name ?? 'The market'} is closed at this hour`);
     const q = this.quote(marketId, itemId, quantity, 'buy');
     if (!q.ok) return q;
     const market = this.get(marketId)!;
@@ -98,6 +127,7 @@ export class MarketService {
 
   /** Player sells to the vendor. */
   sell(seller: OwnerRef, marketId: MarketId, itemId: ItemId, quantity: number): Result<Trade> {
+    if (!this.isOpen(marketId)) return err('MARKET_CLOSED', `${this.get(marketId)?.name ?? 'The market'} is closed at this hour`);
     const q = this.quote(marketId, itemId, quantity, 'sell');
     if (!q.ok) return q;
     const market = this.get(marketId)!;

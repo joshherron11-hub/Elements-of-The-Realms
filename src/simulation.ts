@@ -28,6 +28,9 @@ import type { ModeDefinition } from './modes/types';
 import type { WorldState } from './world/world-state';
 import type { ResolvedRules } from './world/constitution';
 import { DEFAULT_CANON_CONFIG, type CanonConfig } from './identity/canonical/ladder';
+import { DEFAULT_LIVING, type LivingConfig } from './world/living';
+import { RoutineService } from './world/routines';
+import { StallService } from './economy/stall';
 
 export interface SimulationOptions {
   state: WorldState;
@@ -38,6 +41,8 @@ export interface SimulationOptions {
   rules?: ResolvedRules;
   /** Canon configuration. Defaults to interpretation disabled, verifier roles unfinalized. */
   canon?: CanonConfig;
+  /** Living-world rules (calendar, routines, market hours, stalls, lines, reactions). */
+  living?: LivingConfig;
   /** Mode definitions (normally from modes/modes.json). */
   modes?: readonly ModeDefinition[];
 }
@@ -73,6 +78,8 @@ export class Simulation {
   readonly happenings: HappeningService;
   readonly familiars: FamiliarService;
   readonly artifacts: ArtifactService;
+  readonly routines: RoutineService;
+  readonly stall: StallService;
   readonly modes: ModeService;
 
   constructor(opts: SimulationOptions) {
@@ -89,6 +96,7 @@ export class Simulation {
       rng: new Rng(opts.state.rng),
       rules: opts.rules,
       canon: opts.canon ?? DEFAULT_CANON_CONFIG,
+      living: opts.living ?? DEFAULT_LIVING,
     };
     const ctx = this.ctx;
 
@@ -118,6 +126,8 @@ export class Simulation {
     this.identity = new IdentityService(ctx);
     this.search = new SearchService(ctx, this.inventory);
     this.artifacts = new ArtifactService(ctx, this.ownership);
+    this.routines = new RoutineService(ctx, this.world);
+    this.stall = new StallService(ctx, { ownership: this.ownership, economy: this.economy, inventory: this.inventory });
     this.familiars = new FamiliarService(ctx, { ownership: this.ownership, economy: this.economy, inventory: this.inventory, actors: this.actors });
     this.happenings = new HappeningService(ctx, this.relationships, this.reputation);
     this.modes = new ModeService(
@@ -135,6 +145,8 @@ export class Simulation {
         contracts: this.contracts,
         search: this.search,
         familiars: this.familiars,
+        authority: this.authority,
+        stall: this.stall,
       },
       opts.modes ?? [],
     );
@@ -142,6 +154,8 @@ export class Simulation {
     this.kernel.register({
       id: 'simulation',
       init: () => {
+        this.routines.tick();
+        this.market.restock();
         this.chronicle.attach();
         this.interactions.attach();
         this.happenings.attach();
@@ -149,7 +163,10 @@ export class Simulation {
       },
       tick: (dt) => {
         this.resources.tick(dt);
+        this.routines.tick();
+        this.market.restock();
         this.market.tick();
+        this.stall.tick();
         this.familiars.tick(dt);
         this.contracts.tick();
       },

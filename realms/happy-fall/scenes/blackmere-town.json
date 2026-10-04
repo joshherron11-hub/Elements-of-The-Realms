@@ -114,6 +114,23 @@
      0
     ]
    }
+  },
+  {
+   "id": "wicket-door",
+   "at": [
+    -23,
+    11.6
+   ],
+   "radius": 1.1,
+   "label": "Wicket Cottage",
+   "to": {
+    "scene": "wicket-cottage",
+    "locationId": "location_wicket-cottage",
+    "at": [
+     0,
+     3.4
+    ]
+   }
   }
  ],
  "npcs": {
@@ -387,7 +404,8 @@
     4
    ],
    "color": "timber",
-   "roof": "crimson"
+   "roof": "crimson",
+   "label": "Wicket Cottage"
   },
   {
    "type": "building",
@@ -590,6 +608,313 @@
     -36
    ],
    "color": "ember"
+  },
+  {
+   "type": "memorial",
+   "at": [
+    -5,
+    -14
+   ]
+  },
+  {
+   "type": "flowers",
+   "at": [
+    -5,
+    -12.6
+   ]
+  },
+  {
+   "type": "bench",
+   "at": [
+    -6.5,
+    -3
+   ]
+  },
+  {
+   "type": "bench",
+   "at": [
+    6.5,
+    3.2
+   ]
+  },
+  {
+   "type": "banner",
+   "at": [
+    -6,
+    -28
+   ],
+   "color": "crimson"
+  },
+  {
+   "type": "banner",
+   "at": [
+    6,
+    -28
+   ],
+   "color": "crimson"
+  },
+  {
+   "type": "flowers",
+   "at": [
+    -12.5,
+    -2.6
+   ]
+  },
+  {
+   "type": "flowers",
+   "at": [
+    -25.5,
+    6.6
+   ]
+  },
+  {
+   "type": "crate",
+   "at": [
+    23,
+    -6
+   ]
+  },
+  {
+   "type": "board",
+   "at": [
+    11.5,
+    -8.6
+   ]
+  },
+  {
+   "type": "signpost",
+   "at": [
+    -19.4,
+    12.9
+   ],
+   "label": "Wicket Cottage"
   }
- ]
+ ],
+ "spots": {
+  "location_blackmere-square": {
+   "well": [
+    3.5,
+    2
+   ],
+   "board": [
+    5,
+    -4.4
+   ],
+   "lamp": [
+    -6.6,
+    4.4
+   ]
+  },
+  "location_blackmere-market": {
+   "stall": [
+    17,
+    -1
+   ],
+   "crates": [
+    24,
+    -3.6
+   ]
+  },
+  "location_blackmere-hearth-row": {
+   "home-tobias": [
+    -15,
+    -1.4
+   ],
+   "home-pip": [
+    -23,
+    -1.4
+   ]
+  },
+  "location_blackmere-keep": {
+   "gate": [
+    2.5,
+    -24
+   ]
+  }
+ },
+ "readables": [
+  {
+   "id": "notice-board",
+   "at": [
+    5,
+    -6
+   ],
+   "title": "Blackmere Notice Board",
+   "dynamic": "notice-board"
+  },
+  {
+   "id": "price-board",
+   "at": [
+    11.5,
+    -8.6
+   ],
+   "title": "Quill's Sundries \u2014 today's prices",
+   "dynamic": "market-prices"
+  },
+  {
+   "id": "mere-stone",
+   "at": [
+    -5,
+    -14
+   ],
+   "title": "The Mere Stone",
+   "text": "Worn letters circle the stone: 'WHERE THE WATER IS BLACK, THE MEMORY IS LONG.' Someone keeps fresh flowers at its foot. Nobody will say who."
+  },
+  {
+   "id": "keep-plaque",
+   "at": [
+    -4,
+    -26.4
+   ],
+   "title": "Gatehouse Plaque",
+   "text": "By order of the Lord's Steward the Inner Keep is CLOSED until further notice. The notice is dated eleven autumns ago. The 'further notice' has not arrived."
+  },
+  {
+   "id": "wicket-sign",
+   "at": [
+    -19.4,
+    12.9
+   ],
+   "title": "Wicket Cottage",
+   "dynamic": "deed",
+   "propertyId": "property_wicket-cottage"
+  }
+ ],
+ "stalls": {
+  "property_stall-4": [
+   21,
+   6.6
+  ]
+ },
+ "extras": [
+  {
+   "kind": "villager",
+   "path": [
+    [
+     -8,
+     6
+    ],
+    [
+     8,
+     6
+    ],
+    [
+     8,
+     -9
+    ],
+    [
+     -8,
+     -9
+    ]
+   ],
+   "color": "moss",
+   "hours": [
+    7,
+    20
+   ]
+  },
+  {
+   "kind": "villager",
+   "path": [
+    [
+     12,
+     8
+    ],
+    [
+     28,
+     8
+    ],
+    [
+     28,
+     -8
+    ],
+    [
+     12,
+     -8
+    ]
+   ],
+   "color": "crimson",
+   "hours": [
+    8,
+    18
+   ]
+  },
+  {
+   "kind": "villager",
+   "path": [
+    [
+     -34,
+     1.5
+    ],
+    [
+     -12,
+     1.5
+    ]
+   ],
+   "color": "stone",
+   "hours": [
+    6,
+    21
+   ]
+  },
+  {
+   "kind": "cat",
+   "at": [
+    -19,
+    -2.2
+   ]
+  },
+  {
+   "kind": "crow",
+   "at": [
+    -10,
+    -31
+   ]
+  },
+  {
+   "kind": "crow",
+   "at": [
+    11,
+    -31
+   ]
+  },
+  {
+   "kind": "crow",
+   "at": [
+    -1,
+    -42
+   ]
+  }
+ ],
+ "ambient": {
+  "leaves": 70,
+  "smoke": [
+   [
+    -15,
+    -5,
+    5.4
+   ],
+   [
+    -23,
+    9,
+    5.4
+   ],
+   [
+    -31,
+    -5,
+    5.4
+   ],
+   [
+    -13,
+    -14,
+    8
+   ],
+   [
+    13,
+    -15,
+    6.6
+   ]
+  ],
+  "fireflies": false
+ }
 }

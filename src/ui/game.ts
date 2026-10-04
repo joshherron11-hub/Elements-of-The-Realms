@@ -3,20 +3,37 @@ import type { ActorId, CurrencyId, OwnerRef } from '../core/refs';
 import type { Intent, IntentOutcome, ModeKey } from '../modes/types';
 import { buildSection, type BuiltSection } from '../render/builder';
 import { createFamiliarFigure, createFigure, styleFor } from '../render/figures';
-import type { SceneLayout, Vec2 } from '../render/layout';
+import type { ReadableSpec, SceneLayout, Vec2 } from '../render/layout';
 import { Materials } from '../render/materials';
 import { createStage, type Palette, type Stage } from '../render/stage';
+import { Ambient } from '../render/ambient';
+import { lightingAt, type Lighting } from '../render/lighting';
 import type { Simulation } from '../simulation';
 import type { ChronicleEntry } from '../chronicle/types';
+import type { KernelEvent } from '../core/events';
 import { Hud, type Choice } from './hud';
 import { Input } from './input';
 import { nextStep } from './guide';
 import { dist, moveWithCollision, nearest, zoneAt } from './navigation';
+import { PointerControls, isTouchDevice } from './controls';
+import { Minimap } from './minimap';
+import { SynthPlayer, eventToCue, type SoundCue, type SoundPlayer } from './sound';
+import { activityLabel, clockLabel, now, objectives, readableText, relationshipLabel } from './feedback';
 
 const WALK = 5.5; // m/s — PROVISIONAL feel-tuning values below
 const RUN = 9;
 const TALK_RANGE = 3.2; // reaches across a counter
 const GATHER_RANGE = 2.4;
+const READ_RANGE = 2.6;
+const NPC_WALK = 2.6;
+const NPC_IDLE_RADIUS = 0.45; // small fidgets, so people stay where you expect them
+const TAP_PICK = 1.8;
+
+/** Presentation-only pseudo-random in [0,1). */
+const hash = (n: number) => {
+  const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+  return x - Math.floor(x);
+};
 
 interface FamiliarView {
   id: string;
@@ -26,14 +43,40 @@ interface FamiliarView {
   follows: boolean;
   floats: boolean;
   label: HTMLElement;
+  keeper?: ActorId;
+  offset: Vec2;
+  seed: number;
 }
 
 interface NpcView {
   id: ActorId;
   figure: THREE.Group;
   at: Vec2;
+  /** Where their routine puts them in this section. */
+  target: Vec2;
+  /** Set when they are walking out of this section. */
+  leaving?: Vec2;
+  idle?: Vec2;
+  activity?: string;
   label: HTMLElement;
+  doing: HTMLElement;
+  seed: number;
+  walking: boolean;
 }
+
+interface WorldText {
+  el: HTMLElement;
+  anchor: () => THREE.Vector3;
+  until: number;
+  born: number;
+  rise: boolean;
+}
+
+type Target =
+  | { kind: 'npc'; npc: NpcView }
+  | { kind: 'node'; id: string }
+  | { kind: 'readable'; r: ReadableSpec }
+  | { kind: 'stall'; id: string };
 
 /**
  * The browser game loop. Reads simulation state, draws it, and turns player
@@ -56,6 +99,26 @@ export class Game {
   private dialogueLine = 0;
   private lastStatus = '';
   private guideTimer = 0;
+  private syncTimer = 0;
+  private mapTimer = 0;
+  private ambient?: Ambient;
+  private light!: Lighting;
+  private readonly palette: Palette;
+  private readonly minimap = new Minimap(150);
+  private readonly pointer: PointerControls;
+  private readonly sound: SoundPlayer = new SynthPlayer();
+  private texts: WorldText[] = [];
+  private trail: Vec2[] = [];
+  private stillMs = 0;
+  private facing = 0;
+  private walkTarget: Vec2 | null = null;
+  private walkGoal: { kind: 'npc'; id: ActorId } | { kind: 'point' } = { kind: 'point' };
+  private walkStuckMs = 0;
+  private readonly tapRing: THREE.Mesh;
+  private lastBalance = 0;
+  private lastError = { text: '', at: 0 };
+  private readonly relLabels = new Map<string, string>();
+  private moodTimer = 30_000;
   /** Set by the app once the player has saved at least once. */
   saved = false;
   private readonly self: OwnerRef;
@@ -74,6 +137,20 @@ export class Game {
     this.self = { kind: 'actor', id: playerId };
     this.currency = (sim.ctx.rules?.realm.constitution.economy.primaryCurrency ?? Object.keys(sim.state.currencies)[0]) as CurrencyId;
     this.player = createFigure(this.materials, styleFor(this.materials, [], true));
+    this.palette = palette;
+    this.tapRing = new THREE.Mesh(new THREE.RingGeometry(0.35, 0.5, 24), new THREE.MeshBasicMaterial({ color: palette.gold, transparent: true, opacity: 0.8 }));
+    this.tapRing.rotation.x = -Math.PI / 2;
+    this.tapRing.position.y = 0.05;
+    this.pointer = new PointerControls(this.stage.renderer.domElement, () => this.stage.camera, (t) => this.onTap(t.ground));
+    this.hud.map.appendChild(this.minimap.canvas);
+    this.buildTouchControls();
+    try {
+      this.sound.setMuted(window.localStorage.getItem('eotr.sound') !== 'on');
+    } catch {
+      this.sound.setMuted(true);
+    }
+    this.hud.setMuted(this.sound.muted);
+    this.hud.soundButton.onclick = () => this.toggleSound();
   }
 
   /** Optional hooks the app wires up (saving lives outside the game loop). */
@@ -92,8 +169,104 @@ export class Game {
     this.hud.toast(text, bad);
   }
 
+  /** Where an NPC is drawn right now (debug / e2e). */
+  npcPosition(id: string): Vec2 | undefined {
+    const n = this.npcs.find((x) => x.id === id);
+    return n ? [...n.at] : undefined;
+  }
+
+  private buildTouchControls(): void {
+    const pad = document.createElement('div');
+    pad.className = 'pad';
+    const knob = document.createElement('div');
+    knob.className = 'knob';
+    pad.appendChild(knob);
+    const acts = document.createElement('div');
+    acts.className = 'acts';
+    const btn = (label: string, key: string, big = false) => {
+      const b = document.createElement('button');
+      b.textContent = label;
+      if (big) b.className = 'big';
+      b.onclick = () => this.input.push(key);
+      acts.appendChild(b);
+    };
+    btn('Interact', 'e', true);
+    btn('Search', 'f');
+    btn('Bag', 'i');
+    btn('Pets', 'c');
+    btn('Journal', 'j');
+    btn('Save', 'k');
+    btn('Close', 'Escape');
+    this.hud.touch.append(pad, acts);
+    this.pointer.attachStick(pad, knob);
+    const decide = () => this.hud.setTouch(isTouchDevice() || window.innerWidth <= 640);
+    decide();
+    window.addEventListener('resize', decide);
+  }
+
+  private toggleSound(): void {
+    this.sound.setMuted(!this.sound.muted);
+    this.hud.setMuted(this.sound.muted);
+    try {
+      window.localStorage.setItem('eotr.sound', this.sound.muted ? 'off' : 'on');
+    } catch {
+      /* per-viewer convenience only */
+    }
+    if (!this.sound.muted) this.cue('bell');
+  }
+
+  private cue(c: SoundCue): void {
+    this.sound.play(c);
+  }
+
+  /** Show text anchored in the world: a speech bubble, or a number that floats up. */
+  private worldText(text: string, anchor: () => THREE.Vector3, kind: 'bubble' | 'float' | 'float neg', ms = 3500): void {
+    if (kind === 'bubble') {
+      // One bubble per speaker: replace an older one at the same anchor.
+      const at = anchor();
+      this.texts = this.texts.filter((t) => {
+        if (!t.rise && t.anchor().distanceTo(at) < 0.01) {
+          t.el.remove();
+          return false;
+        }
+        return true;
+      });
+    }
+    const t = performance.now();
+    this.texts.push({ el: this.hud.worldText(text, kind), anchor, until: t + ms, born: t, rise: kind !== 'bubble' });
+  }
+
+  private sayNpc(id: ActorId, text: string): void {
+    const n = this.npcs.find((x) => x.id === id);
+    if (n) this.worldText(text, () => new THREE.Vector3(n.at[0], 3.2, n.at[1]), 'bubble');
+  }
+
+  private sayPet(familiarId: string, text: string): void {
+    const p = this.pets.find((x) => x.id === familiarId);
+    if (p) this.worldText(text, () => new THREE.Vector3(p.at[0], p.floats ? 2.8 : 1.9, p.at[1]), 'bubble', 4200);
+  }
+
   start(resume?: { sceneId?: string; position?: [number, number] }): void {
     // Read-only observation of the simulation: surface notable moments.
+    this.sim.kernel.events.on('*', (e) => {
+      const c = eventToCue(e as KernelEvent & { meta?: { actor?: string } }, this.playerId);
+      if (c) this.cue(c);
+    });
+    this.sim.kernel.events.on('relationship.changed', (e) => this.onRelationship(e.payload as { from: string; to: string }));
+    this.sim.kernel.events.on('relationship.formed', (e) => this.onRelationship(e.payload as { from: string; to: string }));
+    this.sim.kernel.events.on('stall.sale', (e) => {
+      const meta = (e as { meta?: { summary?: string } }).meta;
+      if (meta?.summary) this.hud.toast(`◆ ${meta.summary}`);
+    });
+    this.sim.kernel.events.on('market.restocked', (e) => {
+      const p = e.payload as { marketId: string };
+      const m = this.sim.state.markets[p.marketId];
+      if (m && this.sim.state.actors[this.playerId]?.locationId === m.locationId) this.hud.toast(`${m.name} has fresh stock.`);
+    });
+    for (const r of Object.values(this.sim.state.relationships)) {
+      if (r.to === this.playerId) this.relLabels.set(r.from, relationshipLabel(r).label);
+    }
+    this.lastBalance = this.sim.economy.balance(this.self, this.currency);
     this.sim.kernel.events.on('happening.occurred', (e) => this.hud.toast(`✦ ${(e as { meta?: { summary?: string } }).meta?.summary ?? 'Something happened.'}`));
     this.sim.kernel.events.on('market.price-changed', (e) => {
       const p = e.payload as { marketId: string; reason: string };
@@ -130,7 +303,13 @@ export class Game {
   act(intent: Intent, quiet = false): IntentOutcome | undefined {
     const r = this.sim.modes.perform(this.playerId, intent);
     if (!r.ok) {
-      this.hud.toast(r.error.message, true);
+      // Walking into a locked door repeats every frame; say it once.
+      const t = performance.now();
+      if (r.error.message !== this.lastError.text || t - this.lastError.at > 2000) {
+        this.hud.toast(r.error.message, true);
+        this.cue('error');
+      }
+      this.lastError = { text: r.error.message, at: t };
       return undefined;
     }
     if (!quiet) this.hud.toast(r.value.summary);
@@ -147,15 +326,33 @@ export class Game {
     this.layout = layout;
     this.section = buildSection(layout, this.materials);
     this.section.group.add(this.player);
+    this.tapRing.visible = false;
+    this.section.group.add(this.tapRing);
+    this.ambient = new Ambient(layout, this.materials, this.section);
     this.pos = [...at];
+    this.trail = [[...at]];
+    this.walkTarget = null;
     this.stage.setContent(this.section.group, { interior: layout.interior });
     this.stage.camera.position.set(at[0], 30, at[1] + 30);
     this.hud.labels.innerHTML = '';
+    this.texts = [];
     this.placeLabels = this.section.labels.map((l) => ({ el: this.label(l.text, l.kind), at: l.position }));
-    this.spawnNpcs();
+    this.npcs = [];
+    this.syncNpcs(true);
     this.spawnFamiliars();
     this.hud.close();
     this.dialogueWith = null;
+    this.applyLighting();
+  }
+
+  private hourNow(): number {
+    const t = now(this.sim);
+    return t.hour + t.minute / 60;
+  }
+
+  private applyLighting(): void {
+    this.light = lightingAt(this.hourNow(), this.palette);
+    this.stage.applyLighting(this.light);
   }
 
   private label(text: string, kind: string): HTMLElement {
@@ -166,17 +363,111 @@ export class Game {
     return el;
   }
 
-  private spawnNpcs(): void {
-    this.npcs = [];
+  /** Where an NPC's routine puts them in this section: their activity spot, else their usual place. */
+  private npcHome(id: ActorId): Vec2 | undefined {
+    const a = this.sim.state.actors[id];
+    if (!a) return undefined;
+    const loc = a.locationId ?? '';
+    const spot = this.sim.state.npcActivity[id]?.spot;
+    return (spot ? this.layout.spots[loc]?.[spot] : undefined) ?? this.layout.npcs[id] ?? this.layout.spawns[loc];
+  }
+
+  private nearestExit(to: Vec2): Vec2 {
+    const e = nearest(this.layout.exits, to, (x) => x.at, Infinity);
+    return e ? [...e.item.at] : [...to];
+  }
+
+  /**
+   * Keep drawn NPCs in step with their routines: newcomers walk in from the
+   * nearest exit, people whose routine took them elsewhere walk out.
+   */
+  private syncNpcs(initial = false): void {
+    const present = new Set<string>();
+    const taken = new Map<string, number>();
     for (const a of Object.values(this.sim.state.actors)) {
       if (a.kind !== 'npc' || this.sceneFor(a.locationId) !== this.layout.id) continue;
-      const at = this.layout.npcs[a.id] ?? this.layout.spawns[a.locationId ?? ''];
-      if (!at) continue;
-      const figure = createFigure(this.materials, styleFor(this.materials, a.tags));
-      figure.position.set(at[0], 0, at[1]);
-      this.section.group.add(figure);
-      this.npcs.push({ id: a.id, figure, at, label: this.label(a.name, 'npc') });
+      const home = this.npcHome(a.id);
+      if (!home) continue;
+      // Two people at the same spot (a shared table) sit side by side.
+      const key = `${home[0]},${home[1]}`;
+      const i = taken.get(key) ?? 0;
+      taken.set(key, i + 1);
+      const target: Vec2 = i === 0 ? home : [home[0] + (i % 2 ? 1 : -1) * 1.1 * Math.ceil(i / 2), home[1] + 0.3];
+      present.add(a.id);
+      const activity = this.sim.state.npcActivity[a.id]?.activity;
+      let n = this.npcs.find((x) => x.id === a.id);
+      if (!n) {
+        const at: Vec2 = initial ? [...target] : this.nearestExit(target);
+        const figure = createFigure(this.materials, styleFor(this.materials, a.tags));
+        figure.position.set(at[0], 0, at[1]);
+        this.section.group.add(figure);
+        const label = this.label(a.name, 'npc');
+        const doing = document.createElement('span');
+        doing.className = 'doing';
+        label.appendChild(doing);
+        n = { id: a.id, figure, at, target, label, doing, seed: hash(a.name.length * 3.1 + at[0]) * 100, walking: false };
+        this.npcs.push(n);
+      }
+      n.leaving = undefined;
+      if (dist(n.target, target) > 0.01) n.idle = undefined;
+      n.target = target;
+      if (n.activity !== activity) {
+        n.activity = activity;
+        n.doing.textContent = activityLabel(activity) ?? '';
+        n.label.classList.toggle('asleep', activity === 'asleep');
+      }
     }
+    for (const n of this.npcs) {
+      if (present.has(n.id) || n.leaving) continue;
+      n.leaving = this.nearestExit(n.at);
+      const to = this.sim.state.locations[this.sim.state.actors[n.id]?.locationId ?? '']?.name;
+      n.doing.textContent = to ? `off to ${to}` : '';
+      n.label.classList.remove('asleep');
+    }
+  }
+
+  private updateNpcs(dt: number): void {
+    const t = performance.now();
+    const keep: NpcView[] = [];
+    for (const n of this.npcs) {
+      const asleep = n.activity === 'asleep';
+      const near = dist(n.at, this.pos) < 4.5;
+      if (!n.leaving && !asleep && !near && dist(n.at, n.target) < 0.6) {
+        // Idle: drift between nearby points every few seconds.
+        const slot = Math.floor(t / 5000 + n.seed);
+        const k = hash(slot + n.seed);
+        n.idle = k < 0.45 ? undefined : [n.target[0] + (hash(slot * 7 + n.seed) - 0.5) * 2 * NPC_IDLE_RADIUS, n.target[1] + (hash(slot * 13 + n.seed) - 0.5) * 2 * NPC_IDLE_RADIUS];
+      }
+      const dest = n.leaving ?? n.idle ?? n.target;
+      const d = dist(n.at, dest);
+      n.walking = d > 0.08 && !(near && !n.leaving && d < 0.9);
+      if (n.walking) {
+        const step = Math.min(d, (n.leaving || d > 0.9 ? NPC_WALK : NPC_WALK * 0.35) * (dt / 1000));
+        const dir: Vec2 = [((dest[0] - n.at[0]) / d) * step, ((dest[1] - n.at[1]) / d) * step];
+        const moved = moveWithCollision(this.layout, n.at, dir);
+        // Props in the way: people step around in life; here they slip past.
+        n.at = dist(moved, n.at) < step * 0.3 ? [n.at[0] + dir[0], n.at[1] + dir[1]] : moved;
+        n.figure.rotation.y = Math.atan2(dir[0], dir[1]);
+      } else if (near && !asleep) {
+        n.figure.rotation.y = Math.atan2(this.pos[0] - n.at[0], this.pos[1] - n.at[1]);
+      }
+      if (n.leaving && dist(n.at, n.leaving) < 0.3) {
+        this.section.group.remove(n.figure);
+        n.label.remove();
+        continue;
+      }
+      n.figure.position.x = n.at[0];
+      n.figure.position.z = n.at[1];
+      if (asleep && !n.walking) {
+        n.figure.rotation.z = Math.PI / 2;
+        n.figure.position.y = 0.35;
+      } else {
+        n.figure.rotation.z = 0;
+        n.figure.position.y = n.walking ? Math.abs(Math.sin(t / 140 + n.seed)) * 0.1 : Math.sin(t / 500 + n.seed) * 0.04;
+      }
+      keep.push(n);
+    }
+    this.npcs = keep;
   }
 
   /** Familiars in this section: owned followers trail the player; others sit with their keeper or at a layout spot. */
@@ -192,34 +483,116 @@ export class Game {
       const sp = this.sim.familiars.species(f);
       const owner = this.sim.familiars.ownerOf(f.id);
       const mine = owner?.kind === 'actor' && owner.id === this.playerId;
-      const keeper = owner?.kind === 'actor' ? this.npcs.find((n) => n.id === owner.id) : undefined;
+      const keeper = owner?.kind === 'actor' && !mine ? (owner.id as ActorId) : undefined;
+      const keeperView = keeper ? this.npcs.find((n) => n.id === keeper) : undefined;
+      const fixed = this.layout.npcs[f.id];
       const at: Vec2 | undefined = mine
         ? [this.pos[0] - 1.2, this.pos[1] + 1]
-        : this.layout.npcs[f.id] ?? (keeper ? [keeper.at[0] + 1.3, keeper.at[1] + 0.6] : this.layout.spawns[fa.locationId ?? '']);
+        : fixed ?? (keeperView ? [keeperView.at[0] + 1.3, keeperView.at[1] + 0.6] : this.layout.spawns[fa.locationId ?? '']);
       if (!at) continue;
       const figure = createFamiliarFigure(this.materials, sp?.figure ?? 'hound');
       figure.position.x = at[0];
       figure.position.z = at[1];
       this.section.group.add(figure);
-      this.pets.push({ id: f.id, actorId: f.actorId, figure, at, follows: mine && !!sp?.followsOwner, floats: sp?.figure === 'moth', label: this.label(f.name, 'npc') });
+      this.pets.push({
+        id: f.id,
+        actorId: f.actorId,
+        figure,
+        at: [...at],
+        follows: mine && !!sp?.followsOwner,
+        floats: sp?.figure === 'moth',
+        label: this.label(f.name, 'npc'),
+        keeper: fixed ? undefined : keeper,
+        offset: [1.3, 0.6],
+        seed: hash(f.name.length + at[0]) * 50,
+      });
     }
+  }
+
+  /** A point `back` metres behind the player along the path they walked. */
+  private trailPoint(back: number): Vec2 {
+    let left = back;
+    let prev: Vec2 = this.pos;
+    for (let i = this.trail.length - 1; i >= 0; i--) {
+      const p = this.trail[i]!;
+      const d = dist(prev, p);
+      if (d >= left) {
+        const k = left / d;
+        return [prev[0] + (p[0] - prev[0]) * k, prev[1] + (p[1] - prev[1]) * k];
+      }
+      left -= d;
+      prev = p;
+    }
+    return prev;
   }
 
   private updateFamiliars(dt: number): void {
     const t = performance.now();
+    let follower = 0;
     for (const p of this.pets) {
+      let dest: Vec2 | undefined;
+      let sniffing = false;
       if (p.follows) {
-        const d = dist(p.at, this.pos);
-        if (d > 1.8) {
-          const k = Math.min(1, (dt / 1000) * 4);
-          const next: Vec2 = [p.at[0] + (this.pos[0] - p.at[0]) * k * 0.6, p.at[1] + (this.pos[1] - p.at[1]) * k * 0.6];
+        if (this.stillMs > 1500) {
+          // The player has stopped: potter about nearby, sniffing.
+          const slot = Math.floor(t / 2600 + p.seed);
+          const ang = hash(slot + p.seed) * Math.PI * 2;
+          const r = 1.4 + hash(slot * 3 + p.seed) * 1.2;
+          dest = [this.pos[0] + Math.cos(ang) * r, this.pos[1] + Math.sin(ang) * r];
+          sniffing = dist(p.at, dest) < 0.3;
+        } else {
+          dest = this.trailPoint(1.6 + follower * 1.3);
+        }
+        follower++;
+        if (dist(p.at, this.pos) > 14) p.at = this.trailPoint(1.6); // left behind: catch up at once
+      } else if (p.keeper) {
+        const k = this.npcs.find((n) => n.id === p.keeper);
+        if (k) dest = [k.at[0] + p.offset[0], k.at[1] + p.offset[1]];
+      }
+      let moving = false;
+      if (dest) {
+        const d = dist(p.at, dest);
+        if (d > 0.12) {
+          const speed = Math.min(11, 1.5 + d * 2.8);
+          const step = Math.min(d, speed * (dt / 1000));
+          const next: Vec2 = [p.at[0] + ((dest[0] - p.at[0]) / d) * step, p.at[1] + ((dest[1] - p.at[1]) / d) * step];
           p.figure.rotation.y = Math.atan2(next[0] - p.at[0], next[1] - p.at[1]);
           p.at = next;
+          moving = true;
+        } else if (p.follows) {
+          p.figure.rotation.y = Math.atan2(this.pos[0] - p.at[0], this.pos[1] - p.at[1]);
         }
       }
       p.figure.position.x = p.at[0];
       p.figure.position.z = p.at[1];
-      if (p.floats) p.figure.position.y = 1.5 + Math.sin(t / 300 + p.at[0]) * 0.25;
+      if (p.floats) p.figure.position.y = 1.5 + Math.sin(t / 300 + p.seed) * 0.25;
+      else p.figure.position.y = moving ? Math.abs(Math.sin(t / 90 + p.seed)) * 0.12 : 0;
+      p.figure.rotation.x = sniffing && !p.floats ? 0.25 + Math.sin(t / 120) * 0.12 : 0;
+    }
+  }
+
+  /** Now and then a companion shows how it feels, in its own personality. */
+  private familiarMood(dt: number): void {
+    this.moodTimer -= dt;
+    if (this.moodTimer > 0) return;
+    this.moodTimer = 45_000;
+    const p = this.pets.find((x) => x.follows);
+    if (!p) return;
+    const st = this.sim.familiars.status(p.id as never);
+    if (st.ok && st.value.mood) this.sayPet(p.id, st.value.mood);
+  }
+
+  private onRelationship(p: { from: string; to: string }): void {
+    if (p.to !== this.playerId) return;
+    const rel = Object.values(this.sim.state.relationships).find((r) => r.from === p.from && r.to === p.to);
+    const label = relationshipLabel(rel).label;
+    const before = this.relLabels.get(p.from);
+    this.relLabels.set(p.from, label);
+    const name = this.sim.state.actors[p.from]?.name ?? p.from;
+    if (!before) this.hud.toast(`You met ${name}.`);
+    else if (before !== label) {
+      this.hud.toast(`${name} now thinks of you as: ${label}`, relationshipLabel(rel).tone === 'cold');
+      this.sayNpc(p.from as ActorId, relationshipLabel(rel).tone === 'cold' ? '…' : '♥');
     }
   }
 
@@ -227,35 +600,131 @@ export class Game {
     this.sim.tick(dt);
     for (const key of this.input.takePresses()) this.onKey(key);
 
-    const [ax, az] = this.input.axis();
-    if (ax || az) {
-      const speed = (this.input.running() ? RUN : WALK) * (dt / 1000);
+    // Keyboard, then the on-screen stick, then a tapped destination.
+    let [ax, az] = this.input.axis();
+    let running = this.input.running();
+    if (!ax && !az) [ax, az] = this.pointer.stick;
+    if (ax || az) this.walkTarget = null;
+    else if (this.walkTarget) {
+      if (this.walkGoal.kind === 'npc') {
+        const id = this.walkGoal.id;
+        const n = this.npcs.find((x) => x.id === id);
+        if (n) this.walkTarget = [...n.at];
+      }
+      const d = dist(this.pos, this.walkTarget);
+      const arrive = this.walkGoal.kind === 'npc' ? TALK_RANGE * 0.7 : 0.25;
+      if (d <= arrive) this.arrived();
+      else {
+        ax = (this.walkTarget[0] - this.pos[0]) / d;
+        az = (this.walkTarget[1] - this.pos[1]) / d;
+        running = d > 8;
+      }
+    }
+    const movingNow = !!(ax || az);
+    if (movingNow) {
+      const speed = (running ? RUN : WALK) * (dt / 1000);
       const before = this.pos;
       this.pos = moveWithCollision(this.layout, this.pos, [ax * speed, az * speed]);
-      this.player.rotation.y = Math.atan2(ax, az);
+      this.facing = Math.atan2(ax, az);
+      this.player.rotation.y = this.facing;
+      if (this.walkTarget) {
+        this.walkStuckMs = dist(before, this.pos) < speed * 0.2 ? this.walkStuckMs + dt : 0;
+        if (this.walkStuckMs > 500) this.arrived(); // blocked: stop where we are
+      }
+      const scene = this.layout.id;
       this.onMoved(before);
-    }
-    this.player.position.set(this.pos[0], Math.abs(Math.sin(performance.now() / 120)) * (ax || az ? 0.12 : 0), this.pos[1]);
+      if (this.layout.id === scene) {
+        const last = this.trail[this.trail.length - 1];
+        if (!last || dist(last, this.pos) > 0.35) {
+          this.trail.push([...this.pos]);
+          if (this.trail.length > 60) this.trail.shift();
+        }
+      }
+      this.stillMs = 0;
+    } else this.stillMs += dt;
+    this.player.position.set(this.pos[0], Math.abs(Math.sin(performance.now() / 120)) * (movingNow ? 0.12 : 0), this.pos[1]);
+    this.tapRing.visible = !!this.walkTarget && this.walkGoal.kind === 'point';
+    if (this.tapRing.visible) this.tapRing.scale.setScalar(1 + Math.sin(performance.now() / 150) * 0.15);
 
-    for (const n of this.npcs) {
-      n.figure.position.y = Math.sin(performance.now() / 500 + n.at[0]) * 0.04;
-      if (dist(n.at, this.pos) < 6) n.figure.rotation.y = Math.atan2(this.pos[0] - n.at[0], this.pos[1] - n.at[1]);
+    this.syncTimer -= dt;
+    if (this.syncTimer <= 0) {
+      this.syncTimer = 500;
+      this.syncNpcs();
     }
+    this.updateNpcs(dt);
     if (this.dialogueWith && this.hud.openPanel === 'dialogue') {
       const n = this.npcs.find((x) => x.id === this.dialogueWith);
       if (!n || dist(n.at, this.pos) > TALK_RANGE + 2.5) this.hud.close();
     }
 
     this.updateFamiliars(dt);
+    this.familiarMood(dt);
+    this.applyLighting();
+    this.ambient?.update(dt, performance.now(), this.hourNow(), this.light, this.stage.camera);
     this.updatePrompt();
     this.stage.follow(this.player.position, dt);
+    this.coinFeedback();
     this.updateLabels();
     this.updateStatus();
     this.guideTimer -= dt;
     if (this.guideTimer <= 0) {
       this.guideTimer = 400;
       this.hud.guide(nextStep(this.sim, this.playerId, { saved: this.saved })?.text ?? null);
+      this.hud.objectives(objectives(this.sim, this.playerId));
     }
+    this.mapTimer -= dt;
+    if (this.mapTimer <= 0) {
+      this.mapTimer = 150;
+      this.minimap.draw(this.layout, {
+        player: this.pos,
+        facing: this.facing,
+        npcs: this.npcs.map((n) => n.at),
+        pets: this.pets.map((p) => p.at),
+        readables: [...this.layout.readables.map((r) => r.at), ...Object.values(this.layout.stalls)],
+        currentZone: this.sim.state.actors[this.playerId]?.locationId,
+      });
+    }
+  }
+
+  /** Floating +/− numbers whenever the purse changes. */
+  private coinFeedback(): void {
+    const b = this.sim.economy.balance(this.self, this.currency);
+    if (b === this.lastBalance) return;
+    const d = b - this.lastBalance;
+    this.lastBalance = b;
+    const at = new THREE.Vector3(this.pos[0], 2.8, this.pos[1]);
+    this.worldText(`${d > 0 ? '+' : '−'}${Math.abs(d)} ${this.sim.state.currencies[this.currency]?.symbol ?? ''}`.trim(), () => at, d > 0 ? 'float' : 'float neg', 1600);
+  }
+
+  /** Tap / click: walk there; if it was on someone or something, use it on arrival. */
+  private onTap(ground: Vec2): void {
+    const npc = nearest(this.npcs, ground, (n) => n.at, TAP_PICK);
+    if (npc) {
+      this.walkGoal = { kind: 'npc', id: npc.item.id };
+      this.walkTarget = [...npc.item.at];
+      return;
+    }
+    this.walkGoal = { kind: 'point' };
+    const thing = [...this.layout.readables.map((r) => r.at), ...Object.values(this.layout.stalls), ...Object.values(this.layout.nodes)].find((p) => dist(p, ground) < TAP_PICK);
+    this.walkTarget = thing ? [...thing] : ground;
+    this.tapRing.position.x = this.walkTarget[0];
+    this.tapRing.position.z = this.walkTarget[1];
+    this.walkStuckMs = 0;
+    this.pendingUse = !!thing;
+  }
+
+  private pendingUse = false;
+
+  private arrived(): void {
+    const goal = this.walkGoal;
+    const use = this.pendingUse;
+    this.walkTarget = null;
+    this.walkGoal = { kind: 'point' };
+    this.pendingUse = false;
+    this.walkStuckMs = 0;
+    if (goal.kind === 'npc') {
+      if (dist(this.npcPosition(goal.id) ?? [Infinity, Infinity], this.pos) <= TALK_RANGE) this.talk(goal.id);
+    } else if (use) this.interact();
   }
 
   private onMoved(before: Vec2): void {
@@ -264,8 +733,13 @@ export class Game {
     for (const e of this.layout.exits) {
       if (dist(this.pos, e.at) <= e.radius) {
         const ok = this.travelTo(e.to.locationId);
-        if (ok) this.enterScene(e.to.scene, e.to.at);
-        else this.pos = before;
+        if (ok) {
+          this.cue('door');
+          this.enterScene(e.to.scene, e.to.at);
+        } else {
+          this.pos = before;
+          this.walkTarget = null;
+        }
         return;
       }
     }
@@ -281,31 +755,95 @@ export class Game {
     return !!out;
   }
 
-  private interactTarget(): { kind: 'npc'; npc: NpcView } | { kind: 'node'; id: string } | undefined {
+  private interactTarget(): Target | undefined {
     const npc = nearest(this.npcs, this.pos, (n) => n.at, TALK_RANGE);
     if (npc) return { kind: 'npc', npc: npc.item };
+    const stall = nearest(Object.entries(this.layout.stalls), this.pos, ([, at]) => at, READ_RANGE);
+    if (stall) return { kind: 'stall', id: stall.item[0] };
     const node = nearest(Object.entries(this.layout.nodes), this.pos, ([, at]) => at, GATHER_RANGE);
     if (node) return { kind: 'node', id: node.item[0] };
+    const r = nearest(this.layout.readables, this.pos, (x) => x.at, READ_RANGE);
+    if (r) return { kind: 'readable', r: r.item };
     return undefined;
+  }
+
+  private interact(): void {
+    const t = this.interactTarget();
+    if (t?.kind === 'npc') this.talk(t.npc.id);
+    else if (t?.kind === 'node') this.act({ kind: 'gather', nodeId: t.id as never, amount: 1 });
+    else if (t?.kind === 'readable') this.showReadable(t.r);
+    else if (t?.kind === 'stall') this.showStall(t.id);
   }
 
   private updatePrompt(): void {
     const t = this.interactTarget();
-    if (!t || this.hud.openPanel === 'dialogue') return this.hud.prompt(null);
-    if (t.kind === 'npc') return this.hud.prompt(`E — Talk to ${this.sim.state.actors[t.npc.id]?.name}`);
+    const key = this.hud.root.classList.contains('touch') ? 'Interact' : 'E';
+    if (!t || this.hud.openPanel) return this.hud.prompt(null);
+    if (t.kind === 'npc') {
+      const a = this.sim.state.actors[t.npc.id];
+      const doing = activityLabel(t.npc.activity);
+      return this.hud.prompt(`${key} — Talk to ${a?.name}${doing ? ` (${doing})` : ''}`);
+    }
+    if (t.kind === 'readable') return this.hud.prompt(`${key} — Read: ${t.r.title}`);
+    if (t.kind === 'stall') return this.hud.prompt(`${key} — ${this.sim.state.properties[t.id]?.name ?? 'Stall'}`);
     const node = this.sim.state.resourceNodes[t.id];
     const res = node && this.sim.state.resources[node.resourceId];
-    this.hud.prompt(node && res ? `E — Gather ${res.name} (${Math.floor(node.amount)} left)` : null);
+    this.hud.prompt(node && res ? `${key} — Gather ${res.name} (${Math.floor(node.amount)} left)` : null);
+  }
+
+  private showReadable(r: ReadableSpec): void {
+    this.cue('page');
+    this.hud.read(r.title, readableText(this.sim, this.playerId, r));
+  }
+
+  /** A market stall: its owner sets what is for sale and at what price; anyone else just looks. */
+  private showStall(propertyId: string): void {
+    const s = this.sim.state;
+    const p = s.properties[propertyId];
+    if (!p) return;
+    const owner = this.sim.ownership.ownerOf({ kind: 'property', id: p.id });
+    const mine = owner?.kind === 'actor' && owner.id === this.playerId;
+    if (!mine) {
+      const who = !owner ? 'nobody yet' : owner.kind === 'actor' ? s.actors[owner.id]?.name : s.organizations[owner.id]?.name;
+      this.hud.read(p.name, [`Held by ${who}.`, p.forSale ? `For sale at ${this.money(p.value)} — apply to the Reeve at the Keep gatehouse.` : 'A tidy board, a striped awning, an empty crate.']);
+      return;
+    }
+    const def = this.sim.modes.definition(this.sim.modes.current(this.playerId))!;
+    const allowed = def.intents.includes('set-stall-listing');
+    const gate = allowed ? undefined : `not in ${def.name} mode — switch to Live (1)`;
+    const stall = this.sim.stall.get(p.id);
+    const list = (itemId: string, price: number | null) => () => {
+      this.act({ kind: 'set-stall-listing', propertyId: p.id, itemId: itemId as never, price });
+      this.showStall(propertyId);
+    };
+    const listed: Choice[] = Object.entries(stall?.listings ?? {}).map(([itemId, l]) => ({
+      label: `${s.items[itemId]?.name ?? itemId} at ${this.money(l.price)} (${this.sim.inventory.count(this.self, itemId as never)} left)`,
+      detail: gate ?? `about ${Math.round(this.sim.stall.saleChance(itemId, l.price) * 100)}% chance an hour to sell — take down`,
+      disabled: !allowed,
+      onChoose: list(itemId, null),
+    }));
+    const goods: Choice[] = [];
+    const stacks = s.inventories[`actor:${this.playerId}`]?.stacks ?? {};
+    for (const [itemId, q] of Object.entries(stacks)) {
+      if (q <= 0 || stall?.listings[itemId]) continue;
+      const ref = this.sim.stall.referencePrice(itemId);
+      const dear = Math.max(ref + 1, Math.ceil(ref * 1.5));
+      const name = s.items[itemId]?.name ?? itemId;
+      goods.push({ label: `${name} at ${this.money(ref)} — fair`, detail: gate ?? `you carry ${q}; sells briskly`, disabled: !allowed, onChoose: list(itemId, ref) });
+      goods.push({ label: `${name} at ${this.money(dear)} — dear`, detail: gate ?? 'more coin, slower to sell', disabled: !allowed, onChoose: list(itemId, dear) });
+    }
+    const st = this.sim.ctx.living.stall;
+    this.hud.list('stall', p.name, `Yours. Customers come ${st.openHour}:00–${st.closeHour}:00, even while you are away.`, [
+      { heading: 'On your stall', rows: listed.length ? listed : ['Nothing laid out yet.'] },
+      { heading: 'Lay out goods you carry', rows: goods.length ? goods : ['You carry nothing to sell. Gather wheat at Brindle Farm, or bring goods from your travels.'] },
+      { heading: 'Takings', rows: [`${stall?.sales ?? 0} sold · ${this.money(stall?.earnings ?? 0)} earned`] },
+    ]);
   }
 
   private onKey(key: string): void {
     if (key === 'Escape') return this.hud.close();
-    if (key === 'e') {
-      const t = this.interactTarget();
-      if (t?.kind === 'npc') this.talk(t.npc.id);
-      else if (t?.kind === 'node') this.act({ kind: 'gather', nodeId: t.id as never, amount: 1 });
-      return;
-    }
+    if (key === 'e') return this.interact();
+    if (key === 'm') return this.toggleSound();
     if (key === 'f') {
       this.act({ kind: 'search' });
       return;
@@ -366,12 +904,16 @@ export class Game {
     const npcId = this.dialogueWith;
     if (!npcId) return;
     const npc = this.sim.state.actors[npcId]!;
-    const lines = [npc.profile?.greeting ?? `${npc.name} nods.`, ...(npc.profile?.lines ?? [])];
+    const greeting = this.sim.modes.greetingFor(npcId, this.playerId) ?? `${npc.name} nods.`;
+    const lines = [greeting, ...(npc.profile?.lines ?? [])];
+    const rel = Object.values(this.sim.state.relationships).find((r) => r.from === npcId && r.to === this.playerId);
     const def = this.sim.modes.definition(this.sim.modes.current(this.playerId))!;
     const allowed = (k: Intent['kind']) => def.intents.includes(k);
     const after = () => this.renderDialogue();
     const doIt = (intent: Intent) => () => {
-      this.act(intent);
+      const out = this.act(intent);
+      const bark = (out?.data as { bark?: string | null } | undefined)?.bark;
+      if (bark) this.sayNpc(npcId, bark);
       after();
     };
 
@@ -436,8 +978,12 @@ export class Game {
         detail: `${f.variant}; ${f.temperament}${allowed('acquire-familiar') ? '' : ` (not in ${def.name} mode)`}`,
         disabled: !allowed('acquire-familiar') || !this.sim.economy.canAfford(this.self, f.offer!.currencyId, f.offer!.price),
         onChoose: () => {
-          this.act({ kind: 'acquire-familiar', familiarId: f.id });
+          const out = this.act({ kind: 'acquire-familiar', familiarId: f.id }, true);
           this.spawnFamiliars();
+          if (out) {
+            this.hud.toast(out.summary);
+            this.sayPet(f.id, out.summary);
+          }
           after();
         },
       }));
@@ -456,6 +1002,8 @@ export class Game {
     this.hud.dialogue({
       name: npc.name,
       title: npc.profile?.title,
+      relation: relationshipLabel(rel),
+      activity: activityLabel(this.sim.state.npcActivity[npcId]?.activity),
       line: lines[this.dialogueLine % lines.length]!,
       onMore: lines.length > 1 ? () => { this.dialogueLine++; this.renderDialogue(); } : undefined,
       sections: [
@@ -489,7 +1037,9 @@ export class Game {
     const def = this.sim.modes.definition(this.sim.modes.current(this.playerId))!;
     const allowed = (k: Intent['kind']) => def.intents.includes(k);
     const refresh = (intent: Intent) => () => {
-      this.act(intent);
+      const out = this.act(intent);
+      const fid = (intent as { familiarId?: string }).familiarId;
+      if (out && fid) this.sayPet(fid, out.summary);
       this.showCompanions();
     };
     const sections = mine.map((f) => {
@@ -499,6 +1049,7 @@ export class Game {
         `${f.variant} · ${f.temperament}`,
         `Bond ${Math.round(f.bond)}/100 · Fed ${Math.round(c.satiety)} · Energy ${Math.round(c.energy)} · Mood ${Math.round(c.mood)}`,
         st.ok ? `Seems ${st.value.notes.join(', ')}.` : '',
+        st.ok ? st.value.mood : '',
       ];
       const diet = this.sim.familiars.species(f)?.diet ?? [];
       const stacks = this.sim.state.inventories[`actor:${this.playerId}`]?.stacks ?? {};
@@ -561,9 +1112,24 @@ export class Game {
         el.style.top = `${((1 - v.y) / 2) * h}px`;
       }
     };
-    for (const n of this.npcs) place(n.label, new THREE.Vector3(n.at[0], 2.6, n.at[1]));
+    for (const n of this.npcs) place(n.label, new THREE.Vector3(n.at[0], n.activity === 'asleep' && !n.walking ? 1.4 : 2.6, n.at[1]));
     for (const p of this.pets) place(p.label, new THREE.Vector3(p.at[0], p.floats ? 2.3 : 1.5, p.at[1]));
     for (const l of this.placeLabels) place(l.el, l.at);
+    const t = performance.now();
+    this.texts = this.texts.filter((x) => {
+      if (t > x.until) {
+        x.el.remove();
+        return false;
+      }
+      const at = x.anchor();
+      if (x.rise) {
+        const k = (t - x.born) / (x.until - x.born);
+        at.y += k * 1.6;
+        x.el.style.opacity = String(1 - k * k);
+      }
+      place(x.el, at);
+      return true;
+    });
   }
 
   private updateStatus(): void {
@@ -576,6 +1142,7 @@ export class Game {
       coin: `Purse ${this.money(this.sim.economy.balance(this.self, this.currency))}`,
       mode: this.sim.modes.definition(this.sim.modes.current(this.playerId))?.name ?? '—',
       rules: v ? `${s.server.name} · War ${v.war} · PvP ${v.pvp}` : s.server.name,
+      clock: clockLabel(now(this.sim)),
     };
     const key = JSON.stringify(status);
     if (key !== this.lastStatus) {

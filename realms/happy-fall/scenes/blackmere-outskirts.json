@@ -100,6 +100,10 @@
   "rnode_hollowmere-deadwood": [
    13,
    -9
+  ],
+  "rnode_brindle-wheat": [
+   15.5,
+   13
   ]
  },
  "paths": [
@@ -459,6 +463,240 @@
     -8
    ],
    "color": "ember"
+  },
+  {
+   "type": "scarecrow",
+   "at": [
+    20,
+    19.6
+   ]
+  },
+  {
+   "type": "haystack",
+   "at": [
+    34,
+    17
+   ]
+  },
+  {
+   "type": "haystack",
+   "at": [
+    35.5,
+    20.5
+   ]
+  },
+  {
+   "type": "pen",
+   "at": [
+    5,
+    27
+   ],
+   "size": [
+    8,
+    5,
+    1
+   ]
+  },
+  {
+   "type": "cart",
+   "at": [
+    -18,
+    -3.6
+   ]
+  },
+  {
+   "type": "shrine",
+   "at": [
+    20,
+    -11.5
+   ]
+  },
+  {
+   "type": "boat",
+   "at": [
+    -27,
+    -22
+   ]
+  },
+  {
+   "type": "flowers",
+   "at": [
+    28.5,
+    13.4
+   ]
+  },
+  {
+   "type": "signpost",
+   "at": [
+    26,
+    5
+   ],
+   "label": "Brindle Farm \u2014 mind the hens"
   }
- ]
+ ],
+ "spots": {
+  "location_brindle-farm": {
+   "yard": [
+    24.5,
+    7.6
+   ],
+   "field": [
+    18.4,
+    10.2
+   ],
+   "porch": [
+    30,
+    12.8
+   ],
+   "orchard": [
+    8.5,
+    16.5
+   ]
+  },
+  "location_blackmere-east-road": {
+   "road": [
+    -20,
+    2.6
+   ]
+  },
+  "location_hollowmere-wood": {
+   "path": [
+    6,
+    -4
+   ]
+  }
+ },
+ "water": [
+  [
+   -38,
+   -32,
+   -16,
+   -14
+  ]
+ ],
+ "readables": [
+  {
+   "id": "broken-cart",
+   "at": [
+    -18,
+    -1.8
+   ],
+   "title": "An Abandoned Wagon",
+   "text": "Cracked axle, one wheel in the ditch. The load is long gone; a child's wooden horse is still wedged under the seat. Pip says the driver 'took the low road past Hollowmere after dark'."
+  },
+  {
+   "id": "quiet-shrine",
+   "at": [
+    20,
+    -9.8
+   ],
+   "title": "Woodside Shrine",
+   "text": "A little stone house no taller than your knee. Locals leave an apple here 'for the Quiet Folk'. Everyone insists it's only tradition. Everyone leaves an apple."
+  },
+  {
+   "id": "farm-sign",
+   "at": [
+    26,
+    5
+   ],
+   "title": "Brindle Farm",
+   "text": "BRINDLE FARM. Hens free-range: watch your feet. Apples for sale at Quill's. Help wanted at harvest \u2014 ask Hester."
+  },
+  {
+   "id": "mere-shore",
+   "at": [
+    -18,
+    -12.6
+   ],
+   "title": "The Black Mere",
+   "text": "Still, dark water. Your reflection looks back a moment longer than it should. Probably the light."
+  }
+ ],
+ "extras": [
+  {
+   "kind": "chicken",
+   "at": [
+    22.5,
+    6
+   ]
+  },
+  {
+   "kind": "chicken",
+   "at": [
+    25,
+    5
+   ]
+  },
+  {
+   "kind": "chicken",
+   "at": [
+    23.2,
+    9.6
+   ]
+  },
+  {
+   "kind": "sheep",
+   "at": [
+    4,
+    26.5
+   ]
+  },
+  {
+   "kind": "sheep",
+   "at": [
+    6.4,
+    27.6
+   ]
+  },
+  {
+   "kind": "sheep",
+   "at": [
+    5,
+    28.4
+   ]
+  },
+  {
+   "kind": "crow",
+   "at": [
+    19,
+    18
+   ]
+  },
+  {
+   "kind": "crow",
+   "at": [
+    30,
+    -20
+   ]
+  },
+  {
+   "kind": "villager",
+   "path": [
+    [
+     -36,
+     -1
+    ],
+    [
+     30,
+     -1
+    ]
+   ],
+   "color": "gold",
+   "hours": [
+    7,
+    19
+   ]
+  }
+ ],
+ "ambient": {
+  "leaves": 90,
+  "smoke": [
+   [
+    30,
+    9,
+    7
+   ]
+  ],
+  "fireflies": true
+ }
 }

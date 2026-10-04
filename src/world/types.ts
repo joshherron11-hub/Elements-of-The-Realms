@@ -17,6 +17,8 @@ export interface Location {
   tags: string[];
   /** Presentation hint: which scene/section renders this place. */
   sceneKey?: string;
+  /** If this place is a property's interior, entering needs `property.enter` on it. */
+  propertyId?: string;
   description?: string;
 }
 

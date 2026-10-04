@@ -23,7 +23,8 @@ export type Intent =
   | { readonly kind: 'acquire-familiar'; readonly familiarId: FamiliarId }
   | { readonly kind: 'feed-familiar'; readonly familiarId: FamiliarId; readonly itemId: ItemId }
   | { readonly kind: 'rest-familiar'; readonly familiarId: FamiliarId }
-  | { readonly kind: 'bond-familiar'; readonly familiarId: FamiliarId };
+  | { readonly kind: 'bond-familiar'; readonly familiarId: FamiliarId }
+  | { readonly kind: 'set-stall-listing'; readonly propertyId: PropertyId; readonly itemId: ItemId; readonly price: number | null };
 
 export type IntentKind = Intent['kind'];
 
@@ -42,6 +43,7 @@ export const INTENT_KINDS: readonly IntentKind[] = [
   'feed-familiar',
   'rest-familiar',
   'bond-familiar',
+  'set-stall-listing',
 ];
 
 export interface IntentOutcome {

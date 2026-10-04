@@ -81,6 +81,8 @@ export interface Market {
   priceIndex: number;
   /** Optional periodic price drift resolved through a risk profile (non-combat market risk). */
   drift?: { riskProfileId: RiskProfileId; everyMs: number; nextAt?: number };
+  /** In-game day of the last morning restock. */
+  lastRestockDay?: number;
 }
 
 /** A raw resource type (grain, timber, ore) and the item it yields when gathered. */

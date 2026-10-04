@@ -1,4 +1,4 @@
-import type { Clock } from './core/clock';
+import { SystemClock, type Clock } from './core/clock';
 import type { IdFactory } from './core/ids';
 import { err, ok, type Result } from './core/result';
 import type { ActorId, CurrencyId, LocationId, OrganizationId, PersonId, RealmId } from './core/refs';
@@ -9,6 +9,7 @@ import type { ResolvedRules } from './world/constitution';
 import { validatePack, type ContentPack } from './world/content-pack';
 import { createWorldState } from './world/world-state';
 import type { Actor } from './entities/actor';
+import type { LivingConfig } from './world/living';
 
 /**
  * Apply a validated content pack to a world through the ordinary services,
@@ -76,6 +77,7 @@ export interface BootstrapOptions {
   rules: ResolvedRules;
   pack: ContentPack;
   modes: readonly ModeDefinition[];
+  living?: LivingConfig;
   seed: number;
   clock?: Clock;
   ids?: IdFactory;
@@ -87,15 +89,18 @@ export function bootstrapWorld(opts: BootstrapOptions): Result<Simulation> {
   if (!valid.ok) return valid;
   const realm = opts.rules.realm;
   const server = opts.rules.server;
-  const now = opts.clock?.now() ?? 0;
+  // The world's calendar starts now; use the same clock the simulation will run on.
+  const clock = opts.clock ?? new SystemClock();
+  const now = clock.now();
   const state = createWorldState({
     realm: { id: realm.id, name: realm.name, type: realm.type },
     server: { id: server.id, name: server.name, preset: server.preset },
     seed: opts.seed,
     now,
   });
-  const sim = new Simulation({ state, clock: opts.clock, ids: opts.ids, rules: opts.rules, modes: opts.modes }).start();
+  const sim = new Simulation({ state, clock, ids: opts.ids, rules: opts.rules, modes: opts.modes, living: opts.living }).start();
   applyContentPack(sim, opts.pack);
+  sim.tick(0); // settle routines and morning stock now that the content exists
   return ok(sim);
 }
 

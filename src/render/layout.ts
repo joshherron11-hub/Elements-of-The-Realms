@@ -18,6 +18,7 @@ export type Rect = [number, number, number, number]; // x0, z0, x1, z1
 export const PROP_TYPES = [
   'building', 'stall', 'well', 'board', 'lamp', 'crate', 'barrel', 'wall', 'gatehouse', 'keep', 'fence',
   'tree', 'orchard', 'deadwood', 'field', 'rock', 'signpost', 'counter', 'hearth', 'table',
+  'scarecrow', 'haystack', 'cart', 'bed', 'chest', 'bench', 'shrine', 'memorial', 'boat', 'flowers', 'banner', 'rug', 'shelf', 'pen',
 ] as const;
 export type PropType = (typeof PROP_TYPES)[number];
 
@@ -38,6 +39,38 @@ export interface ExitSpec {
   to: { scene: string; locationId: string; at: Vec2 };
 }
 
+/** Something a player can read with E. `dynamic` text is composed from world state. */
+export interface ReadableSpec {
+  id: string;
+  at: Vec2;
+  title: string;
+  text?: string;
+  dynamic?: 'notice-board' | 'tavern-news' | 'market-prices' | 'deed';
+  /** For `deed`: which property. */
+  propertyId?: string;
+}
+
+/** Presentation-only life: walkers, patrons, animals. Never simulation state. */
+export interface ExtraSpec {
+  kind: 'villager' | 'patron' | 'chicken' | 'sheep' | 'crow' | 'cat';
+  /** Stand here (with a little idle drift)… */
+  at?: Vec2;
+  /** …or walk this loop. */
+  path?: Vec2[];
+  /** Only present during these in-game hours [from, to). */
+  hours?: [number, number];
+  color?: string;
+}
+
+export interface AmbientSpec {
+  /** Number of drifting autumn leaves. */
+  leaves: number;
+  /** Chimney smoke sources: [x, z, height]. */
+  smoke: [number, number, number][];
+  /** Fireflies at night. */
+  fireflies: boolean;
+}
+
 export interface SceneLayout {
   id: string;
   name: string;
@@ -53,12 +86,21 @@ export interface SceneLayout {
   nodes: Record<string, Vec2>;
   paths: { rect: Rect; color: string }[];
   props: PropSpec[];
+  /** LocationId → named activity spots NPC routines can use. */
+  spots: Record<string, Record<string, Vec2>>;
+  readables: ReadableSpec[];
+  extras: ExtraSpec[];
+  /** Still water: drawn, and impassable. */
+  water: Rect[];
+  ambient: AmbientSpec;
+  /** PropertyId → where its owner tends it (market stalls). */
+  stalls: Record<string, Vec2>;
 }
 
 export function parseSceneLayout(raw: unknown, source = 'scene'): Result<SceneLayout> {
   const v = new Validator(source);
   const o = v.obj(raw, '');
-  v.noExtraKeys(o, ['id', 'name', 'size', 'ground', 'interior', 'backdrops', 'zones', 'spawns', 'playerStart', 'exits', 'npcs', 'nodes', 'paths', 'props'], '');
+  v.noExtraKeys(o, ['id', 'name', 'size', 'ground', 'interior', 'backdrops', 'zones', 'spawns', 'playerStart', 'exits', 'npcs', 'nodes', 'paths', 'props', 'spots', 'readables', 'extras', 'water', 'ambient', 'stalls'], '');
   const vec = (x: unknown, p: string): Vec2 => {
     const a = v.arr(x, p, (n, np) => v.num(n, np));
     if (a.length !== 2) v.fail(p, 'expected [x, z]');
@@ -119,6 +161,46 @@ export function parseSceneLayout(raw: unknown, source = 'scene'): Result<SceneLa
         label: v.optStr(pr.label, `${p}.label`),
       };
     }),
+    spots: {},
+    readables: [],
+    extras: [],
+    water: [],
+    ambient: { leaves: 0, smoke: [], fireflies: false },
+    stalls: {},
   };
+  layout.spots = Object.fromEntries(Object.entries(v.obj(o.spots ?? {}, 'spots')).map(([loc, m]) => [loc, vecMap(m, `spots.${loc}`)]));
+  layout.readables = v.arr(o.readables ?? [], 'readables', (x, p) => {
+    const r = v.obj(x, p);
+    v.noExtraKeys(r, ['id', 'at', 'title', 'text', 'dynamic', 'propertyId'], p);
+    const spec: ReadableSpec = { id: v.str(r.id, `${p}.id`), at: vec(r.at, `${p}.at`), title: v.str(r.title, `${p}.title`), text: v.optStr(r.text, `${p}.text`), propertyId: v.optStr(r.propertyId, `${p}.propertyId`) };
+    if (r.dynamic !== undefined) spec.dynamic = v.oneOf(r.dynamic, ['notice-board', 'tavern-news', 'market-prices', 'deed'] as const, `${p}.dynamic`);
+    if (!spec.text && !spec.dynamic) v.fail(p, 'a readable needs text or a dynamic source');
+    return spec;
+  });
+  layout.extras = v.arr(o.extras ?? [], 'extras', (x, p) => {
+    const e = v.obj(x, p);
+    v.noExtraKeys(e, ['kind', 'at', 'path', 'hours', 'color'], p);
+    const spec: ExtraSpec = { kind: v.oneOf(e.kind, ['villager', 'patron', 'chicken', 'sheep', 'crow', 'cat'] as const, `${p}.kind`), color: v.optStr(e.color, `${p}.color`) };
+    if (e.at !== undefined) spec.at = vec(e.at, `${p}.at`);
+    if (e.path !== undefined) spec.path = v.arr(e.path, `${p}.path`, (q, qp) => vec(q, qp));
+    if (e.hours !== undefined) {
+      const h = v.arr(e.hours, `${p}.hours`, (n, np) => v.num(n, np, 0, 24));
+      spec.hours = [h[0] ?? 0, h[1] ?? 24];
+    }
+    if (!spec.at && !spec.path?.length) v.fail(p, 'an extra needs `at` or a `path`');
+    return spec;
+  });
+  layout.water = v.arr(o.water ?? [], 'water', (x, p) => rect(x, p));
+  const amb = v.obj(o.ambient ?? {}, 'ambient');
+  layout.ambient = {
+    leaves: amb.leaves === undefined ? 0 : v.num(amb.leaves, 'ambient.leaves', 0, 500),
+    smoke: v.arr(amb.smoke ?? [], 'ambient.smoke', (x, p) => {
+      const a = v.arr(x, p, (n, np) => v.num(n, np));
+      if (a.length !== 3) v.fail(p, 'expected [x, z, height]');
+      return [a[0] ?? 0, a[1] ?? 0, a[2] ?? 5] as [number, number, number];
+    }),
+    fireflies: amb.fireflies === undefined ? false : v.bool(amb.fireflies, 'ambient.fireflies'),
+  };
+  layout.stalls = vecMap(o.stalls, 'stalls');
   return v.ok ? ok(layout) : err('INVALID_CONTENT', v.errors.join('\n'));
 }

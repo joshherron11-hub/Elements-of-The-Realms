@@ -178,6 +178,57 @@ try {
   check(JSON.stringify(after) === JSON.stringify(before), 'RELOAD → STATE REMAINS (identical)');
   check(await page.locator('.toast', { hasText: 'Welcome back' }).count() > 0, 'welcomed back');
 
+  console.log('Living Blackmere — depth checks');
+  const clock = await page.locator('#hud-status .clock').innerText();
+  check(/^Day 1 · 09:\d\d · Morning$/.test(clock), `the day has a clock (${clock})`);
+  const pip = await page.evaluate(() => [window.__eotr.sim.state.npcActivity['actor_pip-ashdown'].activity, window.__eotr.game.npcPosition('actor_pip-ashdown')]);
+  check(pip[0] === 'sorting-letters' && pip[1] !== undefined, 'NPC ROUTINES: Pip is sorting letters by the well');
+
+  await walkTo(0, -8);
+  await walkTo(5, -4.4);
+  await press('e');
+  const board = await page.locator('#hud-panel').innerText();
+  check(/Blackmere Notice Board/.test(board) && /WANTED — /.test(board) && /FOR SALE — Wicket Cottage/.test(board), 'READABLES: the notice board lists work and property for sale');
+  await press('Escape');
+
+  await walkTo(12, 0);
+  await walkTo(19, 3);
+  await walkTo(21, 4.6);
+  await press('e');
+  check(await page.locator('#hud-panel h2', { hasText: 'Market Stall No. 4' }).isVisible(), 'STALL: tending your own stall');
+  await choose('— fair');
+  const listed = await page.evaluate(() => Object.keys(window.__eotr.sim.stall.get('property_stall-4')?.listings ?? {}).length);
+  check(listed === 1, 'STALL: laid out goods for sale');
+  await shot('stall');
+  await press('Escape');
+
+  await walkTo(12, 0);
+  await walkTo(0, 3);
+  await page.waitForTimeout(600); // let the camera settle
+  const before2 = await page.evaluate(() => window.__eotr.game.position);
+  await page.mouse.click(700, 330);
+  await page.waitForTimeout(1200);
+  const after2 = await page.evaluate(() => window.__eotr.game.position);
+  check(Math.hypot(after2[0] - before2[0], after2[1] - before2[1]) > 1, 'MOUSE: click to walk');
+
+  await walkTo(-12, 2);
+  await walkTo(-21.5, 9);
+  await walkTo(-23, 11.4);
+  await page.waitForTimeout(200);
+  check((await state()).scene === 'blackmere-town' && (await page.locator('.toast', { hasText: 'Wicket Cottage is locked' }).count()) > 0, 'PROPERTY: Wicket Cottage is locked to non-owners');
+  await shot('evening-town');
+
+  const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  phone.on('pageerror', (e) => errors.push(e.message));
+  await phone.goto('http://localhost:5199/');
+  await phone.waitForTimeout(1500);
+  check(await phone.locator('#hud-touch .pad').isVisible(), 'PHONE: joystick and action buttons shown');
+  await phone.locator('#hud-touch button', { hasText: 'Journal' }).tap();
+  await phone.waitForTimeout(300);
+  check(await phone.locator('#hud-panel h2', { hasText: 'Journal' }).isVisible(), 'PHONE: action buttons open panels');
+  if (shots) await phone.screenshot({ path: `${shots}/phone.png` });
+  await phone.close();
+
   check(errors.length === 0, `no browser errors${errors.length ? `: ${errors.join(' | ')}` : ''}`);
   console.log('\nLoop complete.');
 } catch (e) {

@@ -5,6 +5,30 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — Blackmere world depth pass
+- **Living world rules** (`realms/happy-fall/living/blackmere.json`, `src/world/living.ts`):
+  calendar (24-min day, start 09:00), NPC daily routines (`RoutineService`), market hours
+  and morning restock, NPC activity/friendly/bark lines, Familiar personality lines. Rules,
+  not save data, so old saves gain them; new state (`npcActivity`, `stalls`,
+  `Market.lastRestockDay`) defaults on load.
+- **Player market stall** (`StallService`, intent `set-stall-listing`): list carried goods,
+  deterministic seeded sales during stall hours, ledgered and chronicled.
+- **Wicket Cottage** interior scene; door locked to non-owners; resting a Familiar at home.
+- **Scenes:** town square, tavern and outskirts detail (props, activity spots, readables,
+  townsfolk, patrons, animals, water, smoke, leaves, fireflies).
+- **Presentation:** routine-driven NPC walking, idle and sleep; trail-following Familiars
+  with sniffing and reaction bubbles; time-of-day lighting; ambient animation; dynamic
+  notice board, rumours, price board and deeds; relationship labels; merchant barks;
+  floating coin numbers; objectives tracker; minimap; sound cues (WebAudio synth, M to
+  mute); click/tap to walk and interact; joystick, action buttons and bottom-sheet panels on
+  phones.
+- Tests: `tests/living.test.ts`; smoke test extended with depth checks and a phone viewport.
+- `docs/LIVING.md`.
+
+### Fixed
+- Worlds founded without an explicit clock (the browser) recorded `createdAt = 0`; the
+  calendar now starts when the world is founded.
+
 ### Changed — Owner decisions (pre-PR)
 - **Canon thresholds:** removed the "2 interactions" Orientation floor as a threshold.
   Added the Recognition ladder (FIRST READ → OBSERVED → REPEATED → CROSS-CONTEXT →

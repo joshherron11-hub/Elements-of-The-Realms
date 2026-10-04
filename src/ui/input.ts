@@ -27,6 +27,17 @@ export class Input {
     return this.down.has('Shift');
   }
 
+  /** Queue a key press from an on-screen button (touch controls). */
+  push(key: string): void {
+    this.pressed.push(key);
+  }
+
+  /** Any movement key held right now. */
+  moving(): boolean {
+    const [x, z] = this.axis();
+    return x !== 0 || z !== 0;
+  }
+
   /** Keys pressed since last call. */
   takePresses(): string[] {
     return this.pressed.splice(0);

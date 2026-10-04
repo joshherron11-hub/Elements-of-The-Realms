@@ -5,6 +5,7 @@ import { mergePacks, parseContentPack, validatePack, type ContentPack } from '..
 import { parseModes } from '../modes/parse';
 import type { ModeDefinition } from '../modes/types';
 import { RELEASE } from './build';
+import { DEFAULT_LIVING, parseLiving, validateLiving, type LivingConfig } from '../world/living';
 
 /**
  * Loads every authored Realm, server preset, server definition, content pack
@@ -18,6 +19,7 @@ const presetFiles = import.meta.glob('../../server-constitutions/*.json', { eage
 const serverFiles = import.meta.glob('../../realms/*/servers/*.json', { eager: true, import: 'default' });
 const packFiles = import.meta.glob('../../realms/*/content/*.json', { eager: true, import: 'default' });
 const modeFiles = import.meta.glob('../../modes/modes.json', { eager: true, import: 'default' });
+const livingFiles = import.meta.glob('../../realms/*/living/*.json', { eager: true, import: 'default' });
 
 function unwrap<T>(r: { ok: true; value: T } | { ok: false; error: { message: string } }): T {
   if (!r.ok) throw new Error(`Invalid content:\n${r.error.message}`);
@@ -30,6 +32,7 @@ export interface ContentFiles {
   servers: Record<string, unknown>;
   packs?: Record<string, unknown>;
   modes?: Record<string, unknown>;
+  living?: Record<string, unknown>;
 }
 
 export class ContentRegistry {
@@ -39,6 +42,8 @@ export class ContentRegistry {
   /** Realm id → merged, validated content pack. */
   readonly packs = new Map<string, ContentPack>();
   readonly modes: ModeDefinition[] = [];
+  /** Realm id → living-world rules. */
+  readonly livingByRealm = new Map<string, LivingConfig>();
 
   constructor(files: ContentFiles) {
     for (const [path, raw] of Object.entries(files.realms)) {
@@ -68,6 +73,27 @@ export class ContentRegistry {
       this.packs.set(realmId, merged);
     }
     for (const raw of Object.values(files.modes ?? {})) this.modes.push(...unwrap(parseModes(raw)));
+    for (const [path, raw] of Object.entries(files.living ?? {})) {
+      const realmId = (raw as { realmId?: unknown }).realmId;
+      if (typeof realmId !== 'string') throw new Error(`Invalid content:\n${path}: living config needs a realmId`);
+      const cfg = unwrap(parseLiving(raw, path));
+      const pack = this.pack(realmId);
+      unwrap(
+        validateLiving(cfg, {
+          actors: new Set(pack.actors.map((a) => a.id)),
+          locations: new Set(pack.locations.map((l) => l.id)),
+          markets: new Set(pack.markets.map((m) => m.id)),
+          items: new Set(pack.items.map((i) => i.id)),
+          familiars: new Set(pack.familiars.map((f) => f.id)),
+        }),
+      );
+      this.livingByRealm.set(realmId, cfg);
+    }
+  }
+
+  /** Living-world rules for a Realm (defaults if none are authored). */
+  living(realmId: string): LivingConfig {
+    return this.livingByRealm.get(realmId) ?? DEFAULT_LIVING;
   }
 
   realm(id: string): RealmDefinition {
@@ -96,4 +122,4 @@ export class ContentRegistry {
   }
 }
 
-export const content = new ContentRegistry({ realms: realmFiles, presets: presetFiles, servers: serverFiles, packs: packFiles, modes: modeFiles });
+export const content = new ContentRegistry({ realms: realmFiles, presets: presetFiles, servers: serverFiles, packs: packFiles, modes: modeFiles, living: livingFiles });

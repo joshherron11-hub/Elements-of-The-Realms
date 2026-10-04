@@ -45,7 +45,7 @@ export function openSession(o: SessionOptions): Session {
     if (loaded.ok) {
       const { meta, world, presentation } = loaded.value;
       const rules = o.content.rulesFor(meta.serverId);
-      const sim = new Simulation({ state: world, rules, modes: o.content.modes, clock: o.clock, ids: o.ids }).start();
+      const sim = new Simulation({ state: world, rules, modes: o.content.modes, living: o.content.living(rules.realm.id), clock: o.clock, ids: o.ids }).start();
       const awayMs = Math.max(0, sim.ctx.clock.now() - meta.worldTime);
       const catchUp = Math.min(awayMs, MAX_CATCH_UP_MS);
       if (catchUp > 0) sim.tick(catchUp);
@@ -55,7 +55,7 @@ export function openSession(o: SessionOptions): Session {
     loadError = loaded.error.message;
   }
   const rules = o.content.rulesFor(o.serverId);
-  const booted = bootstrapWorld({ rules, pack: o.content.pack(rules.realm.id), modes: o.content.modes, seed: o.newWorldSeed, clock: o.clock, ids: o.ids });
+  const booted = bootstrapWorld({ rules, pack: o.content.pack(rules.realm.id), modes: o.content.modes, living: o.content.living(rules.realm.id), seed: o.newWorldSeed, clock: o.clock, ids: o.ids });
   if (!booted.ok) throw new Error(booted.error.message);
   const joined = joinRealm(booted.value, { displayName: o.displayName, startAt: asId(o.startLocation) });
   if (!joined.ok) throw new Error(joined.error.message);

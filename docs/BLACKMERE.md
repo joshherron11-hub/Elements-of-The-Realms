@@ -49,11 +49,14 @@ social events are listed in `docs/ECONOMY.md`.
 - **1–6** switch between the implemented modes.
 
 ## Controls
-WASD / arrows move · Shift run · E interact · F search · I inventory · J journal ·
-C companions · 1–6 modes · Esc close
+WASD / arrows or click/tap to move · Shift run · E interact (talk, read, gather, tend
+stall) · F search · I inventory · J journal · C companions · 1–6 modes · M sound · Esc close.
+Phones get a joystick and action buttons. See [`LIVING.md`](LIVING.md) for routines,
+the stall, Wicket Cottage, ambient life and feedback.
 
 ## Rendering
 Toon materials with three bands, inverted-hull outlines, painted canvas backdrops on
 far planes for 2.5D layering, an elevated three-quarter follow camera and HTML name
 labels. The colours come from the Realm's art direction metadata. There are no
-shadows and no external assets.
+shadows and no external assets. Light follows the in-game hour (`src/render/lighting.ts`);
+ambient life and weather-free atmosphere come from `src/render/ambient.ts`.

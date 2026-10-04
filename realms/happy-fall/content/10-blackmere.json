@@ -107,6 +107,19 @@
         "woodland"
       ],
       "description": "Where the trees begin and the paths stop agreeing with each other."
+    },
+    {
+      "id": "location_wicket-cottage",
+      "name": "Wicket Cottage",
+      "kind": "building",
+      "parentId": "location_blackmere-hearth-row",
+      "sceneKey": "wicket-cottage",
+      "propertyId": "property_wicket-cottage",
+      "tags": [
+        "home",
+        "private"
+      ],
+      "description": "A snug two-room cottage with a crooked chimney and a door that sticks."
     }
   ],
   "routes": [
@@ -165,6 +178,13 @@
       "to": "location_hollowmere-wood",
       "kind": "path",
       "travelTimeMs": 150000
+    },
+    {
+      "id": "route_hearth-row-wicket",
+      "from": "location_blackmere-hearth-row",
+      "to": "location_wicket-cottage",
+      "kind": "path",
+      "travelTimeMs": 15000
     }
   ],
   "actors": [
@@ -323,6 +343,12 @@
           "buyable": false,
           "sellable": true,
           "sellSpread": 0.3
+        },
+        "item_wheat-sheaf": {
+          "basePrice": 3,
+          "buyable": false,
+          "sellable": true,
+          "sellSpread": 0.3
         }
       },
       "drift": {
@@ -358,6 +384,11 @@
       "id": "resource_deadwood",
       "name": "Deadwood",
       "yieldsItemId": "item_split-timber"
+    },
+    {
+      "id": "resource_wheat",
+      "name": "Wheat sheaves",
+      "yieldsItemId": "item_wheat-sheaf"
     }
   ],
   "resourceNodes": [
@@ -375,6 +406,14 @@
       "locationId": "location_hollowmere-wood",
       "amount": 8,
       "capacity": 8,
+      "regenPerHour": 2
+    },
+    {
+      "id": "rnode_brindle-wheat",
+      "resourceId": "resource_wheat",
+      "locationId": "location_brindle-farm",
+      "amount": 10,
+      "capacity": 10,
       "regenPerHour": 2
     }
   ]

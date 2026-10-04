@@ -1,0 +1,200 @@
+{
+ "id": "wicket-cottage",
+ "name": "Wicket Cottage",
+ "size": [
+  14,
+  12
+ ],
+ "ground": "timber",
+ "interior": true,
+ "backdrops": [],
+ "zones": [
+  {
+   "locationId": "location_wicket-cottage",
+   "rect": [
+    -7,
+    -6,
+    7,
+    6
+   ]
+  }
+ ],
+ "spawns": {
+  "location_wicket-cottage": [
+   0,
+   3.4
+  ]
+ },
+ "playerStart": [
+  0,
+  3.4
+ ],
+ "exits": [
+  {
+   "id": "cottage-out",
+   "at": [
+    0,
+    5.6
+   ],
+   "radius": 1.1,
+   "label": "Step out to Hearth Row",
+   "to": {
+    "scene": "blackmere-town",
+    "locationId": "location_blackmere-hearth-row",
+    "at": [
+     -21.5,
+     12.6
+    ]
+   }
+  }
+ ],
+ "npcs": {},
+ "nodes": {},
+ "paths": [],
+ "props": [
+  {
+   "type": "wall",
+   "at": [
+    0,
+    -6
+   ],
+   "size": [
+    14,
+    0.6,
+    4
+   ]
+  },
+  {
+   "type": "wall",
+   "at": [
+    -7,
+    0
+   ],
+   "size": [
+    0.6,
+    12,
+    4
+   ]
+  },
+  {
+   "type": "wall",
+   "at": [
+    7,
+    0
+   ],
+   "size": [
+    0.6,
+    12,
+    4
+   ]
+  },
+  {
+   "type": "wall",
+   "at": [
+    -4.4,
+    6
+   ],
+   "size": [
+    5.2,
+    0.6,
+    4
+   ]
+  },
+  {
+   "type": "wall",
+   "at": [
+    4.4,
+    6
+   ],
+   "size": [
+    5.2,
+    0.6,
+    4
+   ]
+  },
+  {
+   "type": "hearth",
+   "at": [
+    -6.2,
+    -2
+   ]
+  },
+  {
+   "type": "bed",
+   "at": [
+    4.6,
+    -3.4
+   ]
+  },
+  {
+   "type": "chest",
+   "at": [
+    5.6,
+    1.6
+   ]
+  },
+  {
+   "type": "table",
+   "at": [
+    -2,
+    -3.4
+   ]
+  },
+  {
+   "type": "shelf",
+   "at": [
+    0.8,
+    -5.4
+   ]
+  },
+  {
+   "type": "rug",
+   "at": [
+    -1.5,
+    0.5
+   ],
+   "size": [
+    4,
+    3,
+    0
+   ],
+   "color": "ember"
+  },
+  {
+   "type": "flowers",
+   "at": [
+    2.5,
+    -5.2
+   ]
+  }
+ ],
+ "spots": {},
+ "readables": [
+  {
+   "id": "cottage-deed",
+   "at": [
+    -3.6,
+    -5.6
+   ],
+   "title": "The Deed on the Wall",
+   "dynamic": "deed",
+   "propertyId": "property_wicket-cottage"
+  }
+ ],
+ "extras": [
+  {
+   "kind": "cat",
+   "at": [
+    -4.6,
+    -0.6
+   ]
+  }
+ ],
+ "water": [],
+ "ambient": {
+  "leaves": 0,
+  "smoke": [],
+  "fireflies": false
+ },
+ "stalls": {}
+}

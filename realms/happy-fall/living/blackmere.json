@@ -1,0 +1,395 @@
+{
+  "$provisional": "PROVISIONAL placeholders: day length, hours, routines, restock levels, stall odds and all lines are tuning values, not Canon. See docs/PROVISIONAL.md.",
+  "realmId": "realm_happy-fall",
+  "calendar": {
+    "dayLengthMs": 1440000,
+    "startHour": 9
+  },
+  "routines": {
+    "actor_maren-holloway": [
+      {
+        "from": 6,
+        "to": 11,
+        "locationId": "location_blackmere-tavern",
+        "activity": "opening-up",
+        "spot": "bar"
+      },
+      {
+        "from": 11,
+        "to": 17,
+        "locationId": "location_blackmere-tavern",
+        "activity": "serving",
+        "spot": "bar"
+      },
+      {
+        "from": 17,
+        "to": 24,
+        "locationId": "location_blackmere-tavern",
+        "activity": "busy-evening",
+        "spot": "bar"
+      },
+      {
+        "from": 0,
+        "to": 6,
+        "locationId": "location_blackmere-tavern",
+        "activity": "asleep",
+        "spot": "back-room"
+      }
+    ],
+    "actor_tobias-quill": [
+      {
+        "from": 6,
+        "to": 7,
+        "locationId": "location_blackmere-market",
+        "activity": "setting-up",
+        "spot": "stall"
+      },
+      {
+        "from": 7,
+        "to": 19,
+        "locationId": "location_blackmere-market",
+        "activity": "trading",
+        "spot": "stall"
+      },
+      {
+        "from": 19,
+        "to": 23,
+        "locationId": "location_blackmere-tavern",
+        "activity": "evening-drink",
+        "spot": "table-east"
+      },
+      {
+        "from": 23,
+        "to": 6,
+        "locationId": "location_blackmere-hearth-row",
+        "activity": "asleep",
+        "spot": "home-tobias"
+      }
+    ],
+    "actor_hester-brindle": [
+      {
+        "from": 5,
+        "to": 8,
+        "locationId": "location_brindle-farm",
+        "activity": "morning-chores",
+        "spot": "yard"
+      },
+      {
+        "from": 8,
+        "to": 12,
+        "locationId": "location_brindle-farm",
+        "activity": "in-the-fields",
+        "spot": "field"
+      },
+      {
+        "from": 12,
+        "to": 13,
+        "locationId": "location_brindle-farm",
+        "activity": "lunch",
+        "spot": "porch"
+      },
+      {
+        "from": 13,
+        "to": 18,
+        "locationId": "location_brindle-farm",
+        "activity": "orchard-work",
+        "spot": "orchard"
+      },
+      {
+        "from": 18,
+        "to": 21,
+        "locationId": "location_brindle-farm",
+        "activity": "evening-chores",
+        "spot": "yard"
+      },
+      {
+        "from": 21,
+        "to": 5,
+        "locationId": "location_brindle-farm",
+        "activity": "asleep",
+        "spot": "porch"
+      }
+    ],
+    "actor_pip-ashdown": [
+      {
+        "from": 7,
+        "to": 12,
+        "locationId": "location_blackmere-square",
+        "activity": "sorting-letters",
+        "spot": "well"
+      },
+      {
+        "from": 12,
+        "to": 14,
+        "locationId": "location_blackmere-market",
+        "activity": "deliveries",
+        "spot": "crates"
+      },
+      {
+        "from": 14,
+        "to": 18,
+        "locationId": "location_blackmere-square",
+        "activity": "sorting-letters",
+        "spot": "well"
+      },
+      {
+        "from": 18,
+        "to": 23,
+        "locationId": "location_blackmere-tavern",
+        "activity": "telling-stories",
+        "spot": "hearth"
+      },
+      {
+        "from": 23,
+        "to": 7,
+        "locationId": "location_blackmere-hearth-row",
+        "activity": "asleep",
+        "spot": "home-pip"
+      }
+    ],
+    "actor_aldous-crane": [
+      {
+        "from": 8,
+        "to": 17,
+        "locationId": "location_blackmere-keep",
+        "activity": "keeping-records",
+        "spot": "gate"
+      },
+      {
+        "from": 17,
+        "to": 19,
+        "locationId": "location_blackmere-square",
+        "activity": "reading-notices",
+        "spot": "board"
+      },
+      {
+        "from": 19,
+        "to": 22,
+        "locationId": "location_blackmere-tavern",
+        "activity": "supper",
+        "spot": "table-west"
+      },
+      {
+        "from": 22,
+        "to": 8,
+        "locationId": "location_blackmere-keep",
+        "activity": "asleep",
+        "spot": "gate"
+      }
+    ],
+    "actor_sela-vantry": [
+      {
+        "from": 10,
+        "to": 13,
+        "locationId": "location_blackmere-square",
+        "activity": "sightseeing",
+        "spot": "lamp"
+      },
+      {
+        "from": 13,
+        "to": 24,
+        "locationId": "location_blackmere-tavern",
+        "activity": "resting",
+        "spot": "table-east"
+      },
+      {
+        "from": 0,
+        "to": 10,
+        "locationId": "location_blackmere-tavern",
+        "activity": "asleep",
+        "spot": "table-east"
+      }
+    ]
+  },
+  "markets": {
+    "market_quills-sundries": {
+      "openHour": 7,
+      "closeHour": 19,
+      "restock": [
+        {
+          "itemId": "item_lantern-oil",
+          "target": 10
+        },
+        {
+          "itemId": "item_ember-wool",
+          "target": 4
+        },
+        {
+          "itemId": "item_hound-biscuits",
+          "target": 30
+        },
+        {
+          "itemId": "item_seed-cake",
+          "target": 20
+        },
+        {
+          "itemId": "item_grooming-brush",
+          "target": 5
+        }
+      ]
+    },
+    "market_lantern-ladle": {
+      "openHour": 6,
+      "closeHour": 24,
+      "restock": [
+        {
+          "itemId": "item_hearth-loaf",
+          "target": 20
+        },
+        {
+          "itemId": "item_pressed-cider",
+          "target": 20
+        }
+      ]
+    }
+  },
+  "stall": {
+    "baseChancePerHour": 0.35,
+    "maxPriceMultiple": 2.5,
+    "openHour": 7,
+    "closeHour": 19,
+    "maxCatchUpHours": 48
+  },
+  "npcLines": {
+    "actor_maren-holloway": {
+      "activities": {
+        "opening-up": "Fire's only just caught \u2014 give it a minute and the place'll be warm.",
+        "busy-evening": "Evening rush! Shout if you want anything, I'll hear you over the singing. Probably.",
+        "asleep": "Mm? We're shut, love. Come back when the sun's up."
+      },
+      "friendly": "There's my favourite regular. The usual seat's free.",
+      "barks": [
+        "Mind, it's hot.",
+        "Best loaf this side of the mere.",
+        "Enjoy it \u2014 and tell your friends."
+      ]
+    },
+    "actor_tobias-quill": {
+      "activities": {
+        "setting-up": "Not open yet \u2014 the awning's half up. Five minutes!",
+        "evening-drink": "Shop's shut. I'm off duty, which means I'm only *mostly* selling things.",
+        "asleep": "\u2026not open\u2026 come back at seven\u2026"
+      },
+      "friendly": "Ah, my best supplier! What can Quill's do for you today?",
+      "barks": [
+        "A fine choice!",
+        "Pleasure doing business.",
+        "That'll serve you well.",
+        "Come again \u2014 I restock every morning."
+      ]
+    },
+    "actor_hester-brindle": {
+      "activities": {
+        "morning-chores": "Hens first, then sheep, then me. That's the order of the world.",
+        "lunch": "Sit a moment if you like. Bread's yesterday's but the cheese isn't.",
+        "orchard-work": "Mind the ladder. And the wasps. Mostly the wasps.",
+        "asleep": "*a lantern goes out behind the farmhouse window*"
+      },
+      "friendly": "There you are. The hound's missed you \u2014 well, I have too, a bit."
+    },
+    "actor_pip-ashdown": {
+      "activities": {
+        "deliveries": "Can't stop \u2014 Quill's crates won't carry themselves. Walk with me?",
+        "telling-stories": "\u2026and THAT'S why you never take the low road past Hollowmere after dark. Sit, sit!",
+        "asleep": "*snoring, with a letter still in hand*"
+      },
+      "friendly": "You! My favourite satchel-finder. What news?"
+    },
+    "actor_aldous-crane": {
+      "activities": {
+        "reading-notices": "Somebody keeps pinning recipes to the official notice board. Somebody will be found.",
+        "supper": "I am off duty. Mostly. What is it?",
+        "asleep": "The gatehouse door stays shut. A note says: 'Office opens at eight.'"
+      },
+      "friendly": "Ah. A responsible citizen. Blackmere could use more of those."
+    },
+    "actor_sela-vantry": {
+      "activities": {
+        "sightseeing": "Every town has one good well and a hundred stories about it. This one's well is very good.",
+        "asleep": "*Sela is curled up by the fire, a map over her face*"
+      },
+      "friendly": "Friend! Sit, tell me where the road's taken you since."
+    }
+  },
+  "familiarReactions": {
+    "species_russet-hound": {
+      "acquired": [
+        "{name} bounds over, sniffs your boots thoroughly, and decides you'll do."
+      ],
+      "fed": [
+        "{name} wolfs it down, tail going like a flail.",
+        "{name} crunches happily and then checks the floor for crumbs.",
+        "{name} eats, then leans against your leg, satisfied."
+      ],
+      "rested": [
+        "{name} circles three times and flops down with a huge sigh.",
+        "{name} naps with one ear still listening."
+      ],
+      "home": [
+        "{name} claims the spot by the hearth as if it was always theirs."
+      ],
+      "bonded": [
+        "{name} brings you a stick, then refuses to let go of it. Great fun.",
+        "{name} rolls over for a belly rub. You oblige.",
+        "You and {name} race to the nearest tree. {name} wins."
+      ],
+      "hungry": [
+        "{name} is nosing at your pocket, hopefully.",
+        "{name}'s stomach growls louder than {name} does."
+      ],
+      "tired": [
+        "{name} is lagging behind, tongue out."
+      ],
+      "idle": [
+        "{name} is sniffing at something fascinating.",
+        "{name} watches the birds with deep suspicion.",
+        "{name} trots along beside you, content."
+      ]
+    },
+    "familiar_bramble": {
+      "acquired": [
+        "Bramble skids to a stop at your feet, white blaze first, muddy everything else. She's decided."
+      ],
+      "idle": [
+        "Bramble is very interested in a leaf. Now a different leaf.",
+        "Bramble glances back to make sure you're still there.",
+        "Bramble has found mud. Bramble is happy."
+      ]
+    },
+    "species_lantern-moth": {
+      "acquired": [
+        "The moth settles on your shoulder, glowing faintly amber."
+      ],
+      "fed": [
+        "The moth sips at the seed cake, its light brightening.",
+        "Its wings pulse gold as it feeds."
+      ],
+      "rested": [
+        "The moth folds its wings; its glow dims to an ember."
+      ],
+      "home": [
+        "The moth settles on the lantern hook, glowing softly."
+      ],
+      "bonded": [
+        "The moth traces slow loops around your hands.",
+        "It lands on your fingertip and stays there."
+      ],
+      "hungry": [
+        "The moth's glow flickers, faint and uneven."
+      ],
+      "tired": [
+        "The moth drifts low, light dim."
+      ],
+      "idle": [
+        "The moth circles your head in lazy loops.",
+        "Its light catches every falling leaf."
+      ]
+    },
+    "species_keep-raven": {
+      "idle": [
+        "The raven watches you with one bright, judging eye.",
+        "The raven says something that sounds a lot like 'eleven years'."
+      ]
+    }
+  }
+}

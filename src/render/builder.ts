@@ -14,6 +14,12 @@ export interface BuiltSection {
   /** Markers for resource nodes, keyed by node id, so they can show depletion. */
   nodeMarkers: Map<string, THREE.Object3D>;
   exitMarkers: THREE.Object3D[];
+  /** Lamps and windows that light up at night. */
+  nightLights: THREE.Object3D[];
+  /** Water surfaces (animated). */
+  water: THREE.Mesh[];
+  /** Hearth lights (flicker). */
+  fires: THREE.PointLight[];
 }
 
 /** Painted silhouette backdrop: a canvas texture on a far plane (2.5D layering). */
@@ -61,6 +67,7 @@ function roofed(m: Materials, w: number, d: number, h: number, wall: number, roo
   g.add(door);
   const win = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.7), new THREE.MeshBasicMaterial({ color: m.palette.gold }));
   win.position.set(w * 0.28, h * 0.6, d / 2 + 0.01);
+  win.name = 'window-glow';
   g.add(win);
   return g;
 }
@@ -227,6 +234,7 @@ function prop(m: Materials, p: PropSpec, labels: Label[]): THREE.Object3D {
       g.add(pole);
       const glow = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 6), new THREE.MeshBasicMaterial({ color: P.gold }));
       glow.position.y = 3.1;
+      glow.name = 'lamp-glow';
       g.add(glow);
       o = g;
       break;
@@ -255,6 +263,151 @@ function prop(m: Materials, p: PropSpec, labels: Label[]): THREE.Object3D {
       o = m.mesh(new THREE.DodecahedronGeometry(0.8), P.stone);
       o.position.y = 0.4;
       break;
+    case 'scarecrow': {
+      const g = new THREE.Group();
+      const post = m.mesh(new THREE.BoxGeometry(0.15, 2.4, 0.15), P.timber, false);
+      post.position.y = 1.2;
+      const arms = m.mesh(new THREE.BoxGeometry(1.8, 0.12, 0.12), P.timber, false);
+      arms.position.y = 1.8;
+      const coat = m.mesh(new THREE.ConeGeometry(0.55, 1.1, 6), P.crimson);
+      coat.position.y = 1.5;
+      const head = m.mesh(new THREE.SphereGeometry(0.28, 8, 6), P.gold);
+      head.position.y = 2.3;
+      const hat = m.mesh(new THREE.ConeGeometry(0.45, 0.5, 8), P.ink);
+      hat.position.y = 2.65;
+      g.add(post, arms, coat, head, hat);
+      o = g;
+      break;
+    }
+    case 'haystack':
+      o = m.mesh(new THREE.SphereGeometry(1.1, 10, 7, 0, Math.PI * 2, 0, Math.PI / 2), P.gold);
+      break;
+    case 'cart': {
+      const g = new THREE.Group();
+      const bed = m.mesh(new THREE.BoxGeometry(2.6, 0.5, 1.4), P.timber);
+      bed.position.y = 0.9;
+      bed.rotation.z = 0.12; // the broken axle sags
+      g.add(bed);
+      for (const x of [-0.9, 0.9]) {
+        const wheel = m.mesh(new THREE.TorusGeometry(0.45, 0.08, 6, 14), P.ink, false);
+        wheel.position.set(x, 0.45, 0.75);
+        g.add(wheel);
+      }
+      const fallen = m.mesh(new THREE.TorusGeometry(0.45, 0.08, 6, 14), P.ink, false);
+      fallen.rotation.x = Math.PI / 2;
+      fallen.position.set(0.9, 0.08, -1.1);
+      g.add(fallen);
+      o = g;
+      break;
+    }
+    case 'bed': {
+      const g = new THREE.Group();
+      const frame = m.mesh(new THREE.BoxGeometry(2, 0.5, 3), P.timber);
+      frame.position.y = 0.25;
+      const quilt = m.mesh(new THREE.BoxGeometry(1.8, 0.2, 2.2), c('crimson'), false);
+      quilt.position.set(0, 0.6, 0.3);
+      const pillow = m.mesh(new THREE.BoxGeometry(1.4, 0.2, 0.5), P.light, false);
+      pillow.position.set(0, 0.6, -1.1);
+      g.add(frame, quilt, pillow);
+      o = g;
+      break;
+    }
+    case 'chest': {
+      const g = new THREE.Group();
+      const box = m.mesh(new THREE.BoxGeometry(1.2, 0.7, 0.8), P.timber);
+      box.position.y = 0.35;
+      const band = m.mesh(new THREE.BoxGeometry(1.25, 0.1, 0.85), P.gold, false);
+      band.position.y = 0.55;
+      g.add(box, band);
+      o = g;
+      break;
+    }
+    case 'bench':
+      o = m.mesh(new THREE.BoxGeometry(2, 0.5, 0.6), P.timber);
+      o.position.y = 0.25;
+      break;
+    case 'shelf': {
+      const g = new THREE.Group();
+      const back = m.mesh(new THREE.BoxGeometry(2.2, 2, 0.4), P.timber);
+      back.position.y = 1;
+      g.add(back);
+      for (let i = 0; i < 6; i++) {
+        const jar = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.3, 6), m.toon(i % 2 ? P.gold : P.ember));
+        jar.position.set(-0.8 + i * 0.32, 0.75 + (i % 2) * 0.7, 0.25);
+        g.add(jar);
+      }
+      o = g;
+      break;
+    }
+    case 'shrine': {
+      const g = new THREE.Group();
+      const stone = m.mesh(new THREE.BoxGeometry(0.8, 1.2, 0.5), P.stone);
+      stone.position.y = 0.6;
+      const roof = m.mesh(new THREE.ConeGeometry(0.7, 0.5, 4), P.moss);
+      roof.position.y = 1.45;
+      roof.rotation.y = Math.PI / 4;
+      const offering = new THREE.Mesh(new THREE.SphereGeometry(0.14, 6, 5), m.toon(P.crimson));
+      offering.position.set(0, 0.1, 0.45);
+      g.add(stone, roof, offering);
+      o = g;
+      break;
+    }
+    case 'memorial': {
+      const g = new THREE.Group();
+      const stone = m.mesh(new THREE.CylinderGeometry(0.35, 0.5, 1.8, 6), P.stone);
+      stone.position.y = 0.9;
+      g.add(stone);
+      o = g;
+      break;
+    }
+    case 'boat': {
+      const g = new THREE.Group();
+      const hull = m.mesh(new THREE.CylinderGeometry(0.7, 0.4, 3, 6, 1, false, 0, Math.PI), P.timber);
+      hull.rotation.z = Math.PI / 2;
+      hull.rotation.y = Math.PI / 2;
+      hull.position.y = 0.25;
+      g.add(hull);
+      o = g;
+      break;
+    }
+    case 'flowers': {
+      const g = new THREE.Group();
+      for (let i = 0; i < 7; i++) {
+        const f = new THREE.Mesh(new THREE.SphereGeometry(0.16, 6, 4), m.toon(i % 3 === 0 ? P.gold : i % 3 === 1 ? P.crimson : P.ember));
+        f.position.set(Math.cos(i * 2.4) * 0.6, 0.25, Math.sin(i * 2.4) * 0.6);
+        g.add(f);
+      }
+      o = g;
+      break;
+    }
+    case 'banner': {
+      const g = new THREE.Group();
+      const pole = m.mesh(new THREE.CylinderGeometry(0.05, 0.05, 3.6, 5), P.ink, false);
+      pole.position.y = 1.8;
+      const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 1.4), new THREE.MeshToonMaterial({ color: c('crimson'), side: THREE.DoubleSide }));
+      cloth.position.set(0.42, 2.8, 0);
+      cloth.name = 'banner-cloth';
+      g.add(pole, cloth);
+      o = g;
+      break;
+    }
+    case 'rug': {
+      o = new THREE.Mesh(new THREE.PlaneGeometry(w, d), m.toon(c('crimson')));
+      o.rotation.x = -Math.PI / 2;
+      o.position.y = 0.03;
+      break;
+    }
+    case 'pen': {
+      const g = new THREE.Group();
+      for (const [x, z, len, rot] of [[0, -d / 2, w, 0], [0, d / 2, w, 0], [-w / 2, 0, d, Math.PI / 2], [w / 2, 0, d, Math.PI / 2]] as const) {
+        const rail = m.mesh(new THREE.BoxGeometry(len, 0.12, 0.12), P.timber, false);
+        rail.position.set(x, 0.7, z);
+        rail.rotation.y = rot;
+        g.add(rail);
+      }
+      o = g;
+      break;
+    }
   }
   const holder = new THREE.Group();
   holder.add(o);
@@ -284,6 +437,8 @@ export function buildSection(layout: SceneLayout, m: Materials): BuiltSection {
   layout.backdrops.forEach((b, i) => {
     const plane = backdrop(b.kind, m.color(b.color, 'crimson'), W * 2.4, b.height * 2.2, i * 7 + 3);
     plane.position.set(0, b.height * 0.9, -D / 2 - b.distance + 30);
+    plane.name = 'backdrop';
+    plane.userData.parallax = 0.25 + i * 0.25; // further layers follow the camera more (2.5D depth)
     group.add(plane);
   });
 
@@ -307,5 +462,28 @@ export function buildSection(layout: SceneLayout, m: Materials): BuiltSection {
     exitMarkers.push(ring);
   }
 
-  return { group, labels, nodeMarkers, exitMarkers };
+  const nightLights: THREE.Object3D[] = [];
+  const fires: THREE.PointLight[] = [];
+  group.traverse((o) => {
+    if (o instanceof THREE.PointLight) fires.push(o);
+    if (o.name === 'lamp-glow' || o.name === 'window-glow') nightLights.push(o);
+  });
+
+  const water: THREE.Mesh[] = [];
+  for (const [x0, z0, x1, z1] of layout.water) {
+    const surface = new THREE.Mesh(
+      new THREE.PlaneGeometry(x1 - x0, z1 - z0, 12, 12),
+      new THREE.MeshToonMaterial({ color: m.palette.ink, transparent: true, opacity: 0.92 }),
+    );
+    surface.rotation.x = -Math.PI / 2;
+    surface.position.set((x0 + x1) / 2, 0.06, (z0 + z1) / 2);
+    const shine = new THREE.Mesh(new THREE.PlaneGeometry((x1 - x0) * 0.6, 0.15), new THREE.MeshBasicMaterial({ color: m.palette.gold, transparent: true, opacity: 0.35 }));
+    shine.rotation.x = -Math.PI / 2;
+    shine.position.set((x0 + x1) / 2, 0.08, (z0 + z1) / 2);
+    shine.name = 'water-shine';
+    group.add(surface, shine);
+    water.push(surface);
+  }
+
+  return { group, labels, nodeMarkers, exitMarkers, nightLights, water, fires };
 }

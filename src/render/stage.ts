@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type { Lighting } from './lighting';
 
 /**
  * Presentation layer bootstrap (Three.js).
@@ -47,6 +48,8 @@ export interface Stage {
   readonly renderer: THREE.WebGLRenderer;
   /** Replace the current section's content. */
   setContent(group: THREE.Group, opts: { interior: boolean }): void;
+  /** Apply time-of-day lighting (exteriors). Interiors keep their warm hearth light. */
+  applyLighting(light: Lighting): void;
   /** Elevated three-quarter follow camera. */
   follow(target: THREE.Vector3, dtMs: number): void;
   start(onFrame: (dtMs: number) => void): void;
@@ -98,6 +101,14 @@ export function createStage(container: HTMLElement, P: Palette = PALETTE): Stage
       scene.background = new THREE.Color(interior ? P.ink : P.sky);
       scene.fog = interior ? new THREE.Fog(P.ink, 18, 40) : new THREE.Fog(P.fog, 38, 110);
       hemi.intensity = interior ? 0.75 : 1.1;
+    },
+    applyLighting(light) {
+      if (interior) return;
+      (scene.background as THREE.Color).setHex(light.sky);
+      (scene.fog as THREE.Fog).color.setHex(light.fog);
+      sun.color.setHex(light.sunColor);
+      sun.intensity = light.sunIntensity;
+      hemi.intensity = light.hemiIntensity;
     },
     follow(target, dtMs) {
       const desired = target.clone().add(interior ? offsetIn : offsetOut);

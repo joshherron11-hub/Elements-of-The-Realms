@@ -31,6 +31,14 @@ export function footprint(prop: PropSpec): [number, number] | undefined {
     case 'table': return [2, 1.4];
     case 'hearth': return [1.4, 2.6];
     case 'board': case 'signpost': case 'lamp': return [0.4, 0.4];
+    case 'scarecrow': case 'shrine': case 'memorial': return [0.8, 0.8];
+    case 'haystack': return [2, 2];
+    case 'cart': return [3, 1.6];
+    case 'bed': return [2, 3];
+    case 'chest': return [1.2, 0.8];
+    case 'bench': return [2, 0.6];
+    case 'shelf': return [2.2, 0.6];
+    case 'boat': return [3.2, 1.4];
     default: return undefined;
   }
 }
@@ -38,6 +46,7 @@ export function footprint(prop: PropSpec): [number, number] | undefined {
 function blocked(layout: SceneLayout, p: Vec2): boolean {
   const [hw, hd] = [layout.size[0] / 2, layout.size[1] / 2];
   if (Math.abs(p[0]) > hw - PLAYER_RADIUS || Math.abs(p[1]) > hd - PLAYER_RADIUS) return true;
+  for (const w of layout.water ?? []) if (p[0] > w[0] - PLAYER_RADIUS && p[0] < w[2] + PLAYER_RADIUS && p[1] > w[1] - PLAYER_RADIUS && p[1] < w[3] + PLAYER_RADIUS) return true;
   for (const prop of layout.props) {
     const fp = footprint(prop);
     if (!fp) continue;

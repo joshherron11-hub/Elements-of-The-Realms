@@ -20,9 +20,10 @@ npm run dev
 ```
 Then open **http://localhost:5173** in a browser. You arrive in Blackmere Town Square.
 
-**Controls:** WASD / arrows move · Shift run · E talk / gather · F search ·
-I inventory · J journal · C companions · 1–6 switch mode · K save · L load last save ·
-N new game · Esc close panel
+**Controls:** WASD / arrows or click to move · Shift run · E talk / read / gather / tend stall ·
+F search · I inventory · J journal · C companions · 1–6 switch mode · M sound on/off ·
+K save · L load last save · N new game · Esc close panel.
+On a phone or narrow window: tap to walk, joystick bottom-left, action buttons bottom-right.
 
 The game autosaves to your browser every 30 seconds. Reopen the page to continue where you left off.
 
@@ -99,7 +100,7 @@ TypeScript (strict) · Vite · Vitest · Three.js · Playwright (smoke test only
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — kernel design and layering
 - [`CANON_GUARDRAILS.md`](CANON_GUARDRAILS.md) — rules the platform must never break
 - [`docs/KERNEL.md`](docs/KERNEL.md) · [`docs/CANONICAL.md`](docs/CANONICAL.md) · [`docs/REALMS.md`](docs/REALMS.md) · [`docs/MODES.md`](docs/MODES.md) · [`docs/BLACKMERE.md`](docs/BLACKMERE.md) · [`docs/ECONOMY.md`](docs/ECONOMY.md) · [`docs/FAMILIARS.md`](docs/FAMILIARS.md) · [`docs/CHRONICLE_AND_SAVES.md`](docs/CHRONICLE_AND_SAVES.md) · [`docs/AI_AND_PLATFORM.md`](docs/AI_AND_PLATFORM.md)
-- [`docs/LOOP.md`](docs/LOOP.md) · [`docs/PROVISIONAL.md`](docs/PROVISIONAL.md) · [`docs/BACKLOG.md`](docs/BACKLOG.md)
+- [`docs/LOOP.md`](docs/LOOP.md) · [`docs/LIVING.md`](docs/LIVING.md) · [`docs/PROVISIONAL.md`](docs/PROVISIONAL.md) · [`docs/BACKLOG.md`](docs/BACKLOG.md)
 - [`ROADMAP.md`](ROADMAP.md) — build phases
 - [`CHANGELOG.md`](CHANGELOG.md) — what changed
 - [`CLAUDE.md`](CLAUDE.md) — working agreement for AI contributors
