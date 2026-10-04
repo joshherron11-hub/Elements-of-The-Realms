@@ -3,6 +3,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import type { Lighting } from './lighting';
 import { QUALITY, type GraphicsQuality, type QualitySettings } from './quality';
 
@@ -63,8 +64,8 @@ export interface Stage {
   setContent(group: THREE.Group, opts: { interior: boolean; bounds: [number, number] }): void;
   /** Apply time-of-day lighting (exteriors). Interiors keep their warm hearth light. */
   applyLighting(light: Lighting): void;
-  /** Elevated three-quarter follow camera. */
-  follow(target: THREE.Vector3, dtMs: number): void;
+  /** Elevated three-quarter follow camera. `velocity` (m/s, x/z) leads the frame where you are going. */
+  follow(target: THREE.Vector3, dtMs: number, velocity?: [number, number]): void;
   /** Player zoom, 0.7 (close) … 1.4 (far). */
   zoom(factor: number): void;
   readonly zoomLevel: number;
@@ -100,6 +101,32 @@ function skyDome(): { mesh: THREE.Mesh; top: THREE.Color; horizon: THREE.Color; 
   return { mesh, top, horizon, bottom };
 }
 
+/**
+ * Restrained colour grade (display space): warm highlights, cool shadows, a
+ * gentle S-curve and a touch more saturation. Applied after tone output.
+ */
+const GradeShader = {
+  uniforms: { tDiffuse: { value: null as THREE.Texture | null }, strength: { value: 1 } },
+  vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float strength; varying vec2 vUv;
+    void main() {
+      vec4 c = texture2D(tDiffuse, vUv);
+      // Over-bright glows arrive above 1: clamp first so the curve never flips their hue.
+      vec3 src = clamp(c.rgb, 0.0, 1.0);
+      vec3 col = src;
+      float l = dot(col, vec3(0.299, 0.587, 0.114));
+      // Split tone: violet-blue in the shadows, amber in the highlights.
+      vec3 shadowTint = vec3(0.92, 0.94, 1.05);
+      vec3 lightTint = vec3(1.06, 1.0, 0.9);
+      col *= mix(shadowTint, lightTint, smoothstep(0.15, 0.75, l));
+      // Gentle S-curve around mid grey, and a little extra colour.
+      col = mix(col, col * col * (3.0 - 2.0 * col), 0.35);
+      float g = dot(col, vec3(0.299, 0.587, 0.114));
+      col = mix(vec3(g), col, 1.1);
+      gl_FragColor = vec4(mix(src, clamp(col, 0.0, 1.0), strength), c.a);
+    }`,
+};
+
 export function createStage(container: HTMLElement, P: Palette = PALETTE, quality: GraphicsQuality = 'high'): Stage {
   let settings = QUALITY[quality];
   const scene = new THREE.Scene();
@@ -116,8 +143,13 @@ export function createStage(container: HTMLElement, P: Palette = PALETTE, qualit
   container.appendChild(canvas);
 
   // Warm key light, cool violet fill from below: the core of the look.
-  const hemi = new THREE.HemisphereLight(0xffe2c0, 0x3c3a66, 1.1);
+  // The sky fill is cool, so wherever the warm sun is blocked, shadows read blue-violet.
+  const OUT_SKY = 0xbcc2ee;
+  const OUT_GROUND = 0x4a3c50;
+  const hemi = new THREE.HemisphereLight(OUT_SKY, OUT_GROUND, 1.1);
   const sun = new THREE.DirectionalLight(0xffb070, 1.7);
+  (sun.shadow as THREE.LightShadow & { intensity?: number }).intensity = 0.82; // shadows are deep, never ink-black
+  sun.shadow.radius = 3;
   const sunOffset = new THREE.Vector3(-16, 26, 12);
   sun.shadow.bias = -0.0006;
   sun.shadow.normalBias = 0.04;
@@ -134,6 +166,9 @@ export function createStage(container: HTMLElement, P: Palette = PALETTE, qualit
 
   let composer: EffectComposer | undefined;
   let bloom: UnrealBloomPass | undefined;
+  let grade: ShaderPass | undefined;
+  const lead = new THREE.Vector3();
+  let runZoom = 1;
 
   let content: THREE.Group | undefined;
   let interior = false;
@@ -168,7 +203,13 @@ export function createStage(container: HTMLElement, P: Palette = PALETTE, qualit
       bloom = new UnrealBloomPass(new THREE.Vector2(w / 2, h / 2), 0.55, 0.45, 1.0);
       composer.addPass(bloom);
       composer.addPass(new OutputPass());
+      grade = new ShaderPass(GradeShader);
+      composer.addPass(grade);
     }
+    if (bloom) bloom.enabled = settings.bloom;
+    if (grade) grade.enabled = settings.grading;
+    // LOW: a cheap compositor-side grade instead of a post pass.
+    canvas.style.filter = settings.grading ? '' : 'saturate(1.08) contrast(1.05)';
     onResize();
   };
 
@@ -192,7 +233,9 @@ export function createStage(container: HTMLElement, P: Palette = PALETTE, qualit
   const offset = (): THREE.Vector3 => {
     const portrait = camera.aspect < 1;
     const pitch = THREE.MathUtils.degToRad(interior ? 54 : 39);
-    const dist = (interior ? 18.5 : 21) * (portrait ? 1.22 : 1) * zoomLevel;
+    // Indoors the camera pulls back just enough to fit the room's width.
+    const indoor = THREE.MathUtils.clamp(bounds[0] * 1.85, 14.5, 19.5);
+    const dist = (interior ? indoor : 21) * (portrait ? 1.22 : 1) * zoomLevel * runZoom;
     return new THREE.Vector3(0, Math.sin(pitch) * dist, Math.cos(pitch) * dist);
   };
 
@@ -224,16 +267,17 @@ export function createStage(container: HTMLElement, P: Palette = PALETTE, qualit
         sky.top.copy(dark);
         sky.horizon.copy(dark);
         sky.bottom.copy(dark);
-        scene.fog = new THREE.Fog(0x1d120d, 20, 46);
-        hemi.color.setHex(0xffc890);
-        hemi.groundColor.setHex(0x2a2440);
-        hemi.intensity = 0.55;
-        sun.color.setHex(0xffb878);
-        sun.intensity = 0.55;
+        // Interiors: hearth-warm fill from above, a warm bounce from the floor, no cold light at all.
+        scene.fog = new THREE.Fog(0x2a1810, 22, 50);
+        hemi.color.setHex(0xffcf9a);
+        hemi.groundColor.setHex(0x5a3020);
+        hemi.intensity = 0.85;
+        sun.color.setHex(0xffc080);
+        sun.intensity = 0.7;
       } else {
-        scene.fog = new THREE.Fog(P.fog, 36, 120);
-        hemi.color.setHex(0xffe2c0);
-        hemi.groundColor.setHex(0x3c3a66);
+        scene.fog = new THREE.Fog(P.fog, 40, 125);
+        hemi.color.setHex(OUT_SKY);
+        hemi.groundColor.setHex(OUT_GROUND);
       }
     },
     applyLighting(light) {
@@ -244,17 +288,24 @@ export function createStage(container: HTMLElement, P: Palette = PALETTE, qualit
       (scene.fog as THREE.Fog).color.setHex(light.fog);
       sun.color.setHex(light.sunColor);
       sun.intensity = light.sunIntensity;
-      // Fill stays low so the warm key light and the cool shadow side both read.
-      hemi.intensity = light.hemiIntensity * 0.72;
+      // Fill stays lower than the key so the warm lit side and the cool shadow side both read.
+      hemi.intensity = light.hemiIntensity * 0.78;
     },
-    follow(target, dtMs) {
+    follow(target, dtMs, velocity) {
+      // Lead the frame a little in the direction of travel (smoothly), and ease out when running.
+      const v = velocity ?? [0, 0];
+      const speed = Math.hypot(v[0], v[1]);
+      const want = new THREE.Vector3(v[0], 0, v[1]).multiplyScalar(interior ? 0.12 : 0.32);
+      if (want.length() > 2.4) want.setLength(2.4);
+      lead.lerp(want, 1 - Math.exp(-dtMs / 450));
+      runZoom += ((speed > 7 ? 1.07 : 1) - runZoom) * (1 - Math.exp(-dtMs / 600));
       // Frame the player low-centre so the view looks ahead, and keep the frame inside the section.
       const [bx, bz] = bounds;
       const margin = interior ? 3 : 6;
       focus.set(
-        THREE.MathUtils.clamp(target.x, -bx + margin, bx - margin),
+        THREE.MathUtils.clamp(target.x + lead.x, -bx + margin, bx - margin),
         target.y + 1.1,
-        THREE.MathUtils.clamp(target.z - (interior ? 0.6 : 1.6), -bz + margin, bz - margin),
+        THREE.MathUtils.clamp(target.z + lead.z - (interior ? 0.6 : 1.6), -bz + margin, bz - margin),
       );
       if (interior) {
         // Small rooms: stay centred enough that walls never fill the frame.
@@ -262,7 +313,7 @@ export function createStage(container: HTMLElement, P: Palette = PALETTE, qualit
         focus.z = THREE.MathUtils.lerp(focus.z, 0, 0.25);
       }
       const desired = focus.clone().add(offset());
-      const k = first ? 1 : 1 - Math.exp(-dtMs / 160);
+      const k = first ? 1 : 1 - Math.exp(-dtMs / 190);
       first = false;
       camera.position.lerp(desired, k);
       lookAt.lerp(focus, k);

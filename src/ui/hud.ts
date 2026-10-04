@@ -62,7 +62,16 @@ const CSS = `
 #hud-guide { left: calc(14px + var(--safe-l)); top: calc(150px + var(--safe-t)); max-width: min(340px, calc(100vw - 28px)); padding: 9px 13px; font-size: 14px; line-height: 1.35; display: none; box-sizing: border-box; }
 #hud-guide b { color: var(--gold); font-family: var(--display); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; display: block; margin-bottom: 2px; }
 #hud-help { position: absolute; left: calc(14px + var(--safe-l)); bottom: calc(12px + var(--safe-b)); font-size: 12px; color: var(--muted); text-shadow: 0 1px 2px #000; max-width: calc(100vw - 230px); }
+#hud-help { display: flex; align-items: center; gap: 10px; pointer-events: auto; }
+#hud-help .keys { display: none; }
+#hud-help.open .keys { display: block; }
+#hud-root #hud-help .help-toggle { background: rgba(18,12,12,0.72); color: var(--cream); border: 1px solid var(--line); border-radius: 16px; padding: 4px 11px; font-size: 12px; box-shadow: none; flex: none; }
 #hud-help span { margin-right: 10px; white-space: nowrap; display: inline-block; }
+#hud-root #hud-modes button kbd { font: 600 10px var(--serif); opacity: 0.7; margin-right: 5px; padding: 0 4px; border-radius: 4px; border: 1px solid currentColor; }
+#hud-root.touch #hud-modes button kbd { display: none; }
+#hud-prompt { animation: promptIn 0.22s ease-out; }
+@keyframes promptIn { from { opacity: 0; transform: translate(-50%, 6px); } to { opacity: 1; transform: translate(-50%, 0); } }
+#hud-prompt b { display: inline-block; min-width: 22px; padding: 1px 7px; margin-right: 9px; border-radius: 6px; text-align: center; background: linear-gradient(180deg, #f2c463, #d99a34); color: var(--ink) !important; box-shadow: 0 2px 0 rgba(0,0,0,0.45); }
 #hud-help kbd { font-family: var(--serif); font-size: 11px; padding: 0 5px; border-radius: 4px; border: 1px solid rgba(246,234,214,0.35); background: rgba(18,12,12,0.55); color: var(--cream); }
 #hud-toasts { position: absolute; left: 50%; top: calc(14px + var(--safe-t)); transform: translateX(-50%); display: flex; flex-direction: column; gap: 6px; align-items: center; width: min(460px, calc(100vw - 32px)); }
 #hud-toasts .toast { position: relative; padding: 8px 16px; font-size: 15px; text-align: center; animation: toastIn 0.25s ease-out; }
@@ -110,20 +119,20 @@ const CSS = `
 #hud-root.touch #hud-touch { display: block; }
 #hud-touch .pad { position: absolute; left: calc(18px + var(--safe-l)); bottom: calc(18px + var(--safe-b)); width: 116px; height: 116px; border-radius: 50%; background: radial-gradient(circle, rgba(18,12,12,0.25), rgba(18,12,12,0.55)); border: 2px solid rgba(232,176,74,0.55); pointer-events: auto; touch-action: none; }
 #hud-touch .knob { position: absolute; left: 35px; top: 35px; width: 46px; height: 46px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #f6d07a, #c88a2a); box-shadow: 0 3px 8px rgba(0,0,0,0.45); pointer-events: none; }
-#hud-touch .acts { position: absolute; right: calc(14px + var(--safe-r)); bottom: calc(16px + var(--safe-b)); display: grid; grid-template-columns: repeat(3, 58px); gap: 7px; pointer-events: auto; }
-#hud-root #hud-touch .acts button { height: 42px; padding: 0; font-size: 13px; border-radius: 12px; touch-action: manipulation; background: rgba(28,18,16,0.82); color: var(--cream); border: 1px solid var(--line); }
+#hud-touch .acts { position: absolute; right: calc(14px + var(--safe-r)); bottom: calc(16px + var(--safe-b)); display: grid; grid-template-columns: repeat(3, 60px); gap: 8px; pointer-events: auto; }
+#hud-root #hud-touch .acts button { height: 48px; padding: 0; font-size: 13px; border-radius: 12px; touch-action: manipulation; background: rgba(28,18,16,0.82); color: var(--cream); border: 1px solid var(--line); }
 #hud-root #hud-touch .acts button.big { grid-column: span 3; height: 50px; font: 700 17px var(--display); letter-spacing: 0.08em; background: linear-gradient(180deg, #f2c463, #d99a34); color: var(--ink); border: 0; }
 #hud-root.touch #hud-help { display: none; }
 #hud-root.touch #hud-map { bottom: auto; top: calc(12px + var(--safe-t)); }
 #hud-root.touch #hud-map canvas { width: 104px !important; height: 104px !important; }
-#hud-root.touch #hud-modes { top: auto; right: auto; left: 50%; transform: translateX(-50%); bottom: calc(176px + var(--safe-b)); max-width: calc(100vw - 24px); }
+#hud-root.touch #hud-modes { top: auto; right: auto; left: 50%; transform: translateX(-50%); bottom: calc(192px + var(--safe-b)); max-width: calc(100vw - 24px); }
 #hud-root.touch #hud-tools { top: calc(142px + var(--safe-t)); }
 #hud-root.touch #hud-objectives { display: none !important; }
-#hud-root.touch #hud-prompt { bottom: calc(222px + var(--safe-b)); }
+#hud-root.touch #hud-prompt { bottom: calc(240px + var(--safe-b)); }
 #hud-root.touch #hud-status { max-width: calc(100vw - 150px); min-width: 0; padding: 8px 11px; }
 #hud-root.touch #hud-status .loc { font-size: 17px; }
 #hud-root.touch #hud-status .meta { display: none; }
-#hud-root.touch #hud-guide { top: auto; bottom: calc(222px + var(--safe-b)); left: 50%; transform: translateX(-50%); width: calc(100vw - 24px); max-width: 420px; font-size: 12.5px; padding: 6px 11px; line-height: 1.3; }
+#hud-root.touch #hud-guide { top: auto; bottom: calc(240px + var(--safe-b)); left: 50%; transform: translateX(-50%); width: calc(100vw - 24px); max-width: 420px; font-size: 12.5px; padding: 6px 11px; line-height: 1.3; }
 #hud-root.touch #hud-guide b { display: inline; margin-right: 4px; }
 #hud-root.touch.has-prompt #hud-guide { display: none !important; }
 @media (max-width: 640px) {
@@ -181,12 +190,17 @@ export class Hud {
     this.qualityButton = el('button', { id: 'hud-gfx', textContent: 'Graphics', title: 'Graphics quality (G)' });
     tools.append(this.soundButton, this.qualityButton);
     this.touch = el('div', { id: 'hud-touch' });
-    const help = el('div', { id: 'hud-help' });
+    const help = el('div', { id: 'hud-help', className: 'open' });
+    const helpToggle = el('button', { className: 'help-toggle', textContent: '⌨ Controls' });
+    helpToggle.onclick = () => help.classList.toggle('open');
+    const keysEl = el('div', { className: 'keys' });
+    help.append(helpToggle, keysEl);
+    setTimeout(() => help.classList.remove('open'), 15000);
     const keys: [string, string][] = [['WASD', 'move'], ['Click', 'walk'], ['Shift', 'run'], ['E', 'interact'], ['F', 'search'], ['I', 'bag'], ['J', 'journal'], ['C', 'companions'], ['1–6', 'modes'], ['Wheel', 'zoom'], ['M', 'sound'], ['G', 'graphics'], ['K', 'save'], ['Esc', 'close']];
     for (const [k, what] of keys) {
       const item = el('span');
       item.append(el('kbd', { textContent: k }), document.createTextNode(` ${what}`));
-      help.append(item);
+      keysEl.append(item);
     }
     this.root.append(vignette, this.labels, this.status, this.guideEl, this.objectivesEl, this.modes, tools, this.map, this.promptEl, this.toasts, this.touch, this.panel, help);
     parent.appendChild(this.root);
@@ -201,14 +215,17 @@ export class Hud {
       el('div', { className: 'loc', textContent: s.location }),
       ...(s.clock ? [el('div', { className: 'clock', textContent: s.clock })] : []),
       chips,
-      el('div', { className: 'meta', textContent: s.rules }),
     );
+    // Server rules are reference, not something to read every second: keep them in a tooltip.
+    this.status.title = s.rules;
   }
 
-  setModes(modes: { key: string; label: string; active: boolean; onChoose: () => void }[]): void {
+  setModes(modes: { key: string; label: string; hotkey?: string; active: boolean; onChoose: () => void }[]): void {
     this.modes.innerHTML = '';
     for (const m of modes) {
-      const b = el('button', { textContent: m.label, className: m.active ? 'active' : '' }) as HTMLButtonElement;
+      const b = el('button', { className: m.active ? 'active' : '', title: m.hotkey ? `${m.label} (${m.hotkey})` : m.label }) as HTMLButtonElement;
+      if (m.hotkey) b.append(el('kbd', { textContent: m.hotkey }));
+      b.append(document.createTextNode(m.label));
       b.onclick = m.onChoose;
       this.modes.appendChild(b);
     }

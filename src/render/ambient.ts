@@ -5,7 +5,7 @@ import { animateFigure, createAnimal, createFigure } from './figures';
 import type { ExtraSpec, SceneLayout, Vec2 } from './layout';
 import type { Lighting } from './lighting';
 import type { Materials } from './materials';
-import { leafSprite, softDisc } from './textures';
+import { leafSprite, mistBand, softDisc } from './textures';
 
 /**
  * Ambient life: presentation only. Leaves drift, dust motes hang in the light,
@@ -59,6 +59,9 @@ export class Ambient {
   private readonly glowMats = new Set<THREE.MeshBasicMaterial>();
   private readonly flames: THREE.Object3D[] = [];
   private readonly halos: THREE.Sprite[] = [];
+  private readonly birds: { mesh: THREE.Mesh; flock: number; dx: number; dz: number; phase: number }[] = [];
+  private readonly mists: THREE.Mesh[] = [];
+  private readonly flags: THREE.Object3D[] = [];
   private readonly exitGlows: THREE.Mesh[] = [];
   private readonly glints: THREE.Mesh[] = [];
 
@@ -67,6 +70,7 @@ export class Ambient {
     private readonly m: Materials,
     private readonly built: BuiltSection,
     density = 1,
+    opts: { mist?: boolean } = {},
   ) {
     const group = built.group;
     const P = m.palette;
@@ -125,7 +129,34 @@ export class Ambient {
       group.add(this.fireflies);
     }
 
+    if (!layout.interior) {
+      // Distant birds: small V shapes gliding in loose flocks across the upper frame by day.
+      const v = new THREE.BufferGeometry();
+      v.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, -0.55, 0.12, -0.12, -0.12, 0, -0.05, 0, 0, 0, 0.12, 0, -0.05, 0.55, 0.12, -0.12], 3));
+      const ink = new THREE.MeshBasicMaterial({ color: 0x2a2028, side: THREE.DoubleSide, fog: false });
+      const flocks = density >= 1 ? 2 : 1;
+      for (let f = 0; f < flocks; f++) {
+        for (let i = 0; i < 6; i++) {
+          const mesh = new THREE.Mesh(v, ink);
+          mesh.scale.setScalar(1.2);
+          group.add(mesh);
+          this.birds.push({ mesh, flock: f, dx: (i % 3) * 1.4 - 1.4 + hash(i + f) * 0.8, dz: Math.floor(i / 3) * 1.2 + hash(i * 3 + f), phase: hash(i * 7 + f) * 6 });
+        }
+      }
+      if (opts.mist) {
+        // Painterly mist: soft bands between the town and the painted hills.
+        for (let k = 0; k < 3; k++) {
+          const mesh = new THREE.Mesh(new THREE.PlaneGeometry(W * 2.6, 9), new THREE.MeshBasicMaterial({ map: mistBand(), color: 0xe8d8d0, transparent: true, opacity: 0.32 - k * 0.06, depthWrite: false, fog: false }));
+          mesh.position.set(0, 3.2 + k * 1.6, -D / 2 - 6 - k * 10);
+          mesh.name = 'mist';
+          group.add(mesh);
+          this.mists.push(mesh);
+        }
+      }
+    }
+
     group.traverse((o) => {
+      if (o.name === 'bunting') for (const f of o.children) this.flags.push(f);
       if (o.name === 'banner-cloth' || o.name === 'bunting') this.swaying.push(o);
       if (o.name === 'flame') this.flames.push(o);
       if (o.name === 'lamp-halo') this.halos.push(o as THREE.Sprite);
@@ -180,7 +211,7 @@ export class Ambient {
       } else if (e.spec.at) {
         const home: Vec2 = e.spec.at;
         const slot = Math.floor((t + e.seed) / 3);
-        const wander = e.spec.kind === 'chicken' || e.spec.kind === 'sheep' || e.spec.kind === 'cat' ? 1.2 : e.spec.kind === 'crow' ? 0.6 : 0;
+        const wander = e.spec.kind === 'chicken' || e.spec.kind === 'sheep' || e.spec.kind === 'cat' ? 1.2 : e.spec.kind === 'crow' ? 0.6 : e.spec.activity === 'browse' ? 0.35 : 0;
         const tx = home[0] + (hash(slot + e.seed) - 0.5) * 2 * wander;
         const tz = home[1] + (hash(slot + e.seed + 50) - 0.5) * 2 * wander;
         const dx = tx - e.obj.position.x;
@@ -192,12 +223,15 @@ export class Ambient {
           walk = Math.min(1, Math.hypot(dx, dz) * 1.5);
         }
         if (e.spec.kind === 'patron') e.obj.rotation.y = (e.spec.face ?? 0) + Math.sin(t * 0.3 + e.seed) * 0.25;
+        else if (e.spec.face !== undefined && walk < 0.2) e.obj.rotation.y = e.spec.face + Math.sin(t * 0.25 + e.seed) * 0.15;
       }
       animateFigure(e.obj, {
         t,
         walk,
         seated: e.spec.kind === 'patron',
-        talking: e.spec.kind === 'patron' && Math.sin(t * 0.4 + e.seed) > 0.3,
+        talking: (e.spec.kind === 'patron' || e.spec.activity === 'chat') && Math.sin(t * 0.4 + e.seed) > 0.1,
+        look: e.spec.activity === 'browse' ? Math.sin(t * 0.35 + e.seed) * 0.6 : undefined,
+        dt,
         sniff: e.spec.kind === 'chicken' && Math.sin(t * 2.5 + e.seed) > 0.2, // pecking
         joy: e.spec.kind === 'crow' ? Math.max(0, Math.sin(t * 1.5 + e.seed)) * 0.4 : 0,
       });
@@ -250,7 +284,30 @@ export class Ambient {
       this.fireflies.position.y = Math.sin(t * 0.8) * 0.3;
     }
 
-    for (const b of this.swaying) b.rotation.y = Math.sin(t * 1.6 + b.position.x) * (b.name === 'bunting' ? 0.12 : 0.35);
+    // Cloth: banners sway and ripple; each bunting flag flutters on its own beat.
+    for (const b of this.swaying) {
+      b.rotation.y = Math.sin(t * 1.6 + b.position.x) * (b.name === 'bunting' ? 0.12 : 0.35);
+      if (b.name === 'banner-cloth') b.rotation.x = Math.sin(t * 2.7 + b.position.x * 3) * 0.07;
+    }
+    for (const [i, f] of this.flags.entries()) f.rotation.x = Math.sin(t * 3.1 + i * 0.9) * 0.28 + Math.sin(t * 7.3 + i) * 0.06;
+    // Birds by day: flocks circle slowly beyond the frame's centre, wings beating then gliding.
+    const day = hour >= 6 && hour < 19.5;
+    for (const b of this.birds) {
+      b.mesh.visible = day;
+      if (!day) continue;
+      // Low enough to cross the frame from this elevated view (seen from above, as from a rooftop).
+      const a = t * 0.06 + b.flock * 2.4;
+      const cx = camera.position.x + Math.cos(a) * 20;
+      const cz = camera.position.z - 24 + Math.sin(a) * 9;
+      b.mesh.position.set(cx + b.dx * 1.5, 9 + b.flock * 1.5 + Math.sin(t * 0.7 + b.phase) * 0.5, cz + b.dz * 1.5);
+      b.mesh.rotation.y = Math.atan2(-Math.sin(a), Math.cos(a)) + Math.PI / 2;
+      const beat = Math.sin(t * 9 + b.phase);
+      b.mesh.scale.set(1.2, 1.2 * (Math.sin(t * 0.6 + b.phase) > 0 ? beat * 1.2 : 0.4), 1.2);
+    }
+    for (const mist of this.mists) {
+      (mist.material as THREE.MeshBasicMaterial).color.setHex(light.fog).lerp(new THREE.Color(0xffffff), 0.45);
+      mist.position.x = Math.sin(t * 0.02 + mist.position.z) * 4 + camera.position.x * 0.3;
+    }
     for (const f of this.built.fires) f.intensity = (this.layout.interior ? 7 : 5) + Math.sin(t * 11) * 0.8 + Math.sin(t * 23) * 0.5;
     for (const f of this.flames) f.scale.set(1 + Math.sin(t * 13 + f.position.x) * 0.08, 1 + Math.sin(t * 17) * 0.15, 1);
     // Windows and lamps: dim and warm by day, over-bright gold (and blooming) by night.

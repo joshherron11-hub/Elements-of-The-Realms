@@ -1230,6 +1230,108 @@
     1.6,
     1.4
    ]
+  },
+  {
+   "type": "flowers",
+   "at": [
+    -1.9,
+    1.9
+   ]
+  },
+  {
+   "type": "flowers",
+   "at": [
+    1.7,
+    -1.9
+   ]
+  },
+  {
+   "type": "flowers",
+   "at": [
+    -1.8,
+    -1.8
+   ]
+  },
+  {
+   "type": "lamp",
+   "at": [
+    -2.9,
+    -2.4
+   ]
+  },
+  {
+   "type": "lamp",
+   "at": [
+    -8.4,
+    -10.4
+   ],
+   "variant": "double"
+  },
+  {
+   "type": "bunting",
+   "at": [
+    -23,
+    4.6
+   ],
+   "size": [
+    7,
+    0.3,
+    3.2
+   ],
+   "variant": "laundry"
+  },
+  {
+   "type": "bunting",
+   "at": [
+    -31,
+    4.6
+   ],
+   "size": [
+    6,
+    0.3,
+    3.0
+   ],
+   "variant": "laundry"
+  },
+  {
+   "type": "basket",
+   "at": [
+    16.2,
+    -3.6
+   ],
+   "variant": "apples"
+  },
+  {
+   "type": "basket",
+   "at": [
+    22.8,
+    -3.6
+   ],
+   "variant": "eggs"
+  },
+  {
+   "type": "crate",
+   "at": [
+    11.8,
+    -6.4
+   ],
+   "variant": "closed"
+  },
+  {
+   "type": "basket",
+   "at": [
+    22.9,
+    3.5
+   ],
+   "variant": "empty"
+  },
+  {
+   "type": "sack",
+   "at": [
+    30.4,
+    -4.6
+   ],
+   "variant": "open"
   }
  ],
  "spots": {
@@ -1491,6 +1593,118 @@
     10.6
    ],
    "color": "ink"
+  },
+  {
+   "kind": "villager",
+   "at": [
+    13.6,
+    -2.9
+   ],
+   "color": "crimson",
+   "hours": [
+    8,
+    18
+   ],
+   "face": 3.141592653589793,
+   "activity": "browse"
+  },
+  {
+   "kind": "villager",
+   "at": [
+    21.4,
+    -2.9
+   ],
+   "color": "moss",
+   "hours": [
+    9,
+    17
+   ],
+   "face": 3.141592653589793,
+   "activity": "browse"
+  },
+  {
+   "kind": "villager",
+   "at": [
+    14.4,
+    2.9
+   ],
+   "color": "gold",
+   "hours": [
+    9,
+    18
+   ],
+   "face": 0,
+   "activity": "browse"
+  },
+  {
+   "kind": "villager",
+   "at": [
+    -4.6,
+    5.4
+   ],
+   "color": "ember",
+   "hours": [
+    8,
+    19
+   ],
+   "face": 1.5707963267948966,
+   "activity": "chat"
+  },
+  {
+   "kind": "villager",
+   "at": [
+    -3.2,
+    5.4
+   ],
+   "color": "stone",
+   "hours": [
+    8,
+    19
+   ],
+   "face": -1.5707963267948966,
+   "activity": "chat"
+  },
+  {
+   "kind": "villager",
+   "at": [
+    -14.2,
+    1.0
+   ],
+   "color": "moss",
+   "hours": [
+    10,
+    20
+   ],
+   "face": 1.5707963267948966,
+   "activity": "chat"
+  },
+  {
+   "kind": "villager",
+   "at": [
+    -12.8,
+    1.0
+   ],
+   "color": "crimson",
+   "hours": [
+    10,
+    20
+   ],
+   "face": -1.5707963267948966,
+   "activity": "chat"
+  },
+  {
+   "kind": "crow",
+   "at": [
+    3.0,
+    -5.6
+   ]
+  },
+  {
+   "kind": "crow",
+   "at": [
+    -6.5,
+    7.4
+   ]
   }
  ],
  "ambient": {

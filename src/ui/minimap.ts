@@ -12,6 +12,8 @@ export interface MinimapMarks {
   pets: Vec2[];
   readables: Vec2[];
   currentZone?: string;
+  /** Place names written on the map (zones, landmarks). */
+  places?: { text: string; at: Vec2 }[];
 }
 
 const ZONE_COLORS = ['#6f7a40', '#8a4a33', '#5e5868', '#a07a4a', '#7a5a34'];
@@ -83,6 +85,17 @@ export class Minimap {
     for (const r of marks.readables) dot(r, 3.5, '#e8b04a');
     for (const p of marks.pets) dot(p, 5, '#f6ead6');
     for (const n of marks.npcs) dot(n, 6.5, '#e2683a');
+    // Place names, small caps with a dark halo so they read over any colour.
+    c.font = `600 ${Math.round(S * 0.045)}px Georgia, serif`;
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    for (const pl of marks.places ?? []) {
+      c.lineWidth = 4;
+      c.strokeStyle = 'rgba(10,6,6,0.85)';
+      c.strokeText(pl.text, px(pl.at[0]), pz(pl.at[1]));
+      c.fillStyle = '#f6e6c6';
+      c.fillText(pl.text, px(pl.at[0]), pz(pl.at[1]));
+    }
     // Player: a bright arrow with an outline, pointing where they face.
     c.save();
     c.translate(px(marks.player[0]), pz(marks.player[1]));

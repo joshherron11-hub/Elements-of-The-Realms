@@ -38,6 +38,7 @@ export const PROP_VARIANTS: Partial<Record<PropType, readonly string[]>> = {
   cart: ['broken', 'loaded', 'hand'],
   banner: ['pole', 'wall'],
   wheelbarrow: ['empty', 'hay', 'pumpkins'],
+  bunting: ['flags', 'laundry'],
 };
 
 export interface PropSpec {
@@ -82,6 +83,8 @@ export interface ExtraSpec {
   color?: string;
   /** Which way a seated or standing extra faces (radians; 0 = towards the camera). */
   face?: number;
+  /** What a standing extra is doing: chatting (gestures), browsing a stall, or just standing. */
+  activity?: 'chat' | 'browse' | 'stand';
 }
 
 export interface AmbientSpec {
@@ -205,10 +208,11 @@ export function parseSceneLayout(raw: unknown, source = 'scene'): Result<SceneLa
   });
   layout.extras = v.arr(o.extras ?? [], 'extras', (x, p) => {
     const e = v.obj(x, p);
-    v.noExtraKeys(e, ['kind', 'at', 'path', 'hours', 'color', 'face'], p);
+    v.noExtraKeys(e, ['kind', 'at', 'path', 'hours', 'color', 'face', 'activity'], p);
     const spec: ExtraSpec = { kind: v.oneOf(e.kind, ['villager', 'patron', 'chicken', 'sheep', 'crow', 'cat'] as const, `${p}.kind`), color: v.optStr(e.color, `${p}.color`) };
     if (e.at !== undefined) spec.at = vec(e.at, `${p}.at`);
     if (e.face !== undefined) spec.face = v.num(e.face, `${p}.face`, -7, 7);
+    if (e.activity !== undefined) spec.activity = v.oneOf(e.activity, ['chat', 'browse', 'stand'] as const, `${p}.activity`);
     if (e.path !== undefined) spec.path = v.arr(e.path, `${p}.path`, (q, qp) => vec(q, qp));
     if (e.hours !== undefined) {
       const h = v.arr(e.hours, `${p}.hours`, (n, np) => v.num(n, np, 0, 24));

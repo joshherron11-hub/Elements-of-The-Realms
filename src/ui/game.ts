@@ -417,7 +417,7 @@ export class Game {
     this.section.group.add(this.player);
     this.tapRing.visible = false;
     this.section.group.add(this.tapRing);
-    this.ambient = new Ambient(layout, this.materials, this.section, this.stage.settings.density);
+    this.ambient = new Ambient(layout, this.materials, this.section, this.stage.settings.density, { mist: this.stage.settings.mist });
     this.pos = [...at];
     this.trail = [[...at]];
     this.walkTarget = null;
@@ -750,6 +750,7 @@ export class Game {
       }
     }
     const movingNow = !!(ax || az);
+    const startPos: Vec2 = [...this.pos];
     if (movingNow) {
       const speed = (running ? RUN : WALK) * (dt / 1000);
       const before = this.pos;
@@ -795,7 +796,9 @@ export class Game {
     this.applyLighting();
     this.ambient?.update(dt, performance.now(), this.hourNow(), this.light, this.stage.camera);
     this.updatePrompt();
-    this.stage.follow(this.player.position, dt);
+    const sec = Math.max(0.001, dt / 1000);
+    const vel: [number, number] = this.layout && dist(startPos, this.pos) < 3 ? [(this.pos[0] - startPos[0]) / sec, (this.pos[1] - startPos[1]) / sec] : [0, 0];
+    this.stage.follow(this.player.position, dt, vel);
     this.coinFeedback();
     this.updateLabels();
     this.updateStatus();
@@ -814,6 +817,12 @@ export class Game {
         npcs: this.npcs.map((n) => n.at),
         pets: this.pets.map((p) => p.at),
         readables: [...this.layout.readables.map((r) => r.at), ...Object.values(this.layout.stalls)],
+        places: this.layout.interior
+          ? []
+          : this.layout.zones.map((z) => ({
+              text: (this.sim.state.locations[z.locationId]?.name ?? '').replace(/^(Blackmere|The) /, '').replace(/ (Edge|Gatehouse)$/, ''),
+              at: [(z.rect[0] + z.rect[2]) / 2, (z.rect[1] + z.rect[3]) / 2] as Vec2,
+            })),
         currentZone: this.sim.state.actors[this.playerId]?.locationId,
       });
       this.hud.mapTitle(this.sim.state.locations[this.sim.state.actors[this.playerId]?.locationId ?? '']?.name ?? this.layout.name);
@@ -1022,7 +1031,8 @@ export class Game {
     this.hud.setModes(
       this.implementedModes().map((key, i) => ({
         key,
-        label: `${i + 1} ${this.sim.modes.definition(key)!.name}`,
+        label: this.sim.modes.definition(key)!.name,
+        hotkey: String(i + 1),
         active: key === current,
         onChoose: () => this.enterMode(key),
       })),

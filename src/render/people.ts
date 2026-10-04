@@ -173,7 +173,7 @@ function hat(a: Assembly, m: Materials, k: number, look: PersonLook, seed: numbe
 /** Something carried in the right hand; returned as its own group so it can be attached to the hand. */
 function heldItem(m: Materials, k: number, look: PersonLook): THREE.Group | undefined {
   const P = m.palette;
-  const a = m.kit(0.025);
+  const a = m.figureKit(0.025);
   const g = new THREE.Group();
   switch (look.held) {
     case 'tankard':
@@ -253,7 +253,7 @@ export function createPerson(m: Materials, look: PersonLook, seedIn = 1): THREE.
   const leg = (x: number) => {
     const pivot = new THREE.Group();
     pivot.position.set(x * w, hip, 0);
-    const a = m.kit(0.03);
+    const a = m.figureKit(0.03);
     a.add(uvScale(lathe(L([[0.1, -0.66], [0.12, -0.45], [0.15, -0.12], [0.16, 0]]), 10), 3, 1), cloth(m, look.colors.legs));
     const boot: [number, number][] = [[-0.12, 0], [0.24, 0], [0.29, 0.06], [0.22, 0.13], [0.08, 0.15], [0.07, 0.34], [-0.12, 0.34]];
     a.add(slab(L(boot), 0.22 * k, 0.02 * k), m.character(LEATHER), { p: [0, -legLen - 0.06 * k, 0.02 * k], r: [0, -Math.PI / 2, 0] });
@@ -266,7 +266,7 @@ export function createPerson(m: Materials, look: PersonLook, seedIn = 1): THREE.
   rig.add(legL, legR);
 
   // ── Torso: base garment ──
-  const body = m.kit(0.045);
+  const body = m.figureKit(0.045);
   const at = (y: number): V3 => [0, hip + y * k, 0];
   const S: V3 = [w, 1, w * 0.92];
   const hem = long === 'robe' ? -0.98 : long === 'dress' ? -0.9 : -0.3;
@@ -356,13 +356,13 @@ export function createPerson(m: Materials, look: PersonLook, seedIn = 1): THREE.
   const arm = (x: number) => {
     const pivot = new THREE.Group();
     pivot.position.set(x * w, shoulder, 0);
-    const up = m.kit(0.03);
+    const up = m.figureKit(0.03);
     up.add(new THREE.SphereGeometry(0.15 * k, 10, 8), cloth(m, has('mantle') || has('cloak') ? look.colors.over : sleeve), { s: [1, 0.9, 1] });
     up.add(uvScale(lathe(L([[0.12, -0.38], [0.11, -0.3], [0.13, -0.05], [0.12, 0.05]]), 10), 3, 1), cloth(m, sleeve));
     pivot.add(up.build());
     const fore = new THREE.Group();
     fore.position.y = -0.36 * k;
-    const lo = m.kit(0.03);
+    const lo = m.figureKit(0.03);
     lo.add(uvScale(lathe(L([[rolled ? 0.085 : 0.13, -0.3], [rolled ? 0.08 : 0.11, -0.22], [rolled ? 0.09 : 0.1, -0.02], [0.11, 0.02]]), 10), 3, 1), rolled ? m.character(look.skin) : cloth(m, sleeve));
     if (rolled) lo.add(new THREE.TorusGeometry(0.11 * k, 0.04 * k, 5, 12), cloth(m, sleeve), { r: [Math.PI / 2, 0, 0] }, { outline: false });
     else lo.add(new THREE.TorusGeometry(0.12 * k, 0.025 * k, 4, 12), m.character(look.colors.accent), { p: [0, -0.3 * k, 0], r: [Math.PI / 2, 0, 0] }, { outline: false });
@@ -385,7 +385,7 @@ export function createPerson(m: Materials, look: PersonLook, seedIn = 1): THREE.
   const head = new THREE.Group();
   head.position.y = shoulder + 0.44 * k;
   head.scale.setScalar(headScale);
-  const ha = m.kit(0.035);
+  const ha = m.figureKit(0.035);
   face(ha, m, k, look, seed);
   hair(ha, m, k, look, seed, look.hat === 'hood');
   hat(ha, m, k, look, seed);

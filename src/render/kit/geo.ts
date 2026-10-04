@@ -152,7 +152,7 @@ export function normalise(geo: THREE.BufferGeometry): THREE.BufferGeometry {
   let g = geo.index ? geo.toNonIndexed() : geo;
   if (!g.getAttribute('normal')) g.computeVertexNormals();
   if (!g.getAttribute('uv')) g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(g.getAttribute('position').count * 2), 2));
-  for (const name of Object.keys(g.attributes)) if (name !== 'position' && name !== 'normal' && name !== 'uv' && name !== 'outlineNormal') g.deleteAttribute(name);
+  for (const name of Object.keys(g.attributes)) if (name !== 'position' && name !== 'normal' && name !== 'uv' && name !== 'outlineNormal' && name !== 'color') g.deleteAttribute(name);
   g.morphAttributes = {};
   g.clearGroups();
   g = g.index ? g.toNonIndexed() : g;
@@ -207,7 +207,16 @@ interface Part {
 export class Assembly {
   private readonly parts = new Map<THREE.Material, Part[]>();
 
-  constructor(private readonly outlineMaterial: (width: number) => THREE.Material, private readonly outlineWidth = 0.035) {}
+  /**
+   * @param bake When given, every part's material colour is baked into vertex
+   *   colours and the whole assembly is drawn with this one material: one mesh
+   *   plus one outline, whatever the number of colours (used for characters).
+   */
+  constructor(
+    private readonly outlineMaterial: (width: number) => THREE.Material,
+    private readonly outlineWidth = 0.035,
+    private readonly bake?: THREE.Material,
+  ) {}
 
   /**
    * Add a part. `uvTile` re-projects UVs in world metres (for wood, stone and
@@ -218,6 +227,18 @@ export class Assembly {
     g.applyMatrix4(matrixOf(at));
     g = normalise(g);
     if (opts.uvTile) g = projectUv(g, opts.uvTile);
+    if (this.bake) {
+      // Bake the part's colour into its vertices and draw it with the shared material.
+      const col = ((material as THREE.Material & { color?: THREE.Color }).color ?? new THREE.Color(1, 1, 1)).clone();
+      col.r = Math.min(col.r, 1.2);
+      col.g = Math.min(col.g, 1.2);
+      col.b = Math.min(col.b, 1.2);
+      const n = g.getAttribute('position').count;
+      const arr = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) arr.set([col.r, col.g, col.b], i * 3);
+      g.setAttribute('color', new THREE.BufferAttribute(arr, 3));
+      material = this.bake;
+    }
     const list = this.parts.get(material) ?? [];
     list.push({ geo: g, outline: opts.outline ?? true });
     this.parts.set(material, list);

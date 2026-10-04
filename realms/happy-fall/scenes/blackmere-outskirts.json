@@ -671,6 +671,68 @@
     2.8
    ],
    "label": "BLACKMERE 1"
+  },
+  {
+   "type": "pumpkins",
+   "at": [
+    3.8,
+    9.6
+   ]
+  },
+  {
+   "type": "pumpkins",
+   "at": [
+    2.0,
+    11.4
+   ]
+  },
+  {
+   "type": "pumpkins",
+   "at": [
+    4.6,
+    12.6
+   ]
+  },
+  {
+   "type": "pumpkins",
+   "at": [
+    1.0,
+    9.2
+   ]
+  },
+  {
+   "type": "fence",
+   "at": [
+    30,
+    15.8
+   ],
+   "size": [
+    8,
+    0.3,
+    1
+   ],
+   "variant": "picket"
+  },
+  {
+   "type": "bunting",
+   "at": [
+    22.6,
+    15.0
+   ],
+   "size": [
+    6,
+    0.3,
+    3.0
+   ],
+   "variant": "laundry"
+  },
+  {
+   "type": "basket",
+   "at": [
+    28.6,
+    13.8
+   ],
+   "variant": "apples"
   }
  ],
  "spots": {
@@ -825,6 +887,27 @@
     7,
     19
    ]
+  },
+  {
+   "kind": "chicken",
+   "at": [
+    28.2,
+    14.6
+   ]
+  },
+  {
+   "kind": "villager",
+   "at": [
+    16.5,
+    22.5
+   ],
+   "color": "gold",
+   "hours": [
+    7,
+    18
+   ],
+   "face": 3.141592653589793,
+   "activity": "browse"
   }
  ],
  "ambient": {

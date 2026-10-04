@@ -727,12 +727,16 @@ function buildPropInner(m: Materials, p: PropSpec, labels: Label[], layout: Scen
       done('bunting-poles');
       const string = new THREE.Group();
       string.name = 'bunting';
-      const flags = Math.max(4, Math.round(span / 0.7));
-      const colors = [P.crimson, P.gold, P.ember, P.light];
+      const laundry = p.variant === 'laundry';
+      const flags = laundry ? Math.max(3, Math.round(span / 1.3)) : Math.max(4, Math.round(span / 0.7));
+      const colors = laundry ? [0xf3ead8, 0x8a9ab0, 0xc9a070, 0xe8dcc0, 0x7a5a6a] : [P.crimson, P.gold, P.ember, P.light];
       const flagGeo = slab([[-0.22, 0], [0.22, 0], [0.04, -0.46], [0, -0.52], [-0.04, -0.46]], 0.01);
+      // Laundry: shirts and sheets hung out to dry on a Hearth Row line.
+      const shirt = slab([[-0.3, 0], [0.3, 0], [0.42, -0.12], [0.36, -0.26], [0.24, -0.2], [0.24, -0.7], [-0.24, -0.7], [-0.24, -0.2], [-0.36, -0.26], [-0.42, -0.12]], 0.01);
+      const sheet = slab([[-0.45, 0], [0.45, 0], [0.42, -0.95], [0.1, -0.9], [-0.2, -0.97], [-0.44, -0.92]], 0.01);
       for (let i = 0; i < flags; i++) {
         const k = (i + 0.5) / flags;
-        const flag = new THREE.Mesh(flagGeo, m.weave(colors[i % colors.length]!));
+        const flag = new THREE.Mesh(laundry ? (i % 2 ? sheet : shirt) : flagGeo, m.weave(colors[i % colors.length]!));
         (flag.material as THREE.MeshToonMaterial).side = THREE.DoubleSide;
         flag.position.set(-span / 2 + k * span, height - 0.15 - Math.sin(k * Math.PI) * 0.7, 0);
         string.add(flag);

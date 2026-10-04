@@ -5,6 +5,27 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed — Blackmere Art Pass 3: lighting, atmosphere, final presentation (presentation only)
+- Lighting: warm key sun against cool hemisphere shadows, moonlit (not black) nights,
+  softer stronger shadows, warmer tavern interior with ember fog; contact-shadow decals
+  (round and boxy, instanced) under props stand in for ambient occlusion.
+- Post: restrained split-tone colour grade with gentle S-curve on HIGH (clamped, no hue
+  flips), selective bloom on HIGH; LOW uses a cheap CSS grade and skips post.
+- Atmosphere: flocks of distant birds by day, painterly mist bands (HIGH), per-flag
+  bunting flutter, banner-cloth ripple, laundry lines; ambient townsfolk now chat in
+  pairs or browse stalls.
+- Composition: soft grass-to-path edge blends and kerbstones on cobbled paths;
+  denser market, lamps and flowers in the square, a lit tavern door, farm pumpkins,
+  fencing and laundry on the outskirts.
+- Camera: velocity look-ahead, smoother follow, slight pull-back when running, tighter
+  indoor framing.
+- UI: mode buttons show hotkey badges, collapsible controls help, keycap-styled
+  interaction prompts, larger touch targets, place names on the minimap, rules line
+  moved to a tooltip.
+- Performance: people and Familiars bake material colours into vertex colours (one
+  draw per figure part set), cutting draw calls ~25–30% in busy scenes.
+- `QualitySettings` gains `grading` and `mist`.
+
 ### Changed — Blackmere Art Pass 2: characters, Familiars, props (presentation only)
 - Character looks as data (`realms/happy-fall/looks/`, `src/render/looks.ts`): build,
   layered garments, hair, beard, hat, held item, idle stance per NPC; the player has a

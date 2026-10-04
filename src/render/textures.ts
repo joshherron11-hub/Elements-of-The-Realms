@@ -713,3 +713,44 @@ export function leafSprite(): THREE.CanvasTexture {
     return c;
   });
 }
+
+/** A soft rounded-rectangle shadow (contact shadows under boxy props and buildings). */
+export function softRect(): THREE.CanvasTexture {
+  return cached('kit:softrect', () => {
+    const [c, x] = canvas(128);
+    x.filter = 'blur(10px)';
+    x.fillStyle = '#ffffff';
+    x.beginPath();
+    x.roundRect(22, 22, 84, 84, 18);
+    x.fill();
+    return c;
+  });
+}
+
+/** A one-way fade (worn path edges): opaque at v = 0, clear at v = 1. */
+export function edgeFade(): THREE.CanvasTexture {
+  return cached('kit:edgefade', () => {
+    const [c, x] = canvas(8, 64);
+    const g = x.createLinearGradient(0, 64, 0, 0);
+    g.addColorStop(0, 'rgba(255,255,255,0.85)');
+    g.addColorStop(0.45, 'rgba(255,255,255,0.4)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g;
+    x.fillRect(0, 0, 8, 64);
+    return c;
+  });
+}
+
+/** A soft horizontal band (mist layers): clear at top and bottom, dense in the middle. */
+export function mistBand(): THREE.CanvasTexture {
+  return cached('kit:mist', () => {
+    const [c, x] = canvas(16, 128);
+    const g = x.createLinearGradient(0, 0, 0, 128);
+    g.addColorStop(0, 'rgba(255,255,255,0)');
+    g.addColorStop(0.55, 'rgba(255,255,255,0.9)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g;
+    x.fillRect(0, 0, 16, 128);
+    return c;
+  });
+}

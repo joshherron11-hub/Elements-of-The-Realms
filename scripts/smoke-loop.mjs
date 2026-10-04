@@ -172,11 +172,13 @@ try {
   check(await page.locator('.toast', { hasText: 'Saved' }).count() > 0, 'SAVE');
 
   await page.reload();
+  // The welcome toast lives a few seconds; catch it as soon as the page is back (slow software rendering can take longer).
+  const welcomed = await page.locator('.toast', { hasText: 'Welcome back' }).first().waitFor({ timeout: 8000 }).then(() => true, () => false);
   await page.waitForTimeout(1500);
   const after = await state();
   await shot('resumed');
   check(JSON.stringify(after) === JSON.stringify(before), 'RELOAD → STATE REMAINS (identical)');
-  check(await page.locator('.toast', { hasText: 'Welcome back' }).count() > 0, 'welcomed back');
+  check(welcomed, 'welcomed back');
 
   console.log('Living Blackmere — depth checks');
   const clock = await page.locator('#hud-status .clock').innerText();

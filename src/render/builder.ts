@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import type { Materials } from './materials';
 import type { PropSpec, SceneLayout, Rect } from './layout';
 import { footprint } from './footprint';
-import { chevronDecal, cobbleTexture, dirtTexture, groundTexture, plankTexture, softDisc, sparkleDecal } from './textures';
+import { chevronDecal, cobbleTexture, dirtTexture, edgeFade, groundTexture, plankTexture, softDisc, softRect, sparkleDecal } from './textures';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { buildProp, crownGeometry, grassTuftGeometry, leafGeometry, trunkGeometry } from './kit/props';
 import { SceneInstancer } from './kit/instancer';
 
@@ -194,6 +195,126 @@ function surroundings(layout: SceneLayout, m: Materials, density: number): THREE
   return out;
 }
 
+/** Props that sit on the ground and deserve a contact shadow even without footprints. */
+const GROUNDED_SMALL = new Set(['barrel', 'sack', 'basket', 'bucket', 'stool', 'crate', 'pumpkins', 'flowers', 'bush', 'lamp', 'signpost', 'waymarker', 'milestone', 'tree', 'orchard']);
+
+/**
+ * Contact shadows: soft dark decals under every grounded prop, two instanced
+ * meshes for the whole section (round and rounded-rect). They ground objects
+ * on LOW where real-time shadows are off, and deepen the corners on HIGH.
+ */
+function contactShadows(layout: SceneLayout): THREE.Object3D[] {
+  const round: THREE.Matrix4[] = [];
+  const rect: THREE.Matrix4[] = [];
+  const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
+  for (const p of layout.props) {
+    if (p.type === 'rug' || p.type === 'bunting' || p.type === 'lantern' || p.type === 'field' || p.type === 'wall' && layout.interior) continue;
+    const fp = footprint(p);
+    const boxy = p.type === 'building' || p.type === 'stall' || p.type === 'keep' || p.type === 'gatehouse' || p.type === 'wall' || p.type === 'counter' || p.type === 'table' || p.type === 'bench' || p.type === 'bed' || p.type === 'cart' || p.type === 'woodpile' || p.type === 'keg-rack' || p.type === 'trough' || p.type === 'shelf' || p.type === 'chest' || p.type === 'fence' || p.type === 'pen';
+    let sx: number;
+    let sz: number;
+    if (fp) [sx, sz] = [fp[0] * 1.35 + 0.6, fp[1] * 1.35 + 0.6];
+    else if (GROUNDED_SMALL.has(p.type)) [sx, sz] = p.type === 'tree' || p.type === 'orchard' ? [3.4, 3.4] : [1.3, 1.3];
+    else continue;
+    const m = new THREE.Matrix4().compose(new THREE.Vector3(p.at[0], 0.028, p.at[1]), q, new THREE.Vector3(sx, sz, 1));
+    (boxy ? rect : round).push(m);
+  }
+  const out: THREE.Object3D[] = [];
+  for (const [list, map, opacity] of [[round, softDisc(), 0.5], [rect, softRect(), 0.55]] as const) {
+    if (!list.length) continue;
+    const mesh = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map, color: 0x1a1020, transparent: true, opacity, depthWrite: false }), list.length);
+    list.forEach((mm, i) => mesh.setMatrixAt(i, mm));
+    mesh.renderOrder = 1;
+    mesh.name = 'contact-shadows';
+    out.push(mesh);
+  }
+  return out;
+}
+
+/**
+ * Path transitions: a worn band of earth fading into the grass along every
+ * outer edge, and (for cobbles) a row of kerbstones. Edges that run inside
+ * another path (junctions) are skipped, so lanes join cleanly.
+ */
+function pathEdges(layout: SceneLayout, m: Materials, groundColor: number): THREE.Object3D[] {
+  const out: THREE.Object3D[] = [];
+  const strips: THREE.BufferGeometry[] = [];
+  const kerb: THREE.Matrix4[] = [];
+  const insideOther = (x: number, z: number, self: number) => layout.paths.some((o, j) => j !== self && inside(x, z, o.rect, 0.05));
+  const band = 1.3;
+  layout.paths.forEach((path, i) => {
+    const [x0, z0, x1, z1] = path.rect;
+    const edges: [number, number, number, number, number, number][] = [
+      [x0, z0, x1, z0, 0, -1], // north edge, outward -z
+      [x0, z1, x1, z1, 0, 1],
+      [x0, z0, x0, z1, -1, 0],
+      [x1, z0, x1, z1, 1, 0],
+    ];
+    for (const [ax, az, bx, bz, nx, nz] of edges) {
+      const len = Math.hypot(bx - ax, bz - az);
+      const steps = Math.max(1, Math.ceil(len / 1.0));
+      for (let k = 0; k < steps; k++) {
+        const t0 = k / steps;
+        const t1 = (k + 1) / steps;
+        const px0 = ax + (bx - ax) * t0;
+        const pz0 = az + (bz - az) * t0;
+        const px1 = ax + (bx - ax) * t1;
+        const pz1 = az + (bz - az) * t1;
+        const mx = (px0 + px1) / 2 + nx * 0.3;
+        const mz = (pz0 + pz1) / 2 + nz * 0.3;
+        if (insideOther(mx, mz, i)) continue;
+        // Worn band, slightly ragged in width.
+        const w0 = band * (0.75 + hash(px0 * 3.1 + pz0 * 7.7) * 0.5);
+        const w1 = band * (0.75 + hash(px1 * 3.1 + pz1 * 7.7) * 0.5);
+        const g = new THREE.BufferGeometry();
+        const y = 0.012 + i * 0.001;
+        g.setAttribute('position', new THREE.Float32BufferAttribute([px0, y, pz0, px1, y, pz1, px1 + nx * w1, y, pz1 + nz * w1, px0 + nx * w0, y, pz0 + nz * w0], 3));
+        g.setAttribute('uv', new THREE.Float32BufferAttribute([t0, 0, t1, 0, t1, 1, t0, 1], 2));
+        g.setAttribute('normal', new THREE.Float32BufferAttribute([0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0], 3));
+        g.setIndex([0, 1, 2, 0, 2, 3]);
+        strips.push(g.toNonIndexed());
+        if (path.surface === 'cobble') {
+          const n = Math.max(1, Math.round(len / steps / 0.55));
+          for (let s2 = 0; s2 < n; s2++) {
+            const t = (s2 + 0.5) / n;
+            const kx = px0 + (px1 - px0) * t + nx * 0.12;
+            const kz = pz0 + (pz1 - pz0) * t + nz * 0.12;
+            const sd = kx * 13.1 + kz * 5.3;
+            kerb.push(new THREE.Matrix4().compose(new THREE.Vector3(kx, 0.05, kz), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, hash(sd) * 0.5 + (nx ? Math.PI / 2 : 0), 0)), new THREE.Vector3(0.9 + hash(sd + 1) * 0.3, 0.8 + hash(sd + 2) * 0.4, 1)));
+          }
+        }
+      }
+    }
+  });
+  if (strips.length) {
+    const dirt = new THREE.Color(groundColor).lerp(new THREE.Color(0x6b4a2b), 0.65).multiplyScalar(0.92).getHex();
+    const mesh = new THREE.Mesh(mergeGeometries(strips)!, new THREE.MeshBasicMaterial({ map: edgeFade(), color: dirt, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
+    mesh.renderOrder = 0;
+    mesh.name = 'path-edges';
+    out.push(mesh);
+  }
+  if (kerb.length) {
+    const geo = jitterKerb();
+    const mesh = new THREE.InstancedMesh(geo, m.stone(0x8a8278), kerb.length);
+    kerb.forEach((mm, i) => mesh.setMatrixAt(i, mm));
+    mesh.receiveShadow = true;
+    mesh.name = 'kerbstones';
+    out.push(mesh);
+  }
+  return out;
+}
+
+function jitterKerb(): THREE.BufferGeometry {
+  const g = new THREE.BoxGeometry(0.5, 0.12, 0.26, 2, 1, 1);
+  const pos = g.getAttribute('position') as THREE.BufferAttribute;
+  for (let i = 0; i < pos.count; i++) if (pos.getY(i) > 0) {
+      pos.setX(i, pos.getX(i) * 0.85);
+      pos.setZ(i, pos.getZ(i) * 0.8);
+    }
+  g.computeVertexNormals();
+  return g;
+}
+
 /** Build one walkable section from its layout. `density` scales decoration for the graphics preset. */
 export function buildSection(layout: SceneLayout, m: Materials, density = 1): BuiltSection {
   const P = m.palette;
@@ -232,6 +353,8 @@ export function buildSection(layout: SceneLayout, m: Materials, density = 1): Bu
     group.add(flat(tileUv(new THREE.PlaneGeometry(w, d), w, d, surface === 'cobble' ? 3 : 6), mat, (x0 + x1) / 2, 0.022 + lift, (z0 + z1) / 2));
   });
 
+  if (!layout.interior) for (const o of pathEdges(layout, m, groundColor)) group.add(o);
+
   layout.backdrops.forEach((b, i) => {
     const plane = backdrop(b.kind, m.color(b.color, 'crimson'), W * 2.6, b.height * 2.2, i * 7 + 3);
     plane.position.set(0, b.height * 0.9, -D / 2 - b.distance + 30);
@@ -244,6 +367,7 @@ export function buildSection(layout: SceneLayout, m: Materials, density = 1): Bu
   const goods = new SceneInstancer();
   for (const p of layout.props) group.add(prop(m, p, labels, layout, goods));
   for (const o of goods.build(m)) group.add(o);
+  for (const o of contactShadows(layout)) group.add(o);
   if (!layout.interior) {
     for (const o of scatter(layout, m, density)) group.add(o);
     for (const o of surroundings(layout, m, density)) group.add(o);

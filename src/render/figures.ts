@@ -29,7 +29,7 @@ const DEFAULT_LOOKS: Record<string, FamiliarLook> = {
 function pawLeg(m: Materials, color: number, paw: number, at: V3, len: number): THREE.Group {
   const pivot = new THREE.Group();
   pivot.position.set(...at);
-  const a = m.kit(0.025);
+  const a = m.figureKit(0.025);
   a.add(lathe([[0.06, -len], [0.07, -len * 0.6], [0.1, -len * 0.15], [0.09, 0]], 8), m.character(color));
   a.add(new THREE.SphereGeometry(0.075, 8, 6), m.character(paw), { p: [0, -len, 0.03], s: [1, 0.6, 1.3] });
   pivot.add(a.build());
@@ -49,7 +49,7 @@ export function createFamiliarFigure(m: Materials, figure: string, look?: Famili
   root.add(rig);
   if (figure === 'hound') {
     const L = look ?? DEFAULT_LOOKS.hound!;
-    const a = m.kit(0.04);
+    const a = m.figureKit(0.04);
     a.add(lathe([[0.05, -0.55], [0.2, -0.48], [0.25, -0.25], [0.24, 0.0], [0.31, 0.25], [0.29, 0.42], [0.14, 0.56], [0.0, 0.58]], 14), m.character(L.coat), { p: [0, 0.68, 0], r: [Math.PI / 2, 0, 0] });
     a.add(new THREE.SphereGeometry(0.22, 10, 8), m.character(L.marking), { p: [0, 0.6, 0.4], s: [0.9, 1, 0.8] }, { outline: false });
     a.add(cluster([[0, 0, 0, 0.12], [0.1, -0.04, 0.05, 0.1]], 4), m.character(L.marking), { p: [0.08, 0.84, -0.2], s: [1, 0.5, 1.2] }, { outline: false });
@@ -58,7 +58,7 @@ export function createFamiliarFigure(m: Materials, figure: string, look?: Famili
     rig.add(a.build('hound-body'));
     const head = new THREE.Group();
     head.position.set(0, 1.0, 0.62);
-    const ha = m.kit(0.035);
+    const ha = m.figureKit(0.035);
     ha.add(new THREE.SphereGeometry(0.25, 12, 10), m.character(L.coat), { s: [1, 0.95, 1.05] });
     ha.add(slab([[-0.06, 0.2], [0.06, 0.2], [0.09, -0.05], [0, -0.12], [-0.09, -0.05]], 0.02), m.character(L.marking), { p: [0, 0.06, 0.22], r: [-0.4, 0, 0] }, { outline: false });
     ha.add(lathe([[0.15, 0], [0.14, 0.12], [0.11, 0.24], [0.06, 0.3], [0.0, 0.31]], 10), m.character(L.marking), { p: [0, -0.05, 0.15], r: [Math.PI / 2, 0, 0] });
@@ -70,7 +70,7 @@ export function createFamiliarFigure(m: Materials, figure: string, look?: Famili
     for (const x of [-1, 1]) {
       const ear = new THREE.Group();
       ear.position.set(x * 0.18, 0.15, -0.02);
-      const ea = m.kit(0.025);
+      const ea = m.figureKit(0.025);
       ea.add(slab(([[0, 0], [0.12, -0.05], [0.14, -0.3], [0.04, -0.38], [-0.04, -0.2]] as [number, number][]).map(([px, py]) => [px * x, py] as [number, number]), 0.04), m.character(new THREE.Color(L.coat).multiplyScalar(0.7).getHex()), { r: [0, x * 0.3, 0] });
       ear.add(ea.build());
       ear.rotation.z = x * -0.35;
@@ -80,7 +80,7 @@ export function createFamiliarFigure(m: Materials, figure: string, look?: Famili
     // Jaw with a tongue (pants when happy).
     const jaw = new THREE.Group();
     jaw.position.set(0, -0.13, 0.18);
-    const ja = m.kit(0.02);
+    const ja = m.figureKit(0.02);
     ja.add(lathe([[0.1, 0], [0.09, 0.12], [0.05, 0.22], [0, 0.23]], 8), m.character(L.marking), { r: [Math.PI / 2, 0, 0], s: [1, 1, 0.55] });
     jaw.add(ja.build());
     const tongue = new THREE.Mesh(slab([[-0.05, 0], [0.05, 0], [0.05, -0.14], [0, -0.17], [-0.05, -0.14]], 0.015), m.character(0xe06a6a));
@@ -94,14 +94,14 @@ export function createFamiliarFigure(m: Materials, figure: string, look?: Famili
     for (const l of legs) rig.add(l);
     const tail = new THREE.Group();
     tail.position.set(0, 0.8, -0.5);
-    const ta = m.kit(0.025);
+    const ta = m.figureKit(0.025);
     ta.add(tube([[0, 0, 0], [0, 0.15, -0.15], [0, 0.35, -0.2], [0, 0.5, -0.12]], 0.06, 10, 6), m.character(L.coat));
     ta.add(new THREE.SphereGeometry(0.07, 8, 6), m.character(L.marking), { p: [0, 0.5, -0.12] }, { outline: false });
     tail.add(ta.build());
     rig.add(tail);
     // A food bowl that appears while eating.
     const bowl = new THREE.Group();
-    const ba = m.kit(0.02);
+    const ba = m.figureKit(0.02);
     ba.add(lathe([[0, 0], [0.16, 0], [0.24, 0.08], [0.26, 0.12], [0.2, 0.1], [0, 0.1]], 14), m.toon(0x8a5a3a));
     ba.add(cluster([[0, 0, 0, 0.07], [0.07, 0, 0.03, 0.05], [-0.06, 0, -0.03, 0.05]], 2), m.toon(0xc08a4a), { p: [0, 0.1, 0] }, { outline: false });
     bowl.add(ba.build());
@@ -115,7 +115,7 @@ export function createFamiliarFigure(m: Materials, figure: string, look?: Famili
     const body = new THREE.Mesh(lathe([[0, -0.26], [0.07, -0.2], [0.1, -0.05], [0.09, 0.08], [0.11, 0.14], [0.08, 0.22], [0, 0.26]], 10), m.glow(L.accent, 1.6));
     body.rotation.x = Math.PI / 2;
     rig.add(body);
-    const ant = m.kit(0.01);
+    const ant = m.figureKit(0.01);
     for (const x of [-1, 1]) {
       ant.add(tube([[0, 0, 0.24], [x * 0.08, 0.12, 0.36], [x * 0.18, 0.18, 0.4]], 0.012, 8, 3), m.toon(P.gold), {}, { outline: false });
       for (let i = 1; i < 4; i++) ant.add(slab([[0, 0], [0.05, 0.02], [0.0, 0.05]], 0.005), m.toon(P.gold), { p: [x * (0.05 + i * 0.04), 0.1 + i * 0.025, 0.33 + i * 0.02], r: [0, 0, x * 0.4] }, { outline: false });
@@ -146,7 +146,7 @@ export function createFamiliarFigure(m: Materials, figure: string, look?: Famili
     root.userData.rig = { rig, wings, kind: 'moth', seed: 7 } satisfies Rig;
   } else {
     const L = look ?? DEFAULT_LOOKS.raven!;
-    const a = m.kit(0.035);
+    const a = m.figureKit(0.035);
     a.add(lathe([[0.0, -0.42], [0.16, -0.3], [0.27, -0.05], [0.26, 0.15], [0.16, 0.3], [0.0, 0.34]], 12), m.character(L.coat), { p: [0, 0.5, 0], r: [Math.PI / 2 - 0.35, 0, 0] });
     a.add(cluster([[0, 0, 0, 0.13], [0.08, -0.06, 0.02, 0.1], [-0.08, -0.06, 0.02, 0.1]], 6), m.character(L.coat), { p: [0, 0.62, 0.22] }, { outline: false });
     a.add(slab([[-0.2, 0], [0.2, 0], [0.24, -0.38], [0.08, -0.3], [0, -0.42], [-0.08, -0.3], [-0.24, -0.38]], 0.03), m.character(L.coat), { p: [0, 0.4, -0.35], r: [-Math.PI / 2 + 0.5, 0, 0] });
@@ -154,14 +154,14 @@ export function createFamiliarFigure(m: Materials, figure: string, look?: Famili
     rig.add(a.build('raven-body'));
     const head = new THREE.Group();
     head.position.set(0, 0.86, 0.3);
-    const ha = m.kit(0.03);
+    const ha = m.figureKit(0.03);
     ha.add(new THREE.SphereGeometry(0.19, 10, 8), m.character(L.coat));
     ha.add(lathe([[0.07, 0], [0.05, 0.14], [0.01, 0.3], [0, 0.31]], 8), m.character(L.marking), { p: [0, 0.0, 0.12], r: [Math.PI / 2 + 0.1, 0, 0], s: [1, 1, 0.6] });
     for (const x of [-0.09, 0.09]) eye(m, ha, [x, 0.05, 0.15], 0.035, L.accent);
     head.add(ha.build());
     const jaw = new THREE.Group();
     jaw.position.set(0, -0.04, 0.12);
-    const ja = m.kit(0.02);
+    const ja = m.figureKit(0.02);
     ja.add(lathe([[0.05, 0], [0.035, 0.12], [0, 0.24]], 8), m.character(L.marking), { r: [Math.PI / 2, 0, 0], s: [1, 1, 0.5] });
     jaw.add(ja.build());
     head.add(jaw);
@@ -171,7 +171,7 @@ export function createFamiliarFigure(m: Materials, figure: string, look?: Famili
     for (const side of [-1, 1]) {
       const pivot = new THREE.Group();
       pivot.position.set(side * 0.24, 0.62, 0.05);
-      const wa = m.kit(0.025);
+      const wa = m.figureKit(0.025);
       wa.add(slab(feather, 0.05), m.character(new THREE.Color(L.coat).multiplyScalar(1.2).getHex()), { p: [side * 0.02, 0, 0], r: [-Math.PI / 2 + 0.3, side * 0.15, 0] });
       pivot.add(wa.build());
       rig.add(pivot);
@@ -192,8 +192,8 @@ export function createAnimal(m: Materials, kind: 'chicken' | 'sheep' | 'crow' | 
   const head = new THREE.Group();
   let tail: THREE.Object3D | undefined;
   let legs: THREE.Object3D[] | undefined;
-  const a = m.kit(0.03);
-  const ha = m.kit(0.025);
+  const a = m.figureKit(0.03);
+  const ha = m.figureKit(0.025);
   switch (kind) {
     case 'chicken': {
       const c = color ?? 0xf3ead8;
@@ -247,7 +247,7 @@ export function createAnimal(m: Materials, kind: 'chicken' | 'sheep' | 'crow' | 
       ha.add(new THREE.SphereGeometry(0.025, 5, 4), m.toon(0xe0907a), { p: [0, -0.02, 0.16] }, { outline: false });
       const tt = new THREE.Group();
       tt.position.set(0, 0.38, -0.32);
-      const tk = m.kit(0.02);
+      const tk = m.figureKit(0.02);
       tk.add(tube([[0, 0, 0], [0, 0.2, -0.15], [0.05, 0.45, -0.1], [0.12, 0.55, 0.0]], 0.04, 10, 5), m.character(c));
       tt.add(tk.build());
       rig.add(tt);

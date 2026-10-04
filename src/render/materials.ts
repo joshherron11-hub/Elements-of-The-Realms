@@ -121,6 +121,22 @@ export class Materials {
     return new Assembly((w) => this.inkShell(w), outlineWidth);
   }
 
+  /** A character part: all colours baked into vertices, one rim-lit material, one draw call (+ outline). */
+  figureKit(outlineWidth = 0.035): Assembly {
+    return new Assembly((w) => this.inkShell(w), outlineWidth, this.characterVC());
+  }
+
+  /** Rim-lit cel material driven by vertex colours (see `figureKit`). */
+  characterVC(): THREE.MeshToonMaterial {
+    return this.memo('char-vc', () => {
+      const m = this.character(0xffffff).clone();
+      m.vertexColors = true;
+      m.onBeforeCompile = this.character(0xffffff).onBeforeCompile;
+      m.customProgramCacheKey = () => 'eotr-rim-vc';
+      return m;
+    });
+  }
+
   /** Toon plus a stepped rim light: for characters and Familiars. Optional painted map (cloth, hair). */
   character(color: number, map?: THREE.Texture): THREE.MeshToonMaterial {
     return this.memo(`char:${color}:${map?.uuid ?? ''}`, () => {

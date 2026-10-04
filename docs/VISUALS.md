@@ -155,3 +155,24 @@ smoothly and faces whoever they are talking to.
 ### Budget
 Town square on LOW (software rendering): ~410 draw calls, ~129k triangles (Art Pass 1:
 ~350 and ~105k). Market: ~500 calls, ~152k triangles (was ~405 and ~123k).
+
+## Art Pass 3 — lighting, atmosphere, presentation
+- **Light:** warm sun (`lighting.ts` keyframes) over a cool hemisphere (`OUT_SKY`,
+  `OUT_GROUND` in `stage.ts`); nights stay moonlit. Interiors use ember-tinted fog
+  and a warm hemisphere.
+- **Grade:** `GradeShader` in `stage.ts` runs after `OutputPass` on HIGH: clamp,
+  split tone (cool shadows, warm lights), gentle S-curve, +10% saturation. LOW uses
+  a CSS `filter` on the canvas instead.
+- **Grounding:** `contactShadows()` in `builder.ts` instances soft round/boxy decals
+  under props; `pathEdges()` blends path borders into grass and adds kerbstones to
+  cobble paths. Figures keep their blob shadows (`rig.ts`).
+- **Atmosphere (`ambient.ts`):** bird flocks (6–19.5h), mist bands (HIGH,
+  `settings.mist`), bunting and banner flutter, extras with `activity`
+  (`chat` | `browse` | `stand`) from scene data.
+- **Camera:** `stage.follow(target, dt, velocity)` leads in the direction of travel,
+  pulls back slightly when running and frames interiors from their bounds.
+- **Figures:** `materials.figureKit()` bakes material colours into vertex colours so
+  each figure merges into very few draws (trade-off: no cloth weave texture on
+  characters).
+- **Presets:** LOW — no shadows, no bloom, no grade pass, no mist, half particles.
+  HIGH — 2048 shadows, bloom, grade, mist, full particles. Same gameplay either way.

@@ -62,7 +62,7 @@ export interface PoseInput {
 export function shadowDisc(radius: number): THREE.Mesh {
   const m = new THREE.Mesh(
     new THREE.PlaneGeometry(radius * 2, radius * 2),
-    new THREE.MeshBasicMaterial({ map: softDisc(), color: 0x120a14, transparent: true, opacity: 0.45, depthWrite: false }),
+    new THREE.MeshBasicMaterial({ map: softDisc(), color: 0x140c1c, transparent: true, opacity: 0.62, depthWrite: false }),
   );
   m.rotation.x = -Math.PI / 2;
   m.position.y = 0.03;

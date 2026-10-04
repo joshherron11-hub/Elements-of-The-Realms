@@ -14,11 +14,15 @@ export interface QualitySettings {
   bloom: boolean;
   /** Multiplier for particle and scatter counts. */
   density: number;
+  /** Full-screen colour grade (split-tone, gentle contrast). LOW uses a cheap CSS grade instead. */
+  grading: boolean;
+  /** Painterly mist layers in the distance. */
+  mist: boolean;
 }
 
 export const QUALITY: Record<GraphicsQuality, QualitySettings> = {
-  low: { quality: 'low', maxPixelRatio: 1.25, shadows: false, shadowMapSize: 0, bloom: false, density: 0.5 },
-  high: { quality: 'high', maxPixelRatio: 2, shadows: true, shadowMapSize: 2048, bloom: true, density: 1 },
+  low: { quality: 'low', maxPixelRatio: 1.25, shadows: false, shadowMapSize: 0, bloom: false, density: 0.5, grading: false, mist: false },
+  high: { quality: 'high', maxPixelRatio: 2, shadows: true, shadowMapSize: 2048, bloom: true, density: 1, grading: true, mist: true },
 };
 
 /** A sensible default from what the device tells us. Pure, so it can be tested. */
