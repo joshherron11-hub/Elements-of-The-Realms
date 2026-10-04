@@ -22,7 +22,7 @@ Always run `npm run typecheck && npm test` before committing.
 
 ## Layering rules (non-negotiable)
 1. **Simulation** (`src/core`, `src/world`, `src/entities`, `src/economy`, `src/familiars`,
-   `src/contracts`, `src/chronicle`, `src/identity`, `src/modes`, `src/simulation.ts`,
+   `src/contracts`, `src/chronicle`, `src/identity`, `src/modes`, `src/platform`, `src/simulation.ts`,
    `src/seed.ts`) must not import from
    `src/render`, `src/ui`, `src/persistence`, or `src/ai`, and must not touch the DOM,
    `window`, `localStorage`, `Date.now()` or `Math.random()` directly. Use the injected

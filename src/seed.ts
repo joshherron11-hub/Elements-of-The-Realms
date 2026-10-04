@@ -123,7 +123,7 @@ export function joinRealm(sim: Simulation, opts: JoinOptions): Result<{ personId
   if (eco && eco.startingPurse > 0) {
     sim.economy.mint({ kind: 'actor', id: actor.value.id }, eco.primaryCurrency, eco.startingPurse, { reason: 'starting purse', sourceSystem: 'realm' });
   }
-  sim.world.discover(actor.value.id, opts.startAt);
   sim.chronicle.record({ event: 'realm.joined', actor: actor.value.id, location: opts.startAt, sourceSystem: 'realm', summary: `Arrived in ${s.realm.name}`, outcome: 'arrived' });
+  sim.world.discover(actor.value.id, opts.startAt);
   return ok({ personId: person.id, actor: actor.value });
 }

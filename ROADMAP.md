@@ -49,7 +49,9 @@ Complete Personal Chronicle (queries, visibility, summary); Realm/Organization
 Chronicle interfaces; versioned, checksummed saves with migrations; autosave,
 resume with capped catch-up, save/load/new controls.
 
-## Phase 10 — AI abstraction + Play/Learn/Work/Create compatibility ⬜
+## Phase 10 — AI abstraction + Play/Learn/Work/Create compatibility ✅
+AI gateway (guard, density, routing, cache, limits, allowance, cost log, fallback);
+artifacts, contributions, domain Chronicle views; narrated journal (deterministic at MINIMAL).
 
 ## Phase 11 — First complete playable loop ⬜
 Enter Blackmere → move → speak to NPC → receive contract → visit market → acquire

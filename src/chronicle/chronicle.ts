@@ -22,6 +22,8 @@ export interface RecordSpec {
 export interface ChronicleQuery {
   /** Event types or prefixes ending in '.' (e.g. 'contract.' or 'familiar.acquired'). */
   events?: string[];
+  /** Only entries from these platform domains (PLAY / LEARN / WORK / CREATE). */
+  domains?: ChronicleEntry['context']['domain'][];
   location?: string;
   since?: number;
   until?: number;
@@ -153,6 +155,7 @@ export class ChronicleService {
     let out = this.ctx.state.chronicle.filter((e) => e.scopes.some((s) => s.kind === scope.kind && s.id === scope.id));
     if (scope.kind === 'personal' && query.includeParticipation === false) out = out.filter((e) => e.actor === scope.id);
     if (query.events?.length) out = out.filter((e) => query.events!.some((ev) => (ev.endsWith('.') ? e.event.startsWith(ev) : e.event === ev)));
+    if (query.domains?.length) out = out.filter((e) => query.domains!.includes(e.context.domain));
     if (query.location) out = out.filter((e) => e.location === query.location);
     if (query.since !== undefined) out = out.filter((e) => e.timestamp >= query.since!);
     if (query.until !== undefined) out = out.filter((e) => e.timestamp <= query.until!);
@@ -199,6 +202,20 @@ export class ChronicleService {
         return out;
       },
     };
+  }
+
+  /**
+   * Domain views over the same personal history. A Professional Chronicle is
+   * the WORK slice; a Learning Chronicle the LEARN slice; a Creator Chronicle
+   * the CREATE slice. One person, one history, many contexts.
+   */
+  domain(actorId: ActorId, domain: ChronicleEntry['context']['domain']): ChronicleView {
+    const scope = { kind: 'personal', id: actorId } as const;
+    return { scope, entries: (q) => this.forScope(scope, { ...q, domains: [domain] }) };
+  }
+
+  professional(actorId: ActorId): ChronicleView {
+    return this.domain(actorId, 'WORK');
   }
 
   realm(): RealmChronicle {

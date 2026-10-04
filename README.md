@@ -47,7 +47,8 @@ npm run preview    # serve the production bundle
   /contracts            Contracts and tasks
   /chronicle            Chronicle (structured history records)
   /identity             Identity contexts and Canonical evidence (raw only)
-  /ai                   AI service abstraction (optional, never on the hot path)
+  /ai                   AI gateway (optional, never on the deterministic path)
+  /platform             Artifacts + contributions for Learn / Work / Create
   /ui                   DOM/HUD presentation
   /render               Three.js presentation
   /persistence          Save/load adapters
@@ -86,7 +87,7 @@ TypeScript (strict) · Vite · Vitest · Three.js
 ## Documentation
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — kernel design and layering
 - [`CANON_GUARDRAILS.md`](CANON_GUARDRAILS.md) — rules the platform must never break
-- [`docs/KERNEL.md`](docs/KERNEL.md) · [`docs/CANONICAL.md`](docs/CANONICAL.md) · [`docs/REALMS.md`](docs/REALMS.md) · [`docs/MODES.md`](docs/MODES.md) · [`docs/BLACKMERE.md`](docs/BLACKMERE.md) · [`docs/ECONOMY.md`](docs/ECONOMY.md) · [`docs/FAMILIARS.md`](docs/FAMILIARS.md) · [`docs/CHRONICLE_AND_SAVES.md`](docs/CHRONICLE_AND_SAVES.md)
+- [`docs/KERNEL.md`](docs/KERNEL.md) · [`docs/CANONICAL.md`](docs/CANONICAL.md) · [`docs/REALMS.md`](docs/REALMS.md) · [`docs/MODES.md`](docs/MODES.md) · [`docs/BLACKMERE.md`](docs/BLACKMERE.md) · [`docs/ECONOMY.md`](docs/ECONOMY.md) · [`docs/FAMILIARS.md`](docs/FAMILIARS.md) · [`docs/CHRONICLE_AND_SAVES.md`](docs/CHRONICLE_AND_SAVES.md) · [`docs/AI_AND_PLATFORM.md`](docs/AI_AND_PLATFORM.md)
 - [`ROADMAP.md`](ROADMAP.md) — build phases
 - [`CHANGELOG.md`](CHANGELOG.md) — what changed
 - [`CLAUDE.md`](CLAUDE.md) — working agreement for AI contributors

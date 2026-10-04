@@ -71,7 +71,7 @@ describe('bootstrap and joining a Realm', () => {
     expect(sim.economy.balance({ kind: 'actor', id: actor.id }, 'currency_mark' as never)).toBe(40);
     expect(sim.state.persons[personId]!.actors['realm_happy-fall']).toBe(actor.id);
     expect(sim.identity.identitiesOf(personId).map((i) => i.context).sort()).toEqual(['REALM', 'UNIVERSAL']);
-    expect(sim.chronicle.personal(actor.id).entries().map((e) => e.event)).toEqual(['location.discovered', 'realm.joined']);
+    expect(sim.chronicle.personal(actor.id).entries().map((e) => e.event)).toEqual(['realm.joined', 'location.discovered']);
     expect(joinRealm(sim, { displayName: 'Wren', startAt: asId('location_test-green'), personId }).ok).toBe(false);
   });
 });

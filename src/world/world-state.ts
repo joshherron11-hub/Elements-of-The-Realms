@@ -24,6 +24,7 @@ import type { Familiar, FamiliarSpecies } from '../familiars/types';
 import type { DeclaredClaim, Evidence, Identity, IdentityLink, Interaction, Person } from '../identity/types';
 import type { DerivedRecord } from '../identity/canonical/pipeline';
 import type { Recognition } from '../identity/canonical/recognition';
+import type { Artifact, Contribution } from '../platform/types';
 import type { Location, RealmRef, Route, ServerRef } from './types';
 import type { SearchSpot } from './search';
 import type { Happening } from './happenings';
@@ -103,6 +104,10 @@ export interface WorldState {
     recognitions: Record<string, Recognition>;
   };
 
+  /** Things people made (Work / Learn / Create) and who contributed. */
+  artifacts: Record<string, Artifact>;
+  contributions: Contribution[];
+
   /** Small open-ended world flags (quest gates, toggles). */
   flags: Record<string, string | number | boolean>;
 }
@@ -157,6 +162,8 @@ export function createWorldState(opts: NewWorldOptions): WorldState {
     interactions: {},
     evidence: {},
     canonical: { derived: {}, recognitions: {} },
+    artifacts: {},
+    contributions: [],
     flags: {},
   };
 }

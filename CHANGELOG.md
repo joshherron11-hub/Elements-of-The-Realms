@@ -5,6 +5,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — Phase 10: AI service + platform compatibility
+- `src/ai`: `AiService` with deterministic-task guard, server AI-density gate, tier
+  routing/model selection, LRU cache with TTLs, per-user and global rate limits,
+  daily per-user allowances, token/cost usage log, `withFallback`; `OfflineProvider`
+  and `ScriptedProvider`; Chronicle `narrate` with a deterministic narrator.
+- `src/platform`: `Artifact` and `Contribution` records and `ArtifactService`;
+  `ChronicleQuery.domains`, `chronicle.domain()` and `chronicle.professional()`.
+- Journal shows "Your tale so far" (deterministic on MINIMAL servers).
+- Architecture test: the AI layer may only read simulation types.
+- `docs/AI_AND_PLATFORM.md`. 30 new tests (246 total) incl. Work, Learn and Create
+  scenarios built from kernel primitives.
+
+### Changed
+- Joining a Realm records the arrival before the first discovery.
+
+
 ### Added — Phase 9: Chronicle + persistence
 - Personal Chronicle: query by event family, location, time; ordering, paging,
   viewer visibility (`canView`), `latest`, `summary`. Realm/Organization Chronicles

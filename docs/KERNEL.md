@@ -30,6 +30,8 @@ supply *data* for these types; none of them add kernel code.
 | Canonical (reserved) | `DerivedRecord`, `Recognition`, `OrientationAssignment`, `Metastrate`, `Grandmeta` | validators only | `src/identity/canonical/` (see `docs/CANONICAL.md`) |
 | Event | `KernelEvent`, `DomainEvent`, `EventMeta` | `EventBus`, `emit()` | `src/core/events.ts`, `src/world/context.ts` |
 | Chronicle | `ChronicleEntry`, `ChronicleScope`, `ChronicleQuery`, `PersonalChronicle` | `ChronicleService` | `src/chronicle/` (see `docs/CHRONICLE_AND_SAVES.md`) |
+| Artifact / Contribution | `Artifact`, `Contribution` | `ArtifactService` | `src/platform/` |
+| AI gateway | `AiRequest`, `AiProvider`, `UsageRecord` | `AiService`, `narrate` | `src/ai/` (see `docs/AI_AND_PLATFORM.md`) |
 | Persistence | `SaveFile`, `SaveMeta`, `StorageAdapter` | `SaveService`, `migrateWorld` | `src/persistence/` |
 | WorldState | `WorldState` | `createWorldState()` | `src/world/world-state.ts` |
 | Mode / Intent | `ModeDefinition`, `Intent` | `ModeService` | `src/modes/` (see `docs/MODES.md`) |
@@ -63,7 +65,4 @@ ChronicleService ◄── EventBus ◄── every service (events with meta.ch
   (`issuer-default`) — economic risk without combat.
 
 ## Play / Learn / Work / Create
-`PlatformDomain` is carried by contracts, tasks, organizations and chronicle
-entries. A Work "project" is an organization of kind `team`/`company` with
-contracts and tasks; a Learn "course" is an organization of kind `school` with
-tasks; Create "artifacts" are assets of kind `artifact` in the ownership registry.
+See `docs/AI_AND_PLATFORM.md`.

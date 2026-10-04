@@ -132,6 +132,14 @@ schema migrations upgrade old worlds. A saved world is self-contained and is nev
 re-seeded from content. See `docs/CHRONICLE_AND_SAVES.md`.
 
 ## 10. AI
-`src/ai` exposes a provider-agnostic service with routing, model selection, cost
-logging, caching, rate limits, per-user allowance and server AI density
-(`MINIMAL` default). Deterministic gameplay never calls it.
+`src/ai` is a provider-agnostic gateway: deterministic-task guard, server AI-density
+gate (`MINIMAL` default), tier routing and model selection, caching, rate limits,
+per-user allowances, and token/cost logging. Callers always supply an authored
+fallback. AI only reads simulation types and returns text. See
+`docs/AI_AND_PLATFORM.md`.
+
+## 11. Play / Learn / Work / Create
+All four domains share the kernel. `PlatformDomain` is carried by organizations,
+contracts, tasks and Chronicle entries. `Artifact` and `Contribution` (`src/platform`)
+complete the model for work, coursework and creations, and domain-filtered Chronicle
+views give Professional, Learning and Creator histories.

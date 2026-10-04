@@ -1,3 +1,4 @@
+import { AiService, OfflineProvider, narrate } from './ai';
 import { BUILD } from './config/build';
 import { content } from './config/content';
 import { SaveService } from './persistence/saves';
@@ -42,6 +43,12 @@ const rules = sim.ctx.rules!;
 const game = new Game(sim, playerId, loadSceneLayouts(), app, paletteFrom(rules.realm.presentation));
 
 let leaving = false; // set when the page reloads on purpose, so unload does not overwrite the save
+// AI gateway. The Blackmere server runs at MINIMAL density, so narration uses the
+// deterministic narrator and no model is ever called. No real provider is connected.
+const ai = new AiService({ providers: [new OfflineProvider()], now: () => Date.now() });
+game.narrator = async (entries) =>
+  (await narrate(ai, { density: rules.variables.aiDensity }, playerId, entries, (id) => sim.state.locations[id]?.name)).text;
+
 const save = (quiet = false): string | undefined => {
   if (leaving) return undefined;
   const r = saveSession(saves, session, game.snapshot());
@@ -75,4 +82,4 @@ window.addEventListener('beforeunload', () => save(true));
 document.addEventListener('visibilitychange', () => document.visibilityState === 'hidden' && save(true));
 
 // Debug handle for the browser console and automated smoke tests. Presentation only.
-(window as unknown as { __eotr: unknown }).__eotr = { sim, game, playerId, saves, save };
+(window as unknown as { __eotr: unknown }).__eotr = { sim, game, playerId, saves, save, ai };

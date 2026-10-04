@@ -22,6 +22,7 @@ import { WorldService } from './world/world';
 import { SearchService } from './world/search';
 import { HappeningService } from './world/happenings';
 import { FamiliarService } from './familiars/familiars';
+import { ArtifactService } from './platform/artifacts';
 import { ModeService } from './modes/modes';
 import type { ModeDefinition } from './modes/types';
 import type { WorldState } from './world/world-state';
@@ -68,6 +69,7 @@ export class Simulation {
   readonly search: SearchService;
   readonly happenings: HappeningService;
   readonly familiars: FamiliarService;
+  readonly artifacts: ArtifactService;
   readonly modes: ModeService;
 
   constructor(opts: SimulationOptions) {
@@ -111,6 +113,7 @@ export class Simulation {
     this.interactions = new InteractionService(ctx);
     this.identity = new IdentityService(ctx);
     this.search = new SearchService(ctx, this.inventory);
+    this.artifacts = new ArtifactService(ctx, this.ownership);
     this.familiars = new FamiliarService(ctx, { ownership: this.ownership, economy: this.economy, inventory: this.inventory, actors: this.actors });
     this.happenings = new HappeningService(ctx, this.relationships, this.reputation);
     this.modes = new ModeService(

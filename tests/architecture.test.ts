@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
  * on presentation, persistence or AI, nor on ambient time/randomness/DOM.
  */
 const ROOT = join(__dirname, '..', 'src');
-const SIMULATION_DIRS = ['core', 'world', 'entities', 'economy', 'familiars', 'contracts', 'chronicle', 'identity', 'modes'];
+const SIMULATION_DIRS = ['core', 'world', 'entities', 'economy', 'familiars', 'contracts', 'chronicle', 'identity', 'modes', 'platform'];
 const SIMULATION_FILES = ['simulation.ts', 'seed.ts'];
 /** The injectable real-time/random implementations are the only allowed exceptions. */
 const AMBIENT_ALLOWED = new Set(['core/clock.ts', 'core/ids.ts']);
@@ -44,6 +44,16 @@ describe('architecture boundaries', () => {
       for (const f of files(join(ROOT, dir))) {
         const src = readFileSync(f, 'utf8');
         expect(src, relative(ROOT, f)).not.toMatch(/from\s+['"][^'"]*\/identity(\/[^'"]*)?['"]/);
+      }
+    }
+  });
+
+  it('the AI layer only reads simulation types — it can never call a service that changes state', () => {
+    for (const f of files(join(ROOT, 'ai'))) {
+      const src = readFileSync(f, 'utf8');
+      const valueImports = [...src.matchAll(/^import\s+(?!type\b)[^;]*from\s+['"]([^'"]+)['"]/gm)].map((m) => m[1]!);
+      for (const i of valueImports) {
+        expect(i, `${relative(ROOT, f)} value-imports ${i}`).not.toMatch(/(^|\/)(simulation|seed|economy|contracts|entities|familiars|identity|modes|chronicle|platform|persistence|ui|render)(\/|$)/);
       }
     }
   });

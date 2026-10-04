@@ -7,6 +7,7 @@ import type { SceneLayout, Vec2 } from '../render/layout';
 import { Materials } from '../render/materials';
 import { createStage, type Palette, type Stage } from '../render/stage';
 import type { Simulation } from '../simulation';
+import type { ChronicleEntry } from '../chronicle/types';
 import { Hud, type Choice } from './hud';
 import { Input } from './input';
 import { dist, moveWithCollision, nearest, zoneAt } from './navigation';
@@ -75,6 +76,8 @@ export class Game {
   onSave?: () => string | undefined;
   onLoad?: () => void;
   onNewGame?: () => void;
+  /** Optional prose for the journal (AI gateway with authored fallback). */
+  narrator?: (entries: ChronicleEntry[]) => Promise<string>;
 
   /** What the presentation layer needs to put the player back where they stood. */
   snapshot(): { sceneId: string; position: [number, number] } {
@@ -503,8 +506,14 @@ export class Game {
     this.hud.list('companions', 'Companions', mine.length ? 'Care for those in your keeping (C to close)' : 'No Familiars yet — Hester at Brindle Farm has a hound pup looking for a home.', sections);
   }
 
-  private showJournal(): void {
+  private showJournal(prose?: string): void {
     const s = this.sim.state;
+    if (prose === undefined && this.narrator) {
+      const all = this.sim.chronicle.personal(this.playerId).entries();
+      void this.narrator(all).then((text) => {
+        if (this.hud.openPanel === 'journal') this.showJournal(text);
+      });
+    }
     const contracts = this.sim.contracts.heldBy(this.self).map((c) => {
       const tasks = this.sim.contracts.tasksOf(c.id).map((t) => `${t.status === 'done' ? '✓' : '○'} ${t.title}`).join('  ');
       return `${c.title} — ${c.status}${c.outcome ? ` (${c.outcome})` : ''}${c.status === 'accepted' ? `: ${tasks}` : ''}`;
@@ -522,6 +531,7 @@ export class Game {
       .filter((r) => r.to === this.playerId)
       .map((r) => `${s.actors[r.from]?.name ?? r.from} — regard ${r.regard}, trust ${r.trust}, familiarity ${r.familiarity}`);
     this.hud.list('journal', 'Journal', 'Your Chronicle in Happy Fall', [
+      { heading: 'Your tale so far', rows: [prose ?? '…'] },
       { heading: 'Contracts', rows: contracts },
       { heading: 'Standing (always local, never a rank)', rows: standing },
       { heading: 'How people regard you', rows: people },
