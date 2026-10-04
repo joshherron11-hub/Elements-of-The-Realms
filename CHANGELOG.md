@@ -5,6 +5,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — Blackmere character pipeline: rigged humanoid reference (presentation only)
+- Production character pipeline (`tools/characters/`): sculpted distance-field anatomy
+  and clothing → marching cubes → headless Blender (decimated LODs, baked occlusion,
+  palette slots, body segments) → shared 32-bone skeleton, skin weights and an authored
+  clip library (idle, walk, run, turn, talk, interact, sit, carry, work, celebrate,
+  sleep) → `assets/characters/blackmere-humanoid.glb`.
+- Runtime (`src/render/characters/`): GLB library, modular part assembly merged into
+  one skinned geometry per LOD and shared between NPCs, palette/occlusion/detail
+  shader, skinned outline, LODs per graphics preset, AnimationMixer with cross-fades,
+  head look, activity gestures. Falls back to the built figure until loaded;
+  `?models=off` disables it.
+- Reference milestone: Pip Ashdown (Town Square) uses the new model; a placeholder
+  townsperson (`extra_market-runner`) stands beside him for comparison. Looks gain an
+  optional `model` block; scene extras can use a named `look`. No simulation changes.
+- Dev character viewer (`/tools/characters/viewer/`), `docs/CHARACTERS.md`, tests.
+
 ### Changed — Blackmere Art Pass 3: lighting, atmosphere, final presentation (presentation only)
 - Lighting: warm key sun against cool hemisphere shadows, moonlit (not black) nights,
   softer stronger shadows, warmer tavern interior with ember fog; contact-shadow decals

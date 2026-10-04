@@ -2,9 +2,10 @@ import * as THREE from 'three';
 import type { ActorId, CurrencyId, OwnerRef } from '../core/refs';
 import type { Intent, IntentOutcome, ModeKey } from '../modes/types';
 import { buildSection, type BuiltSection } from '../render/builder';
+import { activityGesture, CHARACTER_ASSETS, CharacterLibrary, createCharacter, humanoidOf, wantsUpgrade } from '../render/characters';
 import { animateFigure, createFamiliarFigure, createPerson, lookFromStyle, styleFor } from '../render/figures';
 import { angleDelta, turnToward, type FamiliarAction } from '../render/rig';
-import type { Looks } from '../render/looks';
+import type { Looks, PersonLook } from '../render/looks';
 import type { ReadableSpec, SceneLayout, Vec2 } from '../render/layout';
 import { Materials } from '../render/materials';
 import { createStage, type Palette, type Stage } from '../render/stage';
@@ -137,6 +138,8 @@ export class Game {
   saved = false;
   private readonly self: OwnerRef;
   private readonly currency: CurrencyId;
+  /** Rigged character models; NPCs whose look names one switch over once it loads. */
+  private readonly characters = new CharacterLibrary(CHARACTER_ASSETS);
 
   constructor(
     private readonly sim: Simulation,
@@ -169,6 +172,26 @@ export class Game {
     this.hud.setQuality(this.stage.settings.quality);
     this.hud.qualityButton.onclick = () => this.toggleQuality();
     this.attachZoom();
+    // `?models=off` keeps the built figures (comparison and very weak devices).
+    if (!/[?&]models=off\b/.test(window.location.search)) void this.characters.loadAll().then(() => this.upgradeFigures());
+  }
+
+  /** Swap fallback figures for rigged models once their asset is ready. */
+  private upgradeFigures(): void {
+    for (const n of this.npcs) {
+      const look = this.looks.people[n.id];
+      if (!look || !wantsUpgrade(n.figure, look, this.characters)) continue;
+      const next = this.person(look, n.id);
+      next.position.copy(n.figure.position);
+      next.rotation.copy(n.figure.rotation);
+      n.figure.parent?.add(next);
+      n.figure.removeFromParent();
+      n.figure = next;
+    }
+  }
+
+  private person(look: PersonLook, id: string): THREE.Group {
+    return createCharacter(this.materials, this.characters, look, id.length * 13 + look.height * 10, this.stage.settings);
   }
 
   /** Optional hooks the app wires up (saving lives outside the game loop). */
@@ -417,7 +440,7 @@ export class Game {
     this.section.group.add(this.player);
     this.tapRing.visible = false;
     this.section.group.add(this.tapRing);
-    this.ambient = new Ambient(layout, this.materials, this.section, this.stage.settings.density, { mist: this.stage.settings.mist });
+    this.ambient = new Ambient(layout, this.materials, this.section, this.stage.settings.density, { mist: this.stage.settings.mist, looks: this.looks.people });
     this.pos = [...at];
     this.trail = [[...at]];
     this.walkTarget = null;
@@ -496,7 +519,7 @@ export class Game {
       let n = this.npcs.find((x) => x.id === a.id);
       if (!n) {
         const at: Vec2 = initial ? [...target] : this.nearestExit(target);
-        const figure = createPerson(this.materials, this.looks.people[a.id] ?? lookFromStyle(styleFor(this.materials, a.tags)), a.name.length * 13 + a.id.length);
+        const figure = this.person(this.looks.people[a.id] ?? lookFromStyle(styleFor(this.materials, a.tags)), a.id);
         figure.position.set(at[0], 0, at[1]);
         this.section.group.add(figure);
         const label = this.label(a.name, 'npc');
@@ -562,6 +585,13 @@ export class Game {
       n.figure.position.x = n.at[0];
       n.figure.position.z = n.at[1];
       const talking = this.dialogueWith === n.id && this.hud.openPanel === 'dialogue';
+      const hum = humanoidOf(n.figure);
+      if (hum) {
+        // Routine work shows as a gesture that comes and goes (presentation only).
+        const g = activityGesture(n.activity);
+        const showing = g === 'carry' || (!n.walking && !talking && Math.sin(t / 2600 + n.seed) > -0.2);
+        hum.gesture = g && showing ? g : undefined;
+      }
       animateFigure(n.figure, {
         t: t / 1000,
         dt: dt / 1000,

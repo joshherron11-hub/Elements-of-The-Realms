@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { FamiliarLook } from './looks';
 import type { Materials } from './materials';
 import { animatePerson } from './people';
+import { animateHumanoid, humanoidOf } from './characters/humanoid';
 import { ease, rigOf, shadowDisc, type PoseInput, type Rig } from './rig';
 import { softDisc } from './textures';
 import { cluster, lathe, slab, tube, type V3 } from './kit/geo';
@@ -267,6 +268,7 @@ export function createAnimal(m: Materials, kind: 'chicken' | 'sheep' | 'crow' | 
 
 /** Pose any figure for this frame. Purely visual. */
 export function animateFigure(root: THREE.Object3D, p: PoseInput): void {
+  if (humanoidOf(root)) return animateHumanoid(root, p);
   const r = rigOf(root);
   if (!r) return;
   if (r.kind === 'person') return animatePerson(r, root, p);

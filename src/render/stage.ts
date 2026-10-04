@@ -67,7 +67,8 @@ export interface Stage {
   /** Elevated three-quarter follow camera. `velocity` (m/s, x/z) leads the frame where you are going. */
   follow(target: THREE.Vector3, dtMs: number, velocity?: [number, number]): void;
   /** Player zoom, 0.7 (close) … 1.4 (far). */
-  zoom(factor: number): void;
+  /** `unclamped` is for tools (close-up screenshots); play stays within the normal range. */
+  zoom(factor: number, unclamped?: boolean): void;
   readonly zoomLevel: number;
   setQuality(q: GraphicsQuality): void;
   start(onFrame: (dtMs: number) => void): void;
@@ -323,8 +324,8 @@ export function createStage(container: HTMLElement, P: Palette = PALETTE, qualit
       sun.target.position.copy(focus);
       sun.position.copy(focus).add(sunOffset);
     },
-    zoom(factor) {
-      zoomLevel = THREE.MathUtils.clamp(factor, 0.7, 1.4);
+    zoom(factor, unclamped = false) {
+      zoomLevel = unclamped ? factor : THREE.MathUtils.clamp(factor, 0.7, 1.4);
     },
     setQuality(q) {
       settings = QUALITY[q];

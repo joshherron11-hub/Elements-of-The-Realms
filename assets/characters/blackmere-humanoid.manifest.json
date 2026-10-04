@@ -1,0 +1,257 @@
+{
+ "parts": {
+  "body_arms_lower": {
+   "category": "body",
+   "tris": [
+    946,
+    359,
+    119
+   ],
+   "hides": [],
+   "segment": "arms_lower"
+  },
+  "body_arms_upper": {
+   "category": "body",
+   "tris": [
+    1431,
+    596,
+    220
+   ],
+   "hides": [],
+   "segment": "arms_upper"
+  },
+  "body_feet": {
+   "category": "body",
+   "tris": [
+    1035,
+    428,
+    171
+   ],
+   "hides": [],
+   "segment": "feet"
+  },
+  "body_legs_lower": {
+   "category": "body",
+   "tris": [
+    1185,
+    489,
+    185
+   ],
+   "hides": [],
+   "segment": "legs_lower"
+  },
+  "body_legs_upper": {
+   "category": "body",
+   "tris": [
+    1730,
+    749,
+    310
+   ],
+   "hides": [],
+   "segment": "legs_upper"
+  },
+  "body_neck": {
+   "category": "body",
+   "tris": [
+    312,
+    141,
+    52
+   ],
+   "hides": [],
+   "segment": "neck"
+  },
+  "body_torso": {
+   "category": "body",
+   "tris": [
+    2361,
+    1018,
+    381
+   ],
+   "hides": [],
+   "segment": "torso"
+  },
+  "head_a": {
+   "category": "head",
+   "tris": [
+    4200,
+    1764,
+    672
+   ],
+   "hides": [],
+   "segment": null
+  },
+  "eyes_a": {
+   "category": "eyes",
+   "tris": [
+    792,
+    528,
+    128
+   ],
+   "hides": [],
+   "segment": null
+  },
+  "brows_a": {
+   "category": "brows",
+   "tris": [
+    300,
+    126,
+    80
+   ],
+   "hides": [],
+   "segment": null
+  },
+  "hands_base": {
+   "category": "hands",
+   "tris": [
+    1500,
+    630,
+    240
+   ],
+   "hides": [],
+   "segment": null
+  },
+  "hair_tousled": {
+   "category": "hair",
+   "tris": [
+    2600,
+    1092,
+    416
+   ],
+   "hides": [],
+   "segment": null
+  },
+  "hair_tousled_hat": {
+   "category": "hair",
+   "tris": [
+    2600,
+    1092,
+    416
+   ],
+   "hides": [],
+   "segment": null
+  },
+  "hat_flatcap": {
+   "category": "hat",
+   "tris": [
+    1400,
+    588,
+    224
+   ],
+   "hides": [],
+   "segment": null
+  },
+  "top_tunic": {
+   "category": "top",
+   "tris": [
+    3000,
+    1260,
+    480
+   ],
+   "hides": [
+    "torso",
+    "arms_upper",
+    "arms_lower"
+   ],
+   "segment": null
+  },
+  "over_vest": {
+   "category": "over",
+   "tris": [
+    1300,
+    546,
+    208
+   ],
+   "hides": [],
+   "segment": null
+  },
+  "belt_plain": {
+   "category": "belt",
+   "tris": [
+    500,
+    210,
+    80
+   ],
+   "hides": [],
+   "segment": null
+  },
+  "bottoms_trousers": {
+   "category": "bottoms",
+   "tris": [
+    1600,
+    672,
+    256
+   ],
+   "hides": [
+    "legs_upper"
+   ],
+   "segment": null
+  },
+  "boots_cuffed": {
+   "category": "boots",
+   "tris": [
+    1100,
+    462,
+    176
+   ],
+   "hides": [
+    "feet",
+    "legs_lower"
+   ],
+   "segment": null
+  },
+  "neck_scarf": {
+   "category": "neck",
+   "tris": [
+    1400,
+    588,
+    224
+   ],
+   "hides": [],
+   "segment": null
+  },
+  "bag_satchel": {
+   "category": "bag",
+   "tris": [
+    1200,
+    504,
+    192
+   ],
+   "hides": [],
+   "segment": null
+  }
+ },
+ "slots": [
+  "skin",
+  "lips",
+  "hair",
+  "brow",
+  "sclera",
+  "iris",
+  "pupil",
+  "top",
+  "top_trim",
+  "over",
+  "accent",
+  "legs",
+  "leather",
+  "sole",
+  "metal",
+  "hat"
+ ],
+ "lods": 3,
+ "clips": [
+  "idle",
+  "walk",
+  "run",
+  "turn",
+  "talk",
+  "interact",
+  "sit",
+  "carry",
+  "work",
+  "celebrate",
+  "sleep"
+ ],
+ "bones": 32,
+ "deformBones": 26
+}

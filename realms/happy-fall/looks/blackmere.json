@@ -35,7 +35,20 @@
       "hat": "cap",
       "colors": { "body": "#d9642b", "over": "#2a3a4a", "accent": "#e8b04a", "legs": "#3b2a24", "hat": "#2a3a4a" },
       "garments": ["tunic", "vest", "scarf", "satchel"],
-      "held": "letter", "idle": "hold"
+      "held": "letter", "idle": "hold",
+      "model": {
+        "asset": "blackmere-humanoid",
+        "parts": ["body_base", "head_a", "eyes_a", "brows_a", "hands_base", "hair_tousled", "hat_flatcap", "top_tunic", "over_vest",
+          "belt_plain", "bottoms_trousers", "boots_cuffed", "neck_scarf", "bag_satchel"],
+        "palette": { "iris": "#4a2c1a", "leather": "#6a4428" }
+      }
+    },
+    "extra_market-runner": {
+      "build": "small", "height": 2.15, "skin": "#e0a882", "hair": "#6b3a1e", "hairStyle": "tousled",
+      "hat": "cap",
+      "colors": { "body": "#5d6b3a", "over": "#5a3a24", "accent": "#a3302a", "legs": "#3b2a24", "hat": "#5a3a24" },
+      "garments": ["tunic", "vest", "scarf", "satchel"],
+      "held": "none", "idle": "relaxed"
     },
     "actor_aldous-crane": {
       "build": "tall", "height": 2.75, "skin": "#e7c39a", "hair": "#b8b0a4", "hairStyle": "bald", "beard": "full",

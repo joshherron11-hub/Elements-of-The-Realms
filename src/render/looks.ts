@@ -40,6 +40,20 @@ export interface PersonLook {
   garments: Garment[];
   held: Held;
   idle: Idle;
+  /**
+   * Rigged humanoid model (see `src/render/characters`). When set and the asset
+   * has loaded, this replaces the built figure; the look's colours still apply.
+   */
+  model?: ModelLook;
+}
+
+export interface ModelLook {
+  /** Character asset id, e.g. "blackmere-humanoid". */
+  asset: string;
+  /** Modular parts: body, head, eyes, brows, hands, hair, hat, top, over, belt, bottoms, boots, neck, bag… */
+  parts: string[];
+  /** Palette overrides by slot name (e.g. iris, leather). */
+  palette: Record<string, number>;
 }
 
 export interface FamiliarLook {
@@ -67,7 +81,7 @@ export function parseLooks(raw: unknown, source = 'looks'): Result<Looks> {
   for (const [id, x] of Object.entries(v.obj(o.people ?? {}, 'people'))) {
     const p = `people.${id}`;
     const l = v.obj(x, p);
-    v.noExtraKeys(l, ['build', 'height', 'skin', 'hair', 'hairStyle', 'beard', 'hat', 'colors', 'garments', 'held', 'idle'], p);
+    v.noExtraKeys(l, ['build', 'height', 'skin', 'hair', 'hairStyle', 'beard', 'hat', 'colors', 'garments', 'held', 'idle', 'model'], p);
     const c = v.obj(l.colors, `${p}.colors`);
     people[id] = {
       build: v.oneOf(l.build ?? 'average', BUILDS, `${p}.build`),
@@ -88,6 +102,17 @@ export function parseLooks(raw: unknown, source = 'looks'): Result<Looks> {
       held: v.oneOf(l.held ?? 'none', HELD, `${p}.held`),
       idle: v.oneOf(l.idle ?? 'relaxed', IDLES, `${p}.idle`),
     };
+    if (l.model !== undefined) {
+      const m = v.obj(l.model, `${p}.model`);
+      v.noExtraKeys(m, ['asset', 'parts', 'palette'], `${p}.model`);
+      const pal: Record<string, number> = {};
+      for (const [slot, c] of Object.entries(v.obj(m.palette ?? {}, `${p}.model.palette`))) pal[slot] = hexColor(v, c, `${p}.model.palette.${slot}`);
+      people[id]!.model = {
+        asset: v.str(m.asset, `${p}.model.asset`),
+        parts: v.arr(m.parts, `${p}.model.parts`, (x, xp) => v.str(x, xp)),
+        palette: pal,
+      };
+    }
   }
   const familiars: Record<string, FamiliarLook> = {};
   for (const [id, x] of Object.entries(v.obj(o.familiars ?? {}, 'familiars'))) {

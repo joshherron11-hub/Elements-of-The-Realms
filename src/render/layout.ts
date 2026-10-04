@@ -85,6 +85,8 @@ export interface ExtraSpec {
   face?: number;
   /** What a standing extra is doing: chatting (gestures), browsing a stall, or just standing. */
   activity?: 'chat' | 'browse' | 'stand';
+  /** Draw this person with a named look from the looks files (presentation only). */
+  look?: string;
 }
 
 export interface AmbientSpec {
@@ -208,9 +210,10 @@ export function parseSceneLayout(raw: unknown, source = 'scene'): Result<SceneLa
   });
   layout.extras = v.arr(o.extras ?? [], 'extras', (x, p) => {
     const e = v.obj(x, p);
-    v.noExtraKeys(e, ['kind', 'at', 'path', 'hours', 'color', 'face', 'activity'], p);
+    v.noExtraKeys(e, ['kind', 'at', 'path', 'hours', 'color', 'face', 'activity', 'look'], p);
     const spec: ExtraSpec = { kind: v.oneOf(e.kind, ['villager', 'patron', 'chicken', 'sheep', 'crow', 'cat'] as const, `${p}.kind`), color: v.optStr(e.color, `${p}.color`) };
     if (e.at !== undefined) spec.at = vec(e.at, `${p}.at`);
+    if (e.look !== undefined) spec.look = v.str(e.look, `${p}.look`);
     if (e.face !== undefined) spec.face = v.num(e.face, `${p}.face`, -7, 7);
     if (e.activity !== undefined) spec.activity = v.oneOf(e.activity, ['chat', 'browse', 'stand'] as const, `${p}.activity`);
     if (e.path !== undefined) spec.path = v.arr(e.path, `${p}.path`, (q, qp) => vec(q, qp));

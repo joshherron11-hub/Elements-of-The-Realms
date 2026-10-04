@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { inHours } from '../world/living';
 import type { BuiltSection } from './builder';
-import { animateFigure, createAnimal, createFigure } from './figures';
+import { animateFigure, createAnimal, createFigure, createPerson } from './figures';
+import type { PersonLook } from './looks';
 import type { ExtraSpec, SceneLayout, Vec2 } from './layout';
 import type { Lighting } from './lighting';
 import type { Materials } from './materials';
@@ -70,13 +71,15 @@ export class Ambient {
     private readonly m: Materials,
     private readonly built: BuiltSection,
     density = 1,
-    opts: { mist?: boolean } = {},
+    opts: { mist?: boolean; looks?: Record<string, PersonLook> } = {},
   ) {
     const group = built.group;
     const P = m.palette;
     layout.extras.forEach((spec, i) => {
-      const obj =
-        spec.kind === 'villager' || spec.kind === 'patron'
+      const look = spec.look ? opts.looks?.[spec.look] : undefined;
+      const obj = look
+        ? createPerson(m, look, i * 7 + 3)
+        : spec.kind === 'villager' || spec.kind === 'patron'
           ? createFigure(m, { body: m.color(spec.color, 'stone'), accent: i % 2 ? P.gold : P.timber, role: spec.kind, height: spec.kind === 'patron' ? 2.2 : 2.35 })
           : createAnimal(m, spec.kind, spec.color ? m.color(spec.color) : undefined);
       const start = spec.at ?? spec.path![0]!;
