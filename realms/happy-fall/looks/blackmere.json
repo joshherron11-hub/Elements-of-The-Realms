@@ -1,0 +1,60 @@
+{
+  "$provisional": "Character and Familiar appearance for Blackmere. Presentation only; original designs.",
+  "realmId": "realm_happy-fall",
+  "people": {
+    "player": {
+      "build": "average", "height": 2.55, "skin": "#e7c39a", "hair": "#6b3a1e", "hairStyle": "tousled",
+      "hat": "hood",
+      "colors": { "body": "#efe2c6", "over": "#d9642b", "accent": "#e8b04a", "legs": "#4a3a30", "hat": "#d9642b" },
+      "garments": ["tunic", "cloak", "scarf", "belt-pouch", "lantern"],
+      "held": "none", "idle": "relaxed"
+    },
+    "actor_maren-holloway": {
+      "build": "stout", "height": 2.45, "skin": "#f0d2b0", "hair": "#8a4a2a", "hairStyle": "bun",
+      "hat": "headscarf",
+      "colors": { "body": "#a3302a", "over": "#5a2a24", "accent": "#e8b04a", "legs": "#5a2a24", "hat": "#e8b04a" },
+      "garments": ["dress", "bodice", "apron", "rolled-sleeves", "belt-pouch"],
+      "held": "tankard", "idle": "hips"
+    },
+    "actor_tobias-quill": {
+      "build": "tall", "height": 2.7, "skin": "#c99a6e", "hair": "#3a2416", "hairStyle": "ponytail", "beard": "moustache",
+      "hat": "wide-brim",
+      "colors": { "body": "#efe2c6", "over": "#c9973a", "accent": "#7d2e22", "legs": "#3b2516", "hat": "#5a3a24" },
+      "garments": ["tunic", "doublet", "sash", "belt-pouch", "pack"],
+      "held": "ledger", "idle": "hold"
+    },
+    "actor_hester-brindle": {
+      "build": "stout", "height": 2.45, "skin": "#e0a882", "hair": "#c9a060", "hairStyle": "braid",
+      "hat": "straw",
+      "colors": { "body": "#5d6b3a", "over": "#8a6a44", "accent": "#a3302a", "legs": "#4a3a2a", "hat": "#d9b45a" },
+      "garments": ["dress", "apron", "rolled-sleeves", "scarf"],
+      "held": "pitchfork", "idle": "lean"
+    },
+    "actor_pip-ashdown": {
+      "build": "small", "height": 2.15, "skin": "#9c6b48", "hair": "#2a1a1a", "hairStyle": "tousled",
+      "hat": "cap",
+      "colors": { "body": "#d9642b", "over": "#2a3a4a", "accent": "#e8b04a", "legs": "#3b2a24", "hat": "#2a3a4a" },
+      "garments": ["tunic", "vest", "scarf", "satchel"],
+      "held": "letter", "idle": "hold"
+    },
+    "actor_aldous-crane": {
+      "build": "tall", "height": 2.75, "skin": "#e7c39a", "hair": "#b8b0a4", "hairStyle": "bald", "beard": "full",
+      "hat": "tall",
+      "colors": { "body": "#2a2030", "over": "#7d2e22", "accent": "#e8b04a", "legs": "#2a2030", "hat": "#1e1a24" },
+      "garments": ["robe", "tabard", "mantle", "chain"],
+      "held": "scroll", "idle": "behind"
+    },
+    "actor_sela-vantry": {
+      "build": "slim", "height": 2.6, "skin": "#b07a52", "hair": "#2a1a1a", "hairStyle": "long",
+      "hat": "hood",
+      "colors": { "body": "#5d6b3a", "over": "#6a6a7a", "accent": "#c9973a", "legs": "#3a3440", "hat": "#6a6a7a" },
+      "garments": ["tunic", "cloak", "sash", "bedroll"],
+      "held": "staff", "idle": "lean"
+    }
+  },
+  "familiars": {
+    "familiar_bramble": { "coat": "#c4562a", "marking": "#f6ead6", "accent": "#a3302a" },
+    "familiar_wick": { "coat": "#f6d07a", "marking": "#8a3a1a", "accent": "#ffd9a8" },
+    "familiar_old-corvin": { "coat": "#26222c", "marking": "#9a9284", "accent": "#e8b04a" }
+  }
+}

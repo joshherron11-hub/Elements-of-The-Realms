@@ -97,3 +97,61 @@ Every visible object is built from the art kit in `src/render/kit/`, not from ra
 
 Budget (town square, LOW): ~350 draw calls (unchanged by merging), ~105k triangles,
 29 textures. Measured in software rendering; real-GPU profiling is still to do.
+
+## Art Pass 2 — characters, Familiars, props
+
+### Characters (`src/render/people.ts`, `realms/happy-fall/looks/blackmere.json`)
+Each person is drawn from a **look** (presentation data, validated by `src/render/looks.ts`):
+build (slim, average, stout, small, tall), height, skin, hair and hair style, beard,
+hat, five colours (garment, over-layer, accent, legs, hat), garment layers, the item in
+hand and an idle stance. A new NPC needs a look entry, not code.
+
+| NPC | Silhouette | Layers | In hand | Idle |
+|---|---|---|---|---|
+| Maren Holloway | stout, headscarf, bun | dress, laced bodice, apron with bib, rolled sleeves, belt pouch | tankard | hands on hips |
+| Tobias Quill | tall, wide feathered hat, ponytail, moustache | shirt, button doublet, sash, pack | ledger | holds it up |
+| Hester Brindle | stout, straw hat, braid | dress, apron, rolled sleeves, scarf | pitchfork | leaning |
+| Pip Ashdown | small, peaked cap, tousled hair | tunic, vest, scarf, satchel stuffed with letters | sealed letter | holds it up |
+| Reeve Aldous Crane | tall, tall hat, bald, full grey beard | floor-length robe, tabard with seal, mantle, chain of office | scroll | hands behind back |
+| Sela Vantry | slim, hood, long hair | tunic, cloak, sash, bedroll | glowing staff | leaning |
+| You | open hood with a tail, ember cloak | tunic, cloak, scarf, belt pouch, **a glowing lantern at the hip** | — | relaxed |
+
+Rig: shoulders and **elbows**, hips, head. Poses blend smoothly: walk and run (arm
+swing, torso counter-twist, bob), idle stances with breathing and weight shift,
+talking gestures, **turning** (bodies turn at a limited speed and step in place while
+turning), **interaction facing** (NPCs turn to face you when you are close or talking;
+nearby NPCs follow you with their head), seated and sleeping poses. The player turns
+smoothly and faces whoever they are talking to.
+
+### Familiars (`src/render/figures.ts`)
+- **Bramble (hound):** ears on pivots (flop when trotting, twitch when idle), a jaw
+  that pants with the tongue out when happy or running, a curious head tilt, a wagging
+  tail whose speed follows mood. **Sits** and watches you after you stand still a few
+  seconds. **Feed:** a bowl appears and she eats, tail going. **Bond:** a play-bow,
+  then a happy bounce. **Rest:** lies down, head low.
+- **Wick (lantern moth):** lobed wings with eye-spots, feathered antennae, flutter
+  speed by mood, brighter halo when fed, a looping spin for joy, settles when resting.
+- **Old Corvin (raven):** hops, tilts his head, stretches a wing now and then, caws
+  (the lower beak opens), pecks when fed, flaps when pleased, fluffs up to rest.
+- Care actions also show a small emote (✿ eat, ♥ bond, z z rest) above the Familiar.
+
+### Props (`src/render/kit/props.ts`, `kit/instancer.ts`)
+- **Authored variants** (`variant` on a scene prop, validated per type): stalls by trade
+  (produce, bakery, cloth, pottery), crates (produce, closed, stack, empty), barrels
+  (water, apples, tap, rain), sacks (tied, open, pile), baskets (apples, pears,
+  cabbages, carrots, eggs, empty), benches (plain, backed), tables (set, bare), lamps
+  (single, double), fences (rail, picket), carts (broken, loaded, hand), banners (pole,
+  wall), wheelbarrows (empty, hay, pumpkins).
+- **New props:** stool, basket, bucket, keg rack, tool rack (pitchfork, rake, shovel,
+  scythe), wheelbarrow, trough, milestone, multi-arm waymarker.
+- **Instancing:** apples, pears, cabbages, carrots, loaves, rolls, pies, cheese,
+  bottles, jars, jugs, tankards, gourds, cloth bolts, eggs share one geometry per kind
+  and one instanced draw call per kind for the whole section.
+- **Placement:** props are grouped into small scenes — each stall with its own trade,
+  sign, crates and baskets; the tavern's keg rack, set tables and stools under the
+  patrons; the farm's tool corner, trough, wheelbarrows and egg basket; a waymarker at
+  the road fork and milestones on the road.
+
+### Budget
+Town square on LOW (software rendering): ~410 draw calls, ~129k triangles (Art Pass 1:
+~350 and ~105k). Market: ~500 calls, ~152k triangles (was ~405 and ~123k).

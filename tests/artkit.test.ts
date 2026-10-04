@@ -53,3 +53,11 @@ describe('art kit geometry', () => {
     expect(span(large)).toBeCloseTo(span(small) * 2, 5);
   });
 });
+
+describe('art kit source hygiene', () => {
+  it('no prop adds its own group to itself (done() already returns the group)', async () => {
+    const { readFileSync } = await import('node:fs');
+    const src = readFileSync(new URL('../src/render/kit/props.ts', import.meta.url), 'utf8');
+    expect(src).not.toMatch(/g\.add\(done\(/);
+  });
+});

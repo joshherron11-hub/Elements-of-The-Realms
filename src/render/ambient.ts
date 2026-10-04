@@ -191,7 +191,7 @@ export class Ambient {
           e.obj.rotation.y = Math.atan2(dx, dz);
           walk = Math.min(1, Math.hypot(dx, dz) * 1.5);
         }
-        if (e.spec.kind === 'patron') e.obj.rotation.y = Math.sin(t * 0.3 + e.seed) * 0.5;
+        if (e.spec.kind === 'patron') e.obj.rotation.y = (e.spec.face ?? 0) + Math.sin(t * 0.3 + e.seed) * 0.25;
       }
       animateFigure(e.obj, {
         t,

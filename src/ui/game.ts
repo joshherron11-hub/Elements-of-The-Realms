@@ -2,7 +2,9 @@ import * as THREE from 'three';
 import type { ActorId, CurrencyId, OwnerRef } from '../core/refs';
 import type { Intent, IntentOutcome, ModeKey } from '../modes/types';
 import { buildSection, type BuiltSection } from '../render/builder';
-import { animateFigure, createFamiliarFigure, createFigure, styleFor } from '../render/figures';
+import { animateFigure, createFamiliarFigure, createPerson, lookFromStyle, styleFor } from '../render/figures';
+import { angleDelta, turnToward, type FamiliarAction } from '../render/rig';
+import type { Looks } from '../render/looks';
 import type { ReadableSpec, SceneLayout, Vec2 } from '../render/layout';
 import { Materials } from '../render/materials';
 import { createStage, type Palette, type Stage } from '../render/stage';
@@ -52,6 +54,10 @@ interface FamiliarView {
   joyUntil: number;
   walk: number;
   sniff: boolean;
+  /** A care animation in progress (eat, bond, rest) or an idle sit. */
+  action: FamiliarAction;
+  actionStart: number;
+  actionUntil: number;
 }
 
 interface NpcView {
@@ -68,6 +74,8 @@ interface NpcView {
   doing: HTMLElement;
   seed: number;
   walking: boolean;
+  /** Facing the body is turning towards (smoothed in `turnToward`). */
+  yaw?: number;
 }
 
 interface WorldText {
@@ -136,13 +144,14 @@ export class Game {
     private readonly layouts: Map<string, SceneLayout>,
     container: HTMLElement,
     palette: Palette,
+    private readonly looks: Looks = { people: {}, familiars: {} },
   ) {
     this.stage = createStage(container, palette, Game.initialQuality());
     this.materials = new Materials(palette);
     this.hud = new Hud(document.body);
     this.self = { kind: 'actor', id: playerId };
     this.currency = (sim.ctx.rules?.realm.constitution.economy.primaryCurrency ?? Object.keys(sim.state.currencies)[0]) as CurrencyId;
-    this.player = createFigure(this.materials, styleFor(this.materials, [], true));
+    this.player = createPerson(this.materials, looks.people.player ?? lookFromStyle(styleFor(this.materials, [], true)), 1);
     this.palette = palette;
     this.tapRing = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.3), new THREE.MeshBasicMaterial({ map: targetDecal(), color: palette.gold, transparent: true, opacity: 0.85, depthWrite: false }));
     this.tapRing.rotation.x = -Math.PI / 2;
@@ -308,9 +317,21 @@ export class Game {
     if (n) this.worldText(text, () => new THREE.Vector3(n.at[0], 3.2, n.at[1]), 'bubble');
   }
 
+  /** Play a care animation (eat, bond, rest) with a little emote above the Familiar. */
+  private petAction(familiarId: string, action: FamiliarAction, ms: number): void {
+    const p = this.pets.find((x) => x.id === familiarId);
+    if (!p) return;
+    const t = performance.now();
+    p.action = action;
+    p.actionStart = t;
+    p.actionUntil = t + ms;
+    const emote = action === 'eat' ? '✿' : action === 'bond' ? '♥' : action === 'rest' ? 'z z' : '';
+    if (emote) this.worldText(emote, () => new THREE.Vector3(p.at[0], p.floats ? 3.0 : 2.1, p.at[1]), 'float', 1800);
+  }
+
   private sayPet(familiarId: string, text: string): void {
     const p = this.pets.find((x) => x.id === familiarId);
-    if (p) p.joyUntil = performance.now() + 1600; // a happy hop, spin or wag
+    if (p && p.action === 'none') p.joyUntil = performance.now() + 1600; // a happy hop, spin or wag
     if (p) this.worldText(text, () => new THREE.Vector3(p.at[0], p.floats ? 2.8 : 1.9, p.at[1]), 'bubble', 4200);
   }
 
@@ -475,7 +496,7 @@ export class Game {
       let n = this.npcs.find((x) => x.id === a.id);
       if (!n) {
         const at: Vec2 = initial ? [...target] : this.nearestExit(target);
-        const figure = createFigure(this.materials, styleFor(this.materials, a.tags));
+        const figure = createPerson(this.materials, this.looks.people[a.id] ?? lookFromStyle(styleFor(this.materials, a.tags)), a.name.length * 13 + a.id.length);
         figure.position.set(at[0], 0, at[1]);
         this.section.group.add(figure);
         const label = this.label(a.name, 'npc');
@@ -524,10 +545,15 @@ export class Game {
         const moved = moveWithCollision(this.layout, n.at, dir);
         // Props in the way: people step around in life; here they slip past.
         n.at = dist(moved, n.at) < step * 0.3 ? [n.at[0] + dir[0], n.at[1] + dir[1]] : moved;
-        n.figure.rotation.y = Math.atan2(dir[0], dir[1]);
-      } else if (near && !asleep) {
-        n.figure.rotation.y = Math.atan2(this.pos[0] - n.at[0], this.pos[1] - n.at[1]);
+        n.yaw = Math.atan2(dir[0], dir[1]);
       }
+      // Interaction facing: turn the body to someone close or talking; just the head for someone nearby.
+      const toPlayer = Math.atan2(this.pos[0] - n.at[0], this.pos[1] - n.at[1]);
+      const pd = dist(n.at, this.pos);
+      const talkingTo = this.dialogueWith === n.id && this.hud.openPanel === 'dialogue';
+      if (!n.walking && !asleep && (talkingTo || pd < 3.4)) n.yaw = toPlayer;
+      const turned = turnToward(n.figure, n.yaw ?? n.figure.rotation.y, dt / 1000, n.walking ? 9 : 5);
+      const look = !asleep && !n.walking && pd < 8 ? Math.max(-0.9, Math.min(0.9, angleDelta(n.figure.rotation.y, toPlayer))) : undefined;
       if (n.leaving && dist(n.at, n.leaving) < 0.3) {
         this.section.group.remove(n.figure);
         n.label.remove();
@@ -536,7 +562,15 @@ export class Game {
       n.figure.position.x = n.at[0];
       n.figure.position.z = n.at[1];
       const talking = this.dialogueWith === n.id && this.hud.openPanel === 'dialogue';
-      animateFigure(n.figure, { t: t / 1000, walk: n.walking ? (n.leaving || d > 0.9 ? 1 : 0.4) : 0, sleeping: asleep && !n.walking, talking: talking || (near && !asleep && !n.walking && Math.sin(t / 900 + n.seed) > 0.6) });
+      animateFigure(n.figure, {
+        t: t / 1000,
+        dt: dt / 1000,
+        walk: n.walking ? (n.leaving || d > 0.9 ? 1 : 0.4) : 0,
+        sleeping: asleep && !n.walking,
+        talking: talking || (near && !asleep && !n.walking && Math.sin(t / 900 + n.seed) > 0.6),
+        turn: turned,
+        look,
+      });
       keep.push(n);
     }
     this.npcs = keep;
@@ -562,7 +596,7 @@ export class Game {
         ? [this.pos[0] - 1.2, this.pos[1] + 1]
         : fixed ?? (keeperView ? [keeperView.at[0] + 1.3, keeperView.at[1] + 0.6] : this.layout.spawns[fa.locationId ?? '']);
       if (!at) continue;
-      const figure = createFamiliarFigure(this.materials, sp?.figure ?? 'hound');
+      const figure = createFamiliarFigure(this.materials, sp?.figure ?? 'hound', this.looks.familiars[f.id]);
       figure.position.x = at[0];
       figure.position.z = at[1];
       this.section.group.add(figure);
@@ -580,6 +614,9 @@ export class Game {
         joyUntil: 0,
         walk: 0,
         sniff: false,
+        action: 'none',
+        actionStart: 0,
+        actionUntil: 0,
       });
     }
   }
@@ -608,7 +645,10 @@ export class Game {
       let dest: Vec2 | undefined;
       let sniffing = false;
       if (p.follows) {
-        if (this.stillMs > 1500) {
+        if (this.stillMs > 4000 && dist(p.at, this.pos) < 4) {
+          // A while later: settle down and wait (the sit pose plays in animateFigure).
+          dest = undefined;
+        } else if (this.stillMs > 1500) {
           // The player has stopped: potter about nearby, sniffing.
           const slot = Math.floor(t / 2600 + p.seed);
           const ang = hash(slot + p.seed) * Math.PI * 2;
@@ -631,18 +671,32 @@ export class Game {
           const speed = Math.min(11, 1.5 + d * 2.8);
           const step = Math.min(d, speed * (dt / 1000));
           const next: Vec2 = [p.at[0] + ((dest[0] - p.at[0]) / d) * step, p.at[1] + ((dest[1] - p.at[1]) / d) * step];
-          p.figure.rotation.y = Math.atan2(next[0] - p.at[0], next[1] - p.at[1]);
+          turnToward(p.figure, Math.atan2(next[0] - p.at[0], next[1] - p.at[1]), dt / 1000, 10);
           p.at = next;
           moving = true;
         } else if (p.follows) {
-          p.figure.rotation.y = Math.atan2(this.pos[0] - p.at[0], this.pos[1] - p.at[1]);
+          // Stopped: look back at the player.
+          turnToward(p.figure, Math.atan2(this.pos[0] - p.at[0], this.pos[1] - p.at[1]), dt / 1000, 4);
         }
       }
       p.figure.position.x = p.at[0];
       p.figure.position.z = p.at[1];
       p.walk = moving ? Math.min(1.6, (p.walk + 0.2) * 0.9 + 0.1) : 0;
       p.sniff = sniffing;
-      animateFigure(p.figure, { t: t / 1000 + p.seed, walk: p.walk, sniff: sniffing, joy: Math.max(0, (p.joyUntil - t) / 1600) });
+      // Care animations play out; a follower that has been still a while sits and waits.
+      if (p.action !== 'none' && p.action !== 'sit' && t > p.actionUntil) p.action = 'none';
+      if (p.action === 'none' && p.follows && this.stillMs > 4000 && !moving) p.action = 'sit';
+      if (p.action === 'sit' && (moving || this.stillMs < 4000)) p.action = 'none';
+      const span = Math.max(1, p.actionUntil - p.actionStart);
+      animateFigure(p.figure, {
+        t: t / 1000 + p.seed,
+        dt: dt / 1000,
+        walk: p.walk,
+        sniff: sniffing && p.action === 'none',
+        joy: Math.max(0, (p.joyUntil - t) / 1600),
+        action: p.action,
+        actionT: Math.min(1, (t - p.actionStart) / span),
+      });
     }
   }
 
@@ -701,7 +755,6 @@ export class Game {
       const before = this.pos;
       this.pos = moveWithCollision(this.layout, this.pos, [ax * speed, az * speed]);
       this.facing = Math.atan2(ax, az);
-      this.player.rotation.y = this.facing;
       if (this.walkTarget) {
         this.walkStuckMs = dist(before, this.pos) < speed * 0.2 ? this.walkStuckMs + dt : 0;
         if (this.walkStuckMs > 500) this.arrived(); // blocked: stop where we are
@@ -718,7 +771,11 @@ export class Game {
       this.stillMs = 0;
     } else this.stillMs += dt;
     this.player.position.set(this.pos[0], 0, this.pos[1]);
-    animateFigure(this.player, { t: performance.now() / 1000, walk: movingNow ? (running ? 1.4 : 1) : 0, talking: this.hud.openPanel === 'dialogue' });
+    // Face the person you are talking to; otherwise the way you are going. Turning is smoothed.
+    const partner = this.hud.openPanel === 'dialogue' ? this.npcs.find((x) => x.id === this.dialogueWith) : undefined;
+    if (partner && !movingNow) this.facing = Math.atan2(partner.at[0] - this.pos[0], partner.at[1] - this.pos[1]);
+    const turned = turnToward(this.player, this.facing, dt / 1000, 12);
+    animateFigure(this.player, { t: performance.now() / 1000, dt: dt / 1000, walk: movingNow ? (running ? 1.4 : 1) : 0, talking: !!partner, turn: turned });
     this.tapRing.visible = !!this.walkTarget && this.walkGoal.kind === 'point';
     if (this.tapRing.visible) this.tapRing.scale.setScalar(1 + Math.sin(performance.now() / 150) * 0.15);
 
@@ -1062,6 +1119,7 @@ export class Game {
           this.spawnFamiliars();
           if (out) {
             this.hud.toast(out.summary);
+            this.petAction(f.id, 'bond', 2200);
             this.sayPet(f.id, out.summary);
           }
           after();
@@ -1119,7 +1177,12 @@ export class Game {
     const refresh = (intent: Intent) => () => {
       const out = this.act(intent);
       const fid = (intent as { familiarId?: string }).familiarId;
-      if (out && fid) this.sayPet(fid, out.summary);
+      if (out && fid) {
+        if (intent.kind === 'feed-familiar') this.petAction(fid, 'eat', 2600);
+        else if (intent.kind === 'bond-familiar') this.petAction(fid, 'bond', 2200);
+        else if (intent.kind === 'rest-familiar') this.petAction(fid, 'rest', 4500);
+        this.sayPet(fid, out.summary);
+      }
       this.showCompanions();
     };
     const sections = mine.map((f) => {

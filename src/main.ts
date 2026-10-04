@@ -10,7 +10,7 @@ import { SaveService } from './persistence/saves';
 import { MemoryStorage, WebStorage, type StorageAdapter } from './persistence/storage';
 import { paletteFrom } from './render/stage';
 import { Game } from './ui/game';
-import { loadSceneLayouts } from './ui/scenes';
+import { loadLooks, loadSceneLayouts } from './ui/scenes';
 import { SAVE_SLOT, openSession, saveSession } from './ui/session';
 
 /**
@@ -45,7 +45,7 @@ const session = openSession({
 const { sim, playerId } = session;
 const rules = sim.ctx.rules!;
 
-const game = new Game(sim, playerId, loadSceneLayouts(), app, paletteFrom(rules.realm.presentation));
+const game = new Game(sim, playerId, loadSceneLayouts(), app, paletteFrom(rules.realm.presentation), loadLooks());
 
 let leaving = false; // set when the page reloads on purpose, so unload does not overwrite the save
 // AI gateway. The Blackmere server runs at MINIMAL density, so narration uses the

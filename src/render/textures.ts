@@ -440,7 +440,9 @@ export function paperTexture(seed = 1): THREE.CanvasTexture {
 }
 
 /** A painted signboard: border, lettering, optional emblem. */
-export function signTexture(text: string, bg: number, ink: number, emblem?: 'ladle' | 'arrow' | 'coin' | 'leaf' | 'key'): THREE.CanvasTexture {
+export type SignEmblem = 'ladle' | 'arrow' | 'coin' | 'leaf' | 'key' | 'loaf' | 'jug' | 'spool' | 'apple';
+
+export function signTexture(text: string, bg: number, ink: number, emblem?: SignEmblem): THREE.CanvasTexture {
   return cached(`kit:sign:${text}:${bg}:${ink}:${emblem ?? ''}`, () => {
     const [c, x] = canvas(512, 160);
     x.fillStyle = hex(bg);
@@ -475,6 +477,38 @@ export function signTexture(text: string, bg: number, ink: number, emblem?: 'lad
         x.moveTo(-4, 0);
         x.lineTo(40, 0);
         x.lineTo(40, 16);
+      } else if (emblem === 'loaf') {
+        x.ellipse(0, 6, 42, 24, 0, 0, Math.PI * 2);
+        for (const dx of [-18, 0, 18]) {
+          x.moveTo(dx - 8, -6);
+          x.lineTo(dx + 8, 14);
+        }
+      } else if (emblem === 'jug') {
+        x.moveTo(-18, 36);
+        x.quadraticCurveTo(-34, 0, -12, -20);
+        x.lineTo(-12, -36);
+        x.lineTo(12, -36);
+        x.lineTo(12, -20);
+        x.quadraticCurveTo(34, 0, 18, 36);
+        x.closePath();
+        x.moveTo(22, -14);
+        x.quadraticCurveTo(44, 0, 26, 18);
+      } else if (emblem === 'spool') {
+        x.rect(-26, -36, 52, 10);
+        x.rect(-26, 26, 52, 10);
+        x.moveTo(-14, -26);
+        x.lineTo(14, -14);
+        x.moveTo(-14, -14);
+        x.lineTo(14, -2);
+        x.moveTo(-14, -2);
+        x.lineTo(14, 10);
+        x.moveTo(-14, 10);
+        x.lineTo(14, 22);
+      } else if (emblem === 'apple') {
+        x.arc(-10, 8, 22, Math.PI * 0.3, Math.PI * 1.7);
+        x.arc(10, 8, 22, Math.PI * 1.3, Math.PI * 0.7);
+        x.moveTo(0, -14);
+        x.lineTo(6, -34);
       } else {
         x.ellipse(0, 0, 20, 40, 0.5, 0, Math.PI * 2);
         x.moveTo(-20, 34);

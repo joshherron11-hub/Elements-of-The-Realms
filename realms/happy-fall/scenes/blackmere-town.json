@@ -303,7 +303,8 @@
     14,
     -5
    ],
-   "color": "ember"
+   "color": "ember",
+   "variant": "produce"
   },
   {
    "type": "stall",
@@ -311,7 +312,8 @@
     21,
     -5
    ],
-   "color": "gold"
+   "color": "gold",
+   "variant": "bakery"
   },
   {
    "type": "stall",
@@ -319,7 +321,8 @@
     14,
     5
    ],
-   "color": "gold"
+   "color": "gold",
+   "variant": "pottery"
   },
   {
    "type": "stall",
@@ -327,28 +330,32 @@
     21,
     5
    ],
-   "color": "crimson"
+   "color": "crimson",
+   "variant": "cloth"
   },
   {
    "type": "crate",
    "at": [
     25,
     -6
-   ]
+   ],
+   "variant": "produce"
   },
   {
    "type": "barrel",
    "at": [
     25,
     6
-   ]
+   ],
+   "variant": "rain"
   },
   {
    "type": "barrel",
    "at": [
     26,
     5
-   ]
+   ],
+   "variant": "water"
   },
   {
    "type": "building",
@@ -642,14 +649,16 @@
    "at": [
     -6.5,
     -3
-   ]
+   ],
+   "variant": "backed"
   },
   {
    "type": "bench",
    "at": [
     6.5,
     3.2
-   ]
+   ],
+   "variant": "backed"
   },
   {
    "type": "banner",
@@ -686,7 +695,8 @@
    "at": [
     23,
     -6
-   ]
+   ],
+   "variant": "closed"
   },
   {
    "type": "board",
@@ -781,7 +791,8 @@
    "at": [
     8.8,
     -4.5
-   ]
+   ],
+   "variant": "produce"
   },
   {
    "type": "stall",
@@ -789,7 +800,8 @@
     28,
     -6.5
    ],
-   "color": "moss"
+   "color": "moss",
+   "variant": "produce"
   },
   {
    "type": "stall",
@@ -797,14 +809,16 @@
     28.6,
     7
    ],
-   "color": "crimson"
+   "color": "crimson",
+   "variant": "pottery"
   },
   {
    "type": "sack",
    "at": [
     17.5,
     -7.6
-   ]
+   ],
+   "variant": "open"
   },
   {
    "type": "sack",
@@ -818,14 +832,16 @@
    "at": [
     17.6,
     7.9
-   ]
+   ],
+   "variant": "apples"
   },
   {
    "type": "crate",
    "at": [
     18.6,
     8.4
-   ]
+   ],
+   "variant": "stack"
   },
   {
    "type": "pumpkins",
@@ -900,7 +916,8 @@
    "at": [
     -28.4,
     11.8
-   ]
+   ],
+   "variant": "rain"
   },
   {
    "type": "barrel",
@@ -914,7 +931,8 @@
    "at": [
     -33.6,
     12
-   ]
+   ],
+   "variant": "pile"
   },
   {
    "type": "lamp",
@@ -963,14 +981,16 @@
    "at": [
     -5,
     -26.2
-   ]
+   ],
+   "variant": "closed"
   },
   {
    "type": "crate",
    "at": [
     -5.6,
     -27.2
-   ]
+   ],
+   "variant": "closed"
   },
   {
    "type": "sack",
@@ -1071,7 +1091,8 @@
    "at": [
     5.6,
     11.2
-   ]
+   ],
+   "variant": "backed"
   },
   {
    "type": "planter",
@@ -1099,7 +1120,8 @@
    "at": [
     21,
     13
-   ]
+   ],
+   "variant": "loaded"
   },
   {
    "type": "woodpile",
@@ -1113,6 +1135,100 @@
    "at": [
     15,
     14
+   ]
+  },
+  {
+   "type": "basket",
+   "at": [
+    12.6,
+    -3.3
+   ],
+   "variant": "cabbages"
+  },
+  {
+   "type": "basket",
+   "at": [
+    15.7,
+    -3.3
+   ],
+   "variant": "apples"
+  },
+  {
+   "type": "basket",
+   "at": [
+    19.6,
+    -3.4
+   ],
+   "variant": "pears"
+  },
+  {
+   "type": "basket",
+   "at": [
+    26.3,
+    -3.6
+   ],
+   "variant": "carrots"
+  },
+  {
+   "type": "basket",
+   "at": [
+    12.6,
+    3.4
+   ],
+   "variant": "empty"
+  },
+  {
+   "type": "waymarker",
+   "at": [
+    29.6,
+    -3.3
+   ],
+   "label": "Town Square | East Road | Hearth Row"
+  },
+  {
+   "type": "milestone",
+   "at": [
+    33.5,
+    3.6
+   ],
+   "label": "BLACKMERE 1"
+  },
+  {
+   "type": "cart",
+   "at": [
+    -17.5,
+    5.4
+   ],
+   "variant": "hand"
+  },
+  {
+   "type": "basket",
+   "at": [
+    -25.6,
+    11.9
+   ],
+   "variant": "apples"
+  },
+  {
+   "type": "bucket",
+   "at": [
+    -26.6,
+    12.2
+   ]
+  },
+  {
+   "type": "basket",
+   "at": [
+    -3.4,
+    14.4
+   ],
+   "variant": "apples"
+  },
+  {
+   "type": "bucket",
+   "at": [
+    1.6,
+    1.4
    ]
   }
  ],

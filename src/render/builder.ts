@@ -4,6 +4,7 @@ import type { PropSpec, SceneLayout, Rect } from './layout';
 import { footprint } from './footprint';
 import { chevronDecal, cobbleTexture, dirtTexture, groundTexture, plankTexture, softDisc, sparkleDecal } from './textures';
 import { buildProp, crownGeometry, grassTuftGeometry, leafGeometry, trunkGeometry } from './kit/props';
+import { SceneInstancer } from './kit/instancer';
 
 export interface Label {
   text: string;
@@ -55,9 +56,9 @@ function backdrop(kind: 'hills' | 'treeline', color: number, width: number, heig
 }
 
 /** Build one prop from the art kit and place it. */
-function prop(m: Materials, p: PropSpec, labels: Label[], layout: SceneLayout): THREE.Object3D {
+function prop(m: Materials, p: PropSpec, labels: Label[], layout: SceneLayout, inst: SceneInstancer): THREE.Object3D {
   const holder = new THREE.Group();
-  holder.add(buildProp(m, p, labels, layout));
+  holder.add(buildProp(m, p, labels, layout, inst));
   holder.position.set(p.at[0], 0, p.at[1]);
   return holder;
 }
@@ -239,7 +240,10 @@ export function buildSection(layout: SceneLayout, m: Materials, density = 1): Bu
     group.add(plane);
   });
 
-  for (const p of layout.props) group.add(prop(m, p, labels, layout));
+  // Small goods (produce, bottles, jars…) from every prop share one instanced mesh per kind.
+  const goods = new SceneInstancer();
+  for (const p of layout.props) group.add(prop(m, p, labels, layout, goods));
+  for (const o of goods.build(m)) group.add(o);
   if (!layout.interior) {
     for (const o of scatter(layout, m, density)) group.add(o);
     for (const o of surroundings(layout, m, density)) group.add(o);

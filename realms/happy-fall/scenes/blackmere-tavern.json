@@ -166,14 +166,16 @@
    "at": [
     7.5,
     -6.5
-   ]
+   ],
+   "variant": "tap"
   },
   {
    "type": "barrel",
    "at": [
     8.4,
     -5.6
-   ]
+   ],
+   "variant": "water"
   },
   {
    "type": "lamp",
@@ -272,14 +274,16 @@
    "at": [
     8.6,
     -6.6
-   ]
+   ],
+   "variant": "tied"
   },
   {
    "type": "crate",
    "at": [
     8.8,
     -5.2
-   ]
+   ],
+   "variant": "closed"
   },
   {
    "type": "barrel",
@@ -294,6 +298,56 @@
     2.8,
     -7
    ]
+  },
+  {
+   "type": "keg-rack",
+   "at": [
+    -5.5,
+    -7.2
+   ]
+  },
+  {
+   "type": "stool",
+   "at": [
+    6.5,
+    3.0
+   ]
+  },
+  {
+   "type": "stool",
+   "at": [
+    -3.6,
+    -1.0
+   ]
+  },
+  {
+   "type": "stool",
+   "at": [
+    3.5,
+    3.0
+   ]
+  },
+  {
+   "type": "stool",
+   "at": [
+    -6.5,
+    3.0
+   ]
+  },
+  {
+   "type": "stool",
+   "at": [
+    -6.4,
+    -1.0
+   ]
+  },
+  {
+   "type": "basket",
+   "at": [
+    -8.2,
+    -4.6
+   ],
+   "variant": "apples"
   }
  ],
  "spots": {
@@ -344,50 +398,54 @@
   {
    "kind": "patron",
    "at": [
-    4.2,
-    3.2
+    4.4,
+    4.65
    ],
    "color": "moss",
    "hours": [
     17,
     24
-   ]
+   ],
+   "face": 3.141592653589793
   },
   {
    "kind": "patron",
    "at": [
-    -6.1,
-    3.2
+    -5.6,
+    4.65
    ],
    "color": "stone",
    "hours": [
     18,
     24
-   ]
+   ],
+   "face": 3.141592653589793
   },
   {
    "kind": "patron",
    "at": [
-    -4,
-    -0.4
+    -3.6,
+    -1.0
    ],
    "color": "ember",
    "hours": [
     11,
     15
-   ]
+   ],
+   "face": -1.5707963267948966
   },
   {
    "kind": "patron",
    "at": [
-    6.2,
-    2.9
+    6.5,
+    3.0
    ],
    "color": "crimson",
    "hours": [
     19,
     23
-   ]
+   ],
+   "face": -1.5707963267948966
   },
   {
    "kind": "cat",

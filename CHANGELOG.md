@@ -5,6 +5,23 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed — Blackmere Art Pass 2: characters, Familiars, props (presentation only)
+- Character looks as data (`realms/happy-fall/looks/`, `src/render/looks.ts`): build,
+  layered garments, hair, beard, hat, held item, idle stance per NPC; the player has a
+  distinct hood, ember cloak and a glowing hip lantern.
+- New people builder (`src/render/people.ts`) with elbows, smoothed poses, idle
+  stances, talking gestures, turning steps, head tracking and interaction facing;
+  shared rig contract in `src/render/rig.ts`.
+- Familiars: Bramble sits, pants, eats from a bowl, play-bows and rests; Wick flutters,
+  brightens and loops; Old Corvin hops, caws, pecks and stretches; care emotes.
+- Props: authored `variant`s (validated), new stool, basket, bucket, keg rack, tool rack,
+  wheelbarrow, trough, milestone and waymarker; upgraded stalls (trade-specific wares
+  and signs), crates, barrels, sacks, benches, tables, bar, well, lamps, lanterns, signs,
+  fences, banners and carts; produce and small goods instanced per section.
+- Scenes re-dressed with purposeful groupings; tavern patrons seated facing their
+  tables (`face` on ambient extras).
+- Tests for looks, variants and prop-source hygiene.
+
 ### Changed — Blackmere Art Pass 1: placeholder geometry removed (presentation only)
 - New art kit (`src/render/kit/geo.ts`, `kit/props.ts`): lathe, board, slab, tube,
   cluster, jitter, ribbed folds, world-scaled UVs and a merging `Assembly` with

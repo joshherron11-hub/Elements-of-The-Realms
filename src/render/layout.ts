@@ -20,8 +20,25 @@ export const PROP_TYPES = [
   'tree', 'orchard', 'deadwood', 'field', 'rock', 'signpost', 'counter', 'hearth', 'table',
   'scarecrow', 'haystack', 'cart', 'bed', 'chest', 'bench', 'shrine', 'memorial', 'boat', 'flowers', 'banner', 'rug', 'shelf', 'pen',
   'sack', 'bunting', 'woodpile', 'pumpkins', 'bush', 'lantern', 'planter',
+  'stool', 'basket', 'bucket', 'keg-rack', 'tool-rack', 'wheelbarrow', 'trough', 'milestone', 'waymarker',
 ] as const;
 export type PropType = (typeof PROP_TYPES)[number];
+
+/** Authored variants per prop type (presentation only). Types not listed take no variant. */
+export const PROP_VARIANTS: Partial<Record<PropType, readonly string[]>> = {
+  stall: ['produce', 'bakery', 'cloth', 'pottery'],
+  crate: ['produce', 'closed', 'stack', 'empty'],
+  barrel: ['water', 'apples', 'tap', 'rain'],
+  sack: ['tied', 'open', 'pile'],
+  basket: ['apples', 'pears', 'cabbages', 'carrots', 'eggs', 'empty'],
+  bench: ['plain', 'backed'],
+  table: ['set', 'bare'],
+  lamp: ['single', 'double'],
+  fence: ['rail', 'picket'],
+  cart: ['broken', 'loaded', 'hand'],
+  banner: ['pole', 'wall'],
+  wheelbarrow: ['empty', 'hay', 'pumpkins'],
+};
 
 export interface PropSpec {
   type: PropType;
@@ -30,6 +47,8 @@ export interface PropSpec {
   color?: string; // palette key
   roof?: string; // palette key
   label?: string;
+  /** Authored look of this prop (e.g. a stall's trade, a crate's contents). Presentation only. */
+  variant?: string;
 }
 
 export interface ExitSpec {
@@ -61,6 +80,8 @@ export interface ExtraSpec {
   /** Only present during these in-game hours [from, to). */
   hours?: [number, number];
   color?: string;
+  /** Which way a seated or standing extra faces (radians; 0 = towards the camera). */
+  face?: number;
 }
 
 export interface AmbientSpec {
@@ -153,7 +174,7 @@ export function parseSceneLayout(raw: unknown, source = 'scene'): Result<SceneLa
     }),
     props: v.arr(o.props ?? [], 'props', (x, p) => {
       const pr = v.obj(x, p);
-      v.noExtraKeys(pr, ['type', 'at', 'size', 'color', 'roof', 'label'], p);
+      v.noExtraKeys(pr, ['type', 'at', 'size', 'color', 'roof', 'label', 'variant'], p);
       const size = pr.size === undefined ? undefined : v.arr(pr.size, `${p}.size`, (n, np) => v.num(n, np, 0));
       if (size && size.length !== 3) v.fail(`${p}.size`, 'expected [width, depth, height]');
       return {
@@ -163,6 +184,7 @@ export function parseSceneLayout(raw: unknown, source = 'scene'): Result<SceneLa
         color: v.optStr(pr.color, `${p}.color`),
         roof: v.optStr(pr.roof, `${p}.roof`),
         label: v.optStr(pr.label, `${p}.label`),
+        variant: pr.variant === undefined ? undefined : v.oneOf(pr.variant, PROP_VARIANTS[pr.type as PropType] ?? [], `${p}.variant`),
       };
     }),
     spots: {},
@@ -183,9 +205,10 @@ export function parseSceneLayout(raw: unknown, source = 'scene'): Result<SceneLa
   });
   layout.extras = v.arr(o.extras ?? [], 'extras', (x, p) => {
     const e = v.obj(x, p);
-    v.noExtraKeys(e, ['kind', 'at', 'path', 'hours', 'color'], p);
+    v.noExtraKeys(e, ['kind', 'at', 'path', 'hours', 'color', 'face'], p);
     const spec: ExtraSpec = { kind: v.oneOf(e.kind, ['villager', 'patron', 'chicken', 'sheep', 'crow', 'cat'] as const, `${p}.kind`), color: v.optStr(e.color, `${p}.color`) };
     if (e.at !== undefined) spec.at = vec(e.at, `${p}.at`);
+    if (e.face !== undefined) spec.face = v.num(e.face, `${p}.face`, -7, 7);
     if (e.path !== undefined) spec.path = v.arr(e.path, `${p}.path`, (q, qp) => vec(q, qp));
     if (e.hours !== undefined) {
       const h = v.arr(e.hours, `${p}.hours`, (n, np) => v.num(n, np, 0, 24));

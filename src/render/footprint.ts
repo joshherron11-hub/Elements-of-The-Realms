@@ -3,7 +3,7 @@ import type { PropSpec } from './layout';
 /** Default footprint (w, d) of solid props. Decorative ones return undefined. */
 export function footprint(prop: PropSpec): [number, number] | undefined {
   // Overhead or flat decoration never blocks, whatever its size.
-  if (prop.type === 'bunting' || prop.type === 'lantern' || prop.type === 'rug' || prop.type === 'banner' || prop.type === 'flowers') return undefined;
+  if (prop.type === 'bunting' || prop.type === 'lantern' || prop.type === 'rug' || prop.type === 'banner' || prop.type === 'flowers' || prop.type === 'stool' || prop.type === 'basket' || prop.type === 'bucket') return undefined;
   if (prop.size) {
     if (prop.type === 'field' || prop.type === 'fence') return prop.type === 'fence' ? [prop.size[0], 0.4] : undefined;
     return [prop.size[0], prop.size[1]];
@@ -30,6 +30,12 @@ export function footprint(prop: PropSpec): [number, number] | undefined {
     case 'pumpkins': return [1.2, 1.2];
     case 'bush': return [1.4, 1.4];
     case 'planter': return [1.6, 0.6];
+    case 'keg-rack': return [2.3, 0.9];
+    case 'tool-rack': return [1.9, 0.5];
+    case 'wheelbarrow': return [0.9, 1.8];
+    case 'trough': return [2.1, 0.9];
+    case 'milestone': return [0.7, 0.5];
+    case 'waymarker': return [0.4, 0.4];
     default: return undefined;
   }
 }

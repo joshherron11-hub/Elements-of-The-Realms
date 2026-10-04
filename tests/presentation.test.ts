@@ -71,3 +71,50 @@ describe('graphics presets', () => {
     expect(QUALITY.low.density).toBeLessThan(QUALITY.high.density);
   });
 });
+
+describe('character looks (presentation data)', () => {
+  it('every Blackmere NPC, the player and every Familiar has an authored look', async () => {
+    const { loadLooks } = await import('../src/ui/scenes');
+    const { content } = await import('../src/config/content');
+    const looks = loadLooks();
+    expect(looks.people.player).toBeDefined();
+    for (const a of content.pack('realm_happy-fall').actors) expect(looks.people[a.id], a.id).toBeDefined();
+    for (const f of content.pack('realm_happy-fall').familiars ?? []) expect(looks.familiars[f.id], f.id).toBeDefined();
+  });
+
+  it('the player is visually distinct: no NPC shares their outer colour and hood', async () => {
+    const { loadLooks } = await import('../src/ui/scenes');
+    const looks = loadLooks();
+    const me = looks.people.player!;
+    for (const [id, l] of Object.entries(looks.people)) {
+      if (id === 'player') continue;
+      expect(l.hat === me.hat && l.colors.over === me.colors.over, id).toBe(false);
+    }
+    expect(me.garments).toContain('lantern');
+  });
+
+  it('rejects malformed looks with a path', async () => {
+    const { parseLooks } = await import('../src/render/looks');
+    const r = parseLooks({ people: { x: { skin: 'pink', hair: '#000000', colors: { body: '#000000', accent: '#000000' }, garments: ['spacesuit'] } } }, 'bad');
+    expect(!r.ok && r.error.message).toContain('bad.people.x.skin');
+    expect(!r.ok && r.error.message).toContain('bad.people.x.garments[0]');
+  });
+});
+
+describe('authored prop variants', () => {
+  it('a variant must be one the prop type knows', async () => {
+    const { parseSceneLayout } = await import('../src/render/layout');
+    const base = { id: 'x', name: 'x', size: [10, 10], ground: 'ground', zones: [{ locationId: 'l', rect: [-5, -5, 5, 5] }], playerStart: [0, 0] };
+    expect(parseSceneLayout({ ...base, props: [{ type: 'stall', at: [0, 0], variant: 'bakery' }] }).ok).toBe(true);
+    const bad = parseSceneLayout({ ...base, props: [{ type: 'stall', at: [0, 0], variant: 'spaceport' }] }, 'bad');
+    expect(!bad.ok && bad.error.message).toContain('bad.props[0].variant');
+    expect(parseSceneLayout({ ...base, props: [{ type: 'well', at: [0, 0], variant: 'any' }] }).ok).toBe(false);
+  });
+
+  it('every market stall in Blackmere has a trade', () => {
+    const stalls = layouts.get('blackmere-town')!.props.filter((p) => p.type === 'stall');
+    expect(stalls.length).toBeGreaterThanOrEqual(6);
+    for (const s of stalls) expect(s.variant, `${s.at}`).toBeDefined();
+    expect(new Set(stalls.map((s) => s.variant)).size).toBeGreaterThanOrEqual(4);
+  });
+});

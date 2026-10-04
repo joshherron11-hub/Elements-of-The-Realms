@@ -202,12 +202,12 @@
    ]
   },
   {
-   "type": "signpost",
+   "type": "waymarker",
    "at": [
     -8,
     3
    ],
-   "label": "Blackmere \u2190 \u00b7 \u2192 Brindle / Hollowmere"
+   "label": "Blackmere | Brindle Farm | Hollowmere Wood"
   },
   {
    "type": "tree",
@@ -553,14 +553,16 @@
    "at": [
     25.2,
     10.2
-   ]
+   ],
+   "variant": "open"
   },
   {
    "type": "sack",
    "at": [
     25.9,
     10.6
-   ]
+   ],
+   "variant": "tied"
   },
   {
    "type": "bush",
@@ -608,6 +610,67 @@
     0.3,
     1
    ]
+  },
+  {
+   "type": "tool-rack",
+   "at": [
+    35.4,
+    13.6
+   ]
+  },
+  {
+   "type": "wheelbarrow",
+   "at": [
+    31.2,
+    15.4
+   ],
+   "variant": "hay"
+  },
+  {
+   "type": "wheelbarrow",
+   "at": [
+    24.6,
+    12.9
+   ],
+   "variant": "pumpkins"
+  },
+  {
+   "type": "trough",
+   "at": [
+    3,
+    22.6
+   ]
+  },
+  {
+   "type": "bucket",
+   "at": [
+    4.6,
+    22.1
+   ]
+  },
+  {
+   "type": "basket",
+   "at": [
+    14.6,
+    15.4
+   ],
+   "variant": "apples"
+  },
+  {
+   "type": "basket",
+   "at": [
+    27.4,
+    11.9
+   ],
+   "variant": "eggs"
+  },
+  {
+   "type": "milestone",
+   "at": [
+    -30,
+    2.8
+   ],
+   "label": "BLACKMERE 1"
   }
  ],
  "spots": {
